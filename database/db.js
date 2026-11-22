@@ -61,6 +61,14 @@ db.pragma('foreign_keys = ON');
 function initDb() {
   const schema = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schema);
+  
+  // Run non-destructive migrations
+  try {
+    const { runMigrationV7 } = require('./migrate_v7_notices_family_holidays');
+    runMigrationV7(db);
+  } catch (mErr) {
+    console.warn('Migration V7 warning:', mErr.message);
+  }
 }
 
 initDb();

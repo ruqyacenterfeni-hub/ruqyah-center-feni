@@ -18,6 +18,30 @@ router.get('/info', (req, res) => {
 });
 
 /**
+ * GET /api/public/notice
+ * Returns the currently active scrolling notice / announcement
+ */
+router.get('/notice', (req, res) => {
+  try {
+    const notice = db.prepare(`
+      SELECT id, title_bn, title_en, content_bn, content_en, is_active, updated_at
+      FROM announcements
+      WHERE is_active = 1
+      ORDER BY display_order ASC, id DESC
+      LIMIT 1
+    `).get();
+
+    res.json({
+      success: true,
+      hasNotice: !!notice && (!!notice.content_bn || !!notice.content_en),
+      data: notice || null
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
  * GET /api/public/services
  * Returns all active services with dynamic prices
  */
@@ -132,24 +156,41 @@ router.post('/book', (req, res) => {
     if (isWeeklyHoliday(appointment_date)) {
       return res.status(400).json({
         success: false,
-        error: 'The clinic is closed on Fridays for public appointments.'
+        error: 'The clinic is closed on this weekly holiday for public appointments.'
       });
+    }
+
+    let packageType = (req.body.package_type || '').toLowerCase();
+    let numPatients = parseInt(number_of_patients, 10);
+    if (isNaN(numPatients) || numPatients < 1) {
+      numPatients = 1;
     }
 
     // Verify service exists and is active
     let service = null;
-    if (service_type) {
+    if (service_id) {
+      service = db.prepare('SELECT id, code, name, price, discount_price, category FROM services WHERE id = ? AND is_active = 1').get(service_id);
+    }
+
+    if (!service && service_type) {
       const st = String(service_type).toLowerCase();
-      if (st.includes('ruqyah') || st.includes('রুকইয়াহ')) {
+      if (st === 'family' || st.includes('ফ্যামিলি') || packageType === 'family') {
+        service = db.prepare("SELECT * FROM services WHERE code = 'family' AND is_active = 1").get();
+      } else if (st.includes('ruqyah') || st.includes('রুকইয়াহ')) {
         service = db.prepare("SELECT * FROM services WHERE code = 'ruqyah' AND is_active = 1").get() ||
-                  db.prepare("SELECT * FROM services WHERE name LIKE '%রুকইয়াহ%' AND is_active = 1").get();
+                  db.prepare("SELECT * FROM services WHERE name LIKE '%রুকইয়াহ%' AND code != 'family' AND is_active = 1").get();
       } else if (st.includes('hijama') || st.includes('হিজামা')) {
         service = db.prepare("SELECT * FROM services WHERE code = 'hijama' AND is_active = 1").get() ||
                   db.prepare("SELECT * FROM services WHERE name LIKE '%হিজামা%' AND is_active = 1").get();
       }
     }
-    if (!service && service_id) {
-      service = db.prepare('SELECT id, code, name, price, discount_price FROM services WHERE id = ? AND is_active = 1').get(service_id);
+
+    if (!service) {
+      if (packageType === 'family') {
+        service = db.prepare("SELECT * FROM services WHERE code = 'family' AND is_active = 1").get();
+      } else {
+        service = db.prepare("SELECT * FROM services WHERE code = 'ruqyah' AND is_active = 1").get();
+      }
     }
 
     if (!service) {
@@ -157,6 +198,19 @@ router.post('/book', (req, res) => {
         success: false,
         error: 'Selected service is currently unavailable or inactive.'
       });
+    }
+
+    const isFamily = service.code === 'family' || packageType === 'family' || (service.name && service.name.includes('ফ্যামিলি'));
+    if (isFamily) {
+      packageType = 'family';
+      if (numPatients > 6) {
+        return res.status(400).json({
+          success: false,
+          error: 'ফ্যামিলি প্যাকেজে সর্বোচ্চ ৬ জন রোগীর জন্য বুকিং করা সম্ভব। ৬ জনের বেশি হলে অনুগ্রহ করে আলাদা বুকিং করুন বা ক্লিনিকে যোগাযোগ করুন।'
+        });
+      }
+    } else {
+      packageType = 'standard';
     }
 
     // 2. Atomic Database Transaction (Strict Concurrency Control)
@@ -217,17 +271,46 @@ router.post('/book', (req, res) => {
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       const appointmentId = `APT-${datePart}-${randomSuffix}`;
 
-      const sType = (service.code === 'hijama' || (service.name && service.name.includes('হিজামা'))) ? 'hijama' : 'ruqyah';
-      const sPrice = sType === 'hijama' ? null : (service.discount_price || service.price || 2050);
+      // Price calculation
+      const isHijama = service.code === 'hijama' || (service.name && service.name.includes('হিজামা'));
+      const sType = isHijama ? 'hijama' : 'ruqyah';
+      
+      let sPrice = null;
+      let perPatientPrice = null;
+
+      if (!isHijama) {
+        if (packageType === 'family') {
+          // Fixed 6000 BDT for family package (up to 6 patients)
+          sPrice = service.discount_price || service.price || 6000;
+          perPatientPrice = null;
+        } else {
+          // Standard Ruqyah: unit price * number of patients
+          perPatientPrice = service.discount_price || service.price || 2050;
+          sPrice = perPatientPrice * numPatients;
+        }
+      }
+
+      function toBnNumber(num) {
+        if (num === null || num === undefined) return '';
+        const enStr = Number(num).toLocaleString('en-IN');
+        const bnDigits = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯', ',': ',' };
+        return enStr.split('').map(c => bnDigits[c] || c).join('');
+      }
+
+      let priceDisplay = 'খরচ পরামর্শের মাধ্যমে নির্ধারণ করা হবে।';
+      if (!isHijama && sPrice !== null) {
+        priceDisplay = `${toBnNumber(sPrice)} টাকা`;
+      }
 
       // Insert Appointment
       db.prepare(`
         INSERT INTO appointments (
           appointment_id, patient_id, patient_name, patient_phone, patient_address,
-          service_id, service_name, service_type, service_price, appointment_date,
-          time_slot, appointment_time, slot_start_time,
+          service_id, service_name, service_type, service_price, original_price,
+          adjusted_price, is_price_overridden, per_patient_price, package_type,
+          appointment_date, time_slot, appointment_time, slot_start_time,
           number_of_patients, additional_notes, notes, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
       `).run(
         appointmentId,
         patientId,
@@ -238,11 +321,15 @@ router.post('/book', (req, res) => {
         service.name,
         sType,
         sPrice,
+        sPrice,
+        sPrice,
+        perPatientPrice,
+        packageType,
         appointment_date,
         time_slot,
         time_slot,
         validSlot.start,
-        parseInt(number_of_patients, 10) || 1,
+        numPatients,
         additional_notes ? additional_notes.trim() : null,
         additional_notes ? additional_notes.trim() : null
       );
@@ -256,8 +343,10 @@ router.post('/book', (req, res) => {
         service_id: service.id,
         service_name: service.name,
         service_type: sType,
+        package_type: packageType,
+        number_of_patients: numPatients,
         price: sPrice,
-        price_display: sType === 'hijama' ? 'খরচ পরামর্শের মাধ্যমে নির্ধারণ করা হবে।' : '২,০৫০ টাকা',
+        price_display: priceDisplay,
         appointment_date,
         time_slot,
         status: 'Pending'

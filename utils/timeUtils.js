@@ -22,6 +22,7 @@ function isDateInPast(dateStr) {
 
 /**
  * Checks if date is a weekly holiday (e.g. Friday = 5)
+ * If weekly holiday is disabled or set to -1, returns false (7 days open)
  */
 function isWeeklyHoliday(dateStr) {
   const parts = dateStr.split('-');
@@ -30,8 +31,14 @@ function isWeeklyHoliday(dateStr) {
   const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
   const dayOfWeek = d.getDay(); // 0 = Sun, 5 = Fri
   
-  const setting = db.prepare('SELECT weekly_holiday_day FROM availability_settings WHERE id = 1').get();
-  const holidayDay = setting ? setting.weekly_holiday_day : CLINIC.DEFAULT_WEEKLY_HOLIDAY;
+  const setting = db.prepare('SELECT weekly_holiday_day, weekly_holiday_enabled FROM availability_settings WHERE id = 1').get();
+  if (setting) {
+    if (setting.weekly_holiday_enabled === 0 || setting.weekly_holiday_day === -1 || setting.weekly_holiday_day === null) {
+      return false; // No weekly holiday! Open 7 days a week
+    }
+  }
+  const holidayDay = (setting && setting.weekly_holiday_day !== undefined && setting.weekly_holiday_day !== null) ? setting.weekly_holiday_day : CLINIC.DEFAULT_WEEKLY_HOLIDAY;
+  if (holidayDay === -1) return false;
   
   return dayOfWeek === holidayDay;
 }
@@ -104,11 +111,15 @@ function getAvailabilityForDate(dateStr) {
 
   // 4. Check if weekly holiday
   if (isWeeklyHoliday(dateStr)) {
+    const setting = db.prepare('SELECT weekly_holiday_day FROM availability_settings WHERE id = 1').get();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const holDay = (setting && setting.weekly_holiday_day !== undefined && setting.weekly_holiday_day !== null) ? setting.weekly_holiday_day : CLINIC.DEFAULT_WEEKLY_HOLIDAY;
+    const dayName = dayNames[holDay] || 'Weekly Holiday';
     return {
       success: true,
       date: dateStr,
       isAvailable: false,
-      reason: 'Weekly Holiday (Friday) - Clinic closed for public bookings.',
+      reason: `Weekly Holiday (${dayName}) - Clinic closed for public bookings.`,
       isWeeklyHoliday: true,
       slots: []
     };

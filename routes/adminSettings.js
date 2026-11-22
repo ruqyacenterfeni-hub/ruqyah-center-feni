@@ -230,4 +230,77 @@ router.get('/backup', (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/settings/notice
+ * Returns the latest announcement
+ */
+router.get('/notice', (req, res) => {
+  try {
+    const notice = db.prepare(`
+      SELECT * FROM announcements ORDER BY display_order ASC, id DESC LIMIT 1
+    `).get();
+    res.json({ success: true, data: notice || null });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * PUT /api/admin/settings/notice
+ * Update the announcement content and active state
+ */
+router.put('/notice', (req, res) => {
+  try {
+    const { title_bn, title_en, content_bn, content_en, is_active } = req.body;
+    if (!content_bn && !content_en) {
+      return res.status(400).json({ success: false, error: 'Notice content is required.' });
+    }
+
+    const existing = db.prepare('SELECT id FROM announcements ORDER BY id DESC LIMIT 1').get();
+    const activeVal = is_active !== undefined ? (is_active ? 1 : 0) : 1;
+
+    if (existing) {
+      db.prepare(`
+        UPDATE announcements
+        SET title_bn = ?, title_en = ?, content_bn = ?, content_en = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(title_bn || 'জরুরি বিজ্ঞপ্তি', title_en || 'Important Notice', content_bn || '', content_en || '', activeVal, existing.id);
+    } else {
+      db.prepare(`
+        INSERT INTO announcements (title_bn, title_en, content_bn, content_en, is_active)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(title_bn || 'জরুরি বিজ্ঞপ্তি', title_en || 'Important Notice', content_bn || '', content_en || '', activeVal);
+    }
+
+    logAudit(req.admin.username, 'UPDATE_ANNOUNCEMENT', 'SETTINGS', 'announcement', 'Updated scrolling homepage notice', req);
+
+    const updated = db.prepare('SELECT * FROM announcements ORDER BY id DESC LIMIT 1').get();
+    res.json({ success: true, message: 'Notice updated successfully.', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/settings/notice/toggle
+ * Toggle publish/unpublish state
+ */
+router.post('/notice/toggle', (req, res) => {
+  try {
+    const existing = db.prepare('SELECT * FROM announcements ORDER BY id DESC LIMIT 1').get();
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'No notice found.' });
+    }
+
+    const newStatus = existing.is_active ? 0 : 1;
+    db.prepare('UPDATE announcements SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newStatus, existing.id);
+
+    logAudit(req.admin.username, 'TOGGLE_ANNOUNCEMENT', 'SETTINGS', String(existing.id), `Toggled notice status to ${newStatus ? 'Published' : 'Unpublished'}`, req);
+
+    res.json({ success: true, is_active: newStatus, message: newStatus ? 'Notice published successfully.' : 'Notice unpublished successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

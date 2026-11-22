@@ -269,9 +269,17 @@ async function loadAppointmentsList() {
     data.data.forEach(a => {
       const badgeHtml = typeof formatStatusBadge === 'function' ? formatStatusBadge(a.status) : `<span class="badge ${getBadgeClassForStatus(a.status)}">${a.status}</span>`;
       const isHijama = a.service_type === 'hijama' || (a.service_name && a.service_name.includes('হিজামা'));
-      const feeHtml = isHijama
-        ? `<span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.78rem; font-weight: 600;">${isBn ? 'পরামর্শের মাধ্যমে নির্ধারণ করা হবে' : 'Determined after consultation'}</span>`
-        : `<strong style="color: var(--primary); font-size: 0.95rem;">${isBn ? '২,০৫০ টাকা' : '2,050 BDT'}</strong>`;
+      const isFamily = a.package_type === 'family' || (a.service_name && a.service_name.includes('ফ্যামিলি'));
+
+      let feeHtml = '';
+      if (isHijama) {
+        feeHtml = `<span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.78rem; font-weight: 600;">${isBn ? 'পরামর্শ ভিত্তিক ফি' : 'Consultation fee'}</span>`;
+      } else {
+        const feeAmount = a.service_price !== null && a.service_price !== undefined ? a.service_price : (isFamily ? 6000 : 2050);
+        const overrideBadge = a.is_price_overridden ? `<span class="badge" style="background: #EFF6FF; color: #1D4ED8; font-size: 0.7rem; margin-left: 4px;" title="Price Adjusted by Admin">সমন্বিত</span>` : '';
+        const packBadge = isFamily ? `<span class="badge badge-gold" style="font-size: 0.7rem; margin-right: 4px;">Family</span>` : '';
+        feeHtml = `<div>${packBadge}<strong style="color: var(--primary); font-size: 0.95rem;">${feeAmount.toLocaleString('en-US')} BDT</strong>${overrideBadge}</div>`;
+      }
 
       html += `
         <tr>
@@ -289,13 +297,17 @@ async function loadAppointmentsList() {
           </td>
           <td>
             <span style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">${a.service_name}</span>
+            ${a.number_of_patients > 1 ? `<div style="font-size: 0.75rem; color: var(--text-muted);">${a.number_of_patients} Patients</div>` : ''}
           </td>
           <td>
             ${feeHtml}
           </td>
           <td>${badgeHtml}</td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openAppointmentModal('${a.id}')">${isBn ? 'পরিচালনা' : 'Manage'}</button>
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+              <button class="btn btn-secondary btn-sm" onclick="openAppointmentModal('${a.id}')">${isBn ? 'পরিচালনা' : 'Manage'}</button>
+              <button class="btn btn-outline-primary btn-sm" onclick="openPriceOverrideModal('${a.id}', '${a.appointment_id}', '${a.patient_name}', ${a.service_price || 0})" title="Adjust Fee / Concession">৳ ফি</button>
+            </div>
           </td>
         </tr>
       `;
@@ -732,7 +744,11 @@ async function loadAvailabilityOverview() {
     // Weekly holiday setting
     const holidayDaySelect = document.getElementById('weeklyHolidaySelect');
     if (holidayDaySelect && settings) {
-      holidayDaySelect.value = settings.weekly_holiday_day;
+      if (settings.weekly_holiday_enabled === 0 || settings.weekly_holiday_day === -1) {
+        holidayDaySelect.value = '-1';
+      } else {
+        holidayDaySelect.value = String(settings.weekly_holiday_day);
+      }
     }
   } catch (err) {
     console.error(err);
@@ -895,15 +911,23 @@ document.getElementById('blockSlotForm')?.addEventListener('submit', async (e) =
 // Save weekly holiday settings
 document.getElementById('saveHolidaySettingsBtn')?.addEventListener('click', async () => {
   const day = document.getElementById('weeklyHolidaySelect')?.value;
+  const dayVal = parseInt(day, 10);
+  const enabledVal = dayVal === -1 ? 0 : 1;
+
   try {
     const res = await fetch('/api/admin/availability/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ weekly_holiday_day: parseInt(day, 10) })
+      body: JSON.stringify({
+        weekly_holiday_day: dayVal,
+        weekly_holiday_enabled: enabledVal
+      })
     });
     const data = await res.json();
     if (data.success) {
-      showToast(data.message, 'success');
+      showToast(data.message || 'Weekly holiday setting updated.', 'success');
+    } else {
+      showToast(data.error || 'Failed to update weekly holiday.', 'error');
     }
   } catch (err) {
     showToast('Failed to update weekly holiday.', 'error');
@@ -2330,10 +2354,128 @@ async function loadClinicSettings() {
 
     // Load Audit Logs
     loadAuditLogs();
+    // Load Homepage Notice in Admin
+    loadAdminNotice();
   } catch (err) {
     console.error(err);
   }
 }
+
+async function loadAdminNotice() {
+  try {
+    const res = await fetch('/api/admin/settings/notice');
+    const data = await res.json();
+    if (data.success && data.data) {
+      const n = data.data;
+      if (document.getElementById('noticeContentBn')) document.getElementById('noticeContentBn').value = n.content_bn || '';
+      if (document.getElementById('noticeContentEn')) document.getElementById('noticeContentEn').value = n.content_en || '';
+      const badge = document.getElementById('noticeStatusBadge');
+      const btn = document.getElementById('toggleNoticeBtn');
+      if (badge) {
+        badge.textContent = n.is_active ? 'Published (সক্রিয়)' : 'Unpublished (নিষ্ক্রিয়)';
+        badge.className = n.is_active ? 'badge badge-success' : 'badge badge-secondary';
+      }
+      if (btn) {
+        btn.textContent = n.is_active ? 'Unpublish Notice' : 'Publish Notice';
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load admin notice:', err);
+  }
+}
+
+document.getElementById('announcementNoticeForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const contentBn = document.getElementById('noticeContentBn')?.value?.trim();
+  const contentEn = document.getElementById('noticeContentEn')?.value?.trim();
+
+  try {
+    const res = await fetch('/api/admin/settings/notice', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title_bn: 'জরুরি বিজ্ঞপ্তি',
+        title_en: 'Important Notice',
+        content_bn: contentBn,
+        content_en: contentEn,
+        is_active: 1
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Notice updated and published successfully!', 'success');
+      loadAdminNotice();
+    } else {
+      showToast(data.error || 'Failed to update notice.', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to save notice.', 'error');
+  }
+});
+
+document.getElementById('toggleNoticeBtn')?.addEventListener('click', async () => {
+  try {
+    const res = await fetch('/api/admin/settings/notice/toggle', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      loadAdminNotice();
+    } else {
+      showToast(data.error || 'Failed to toggle notice.', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to toggle notice.', 'error');
+  }
+});
+
+// Price Override Modal System
+function openPriceOverrideModal(id, aptId, patientName, currentFee) {
+  const modal = document.getElementById('priceOverrideModal');
+  const idInput = document.getElementById('overrideAptId');
+  const info = document.getElementById('overridePatientInfo');
+  const feeInfo = document.getElementById('overrideCurrentFee');
+  const priceInput = document.getElementById('overridePriceInput');
+
+  if (idInput) idInput.value = id;
+  if (info) info.textContent = `Patient: ${patientName} (${aptId})`;
+  if (feeInfo) feeInfo.textContent = `Current Fee: ${currentFee || 0} BDT`;
+  if (priceInput) priceInput.value = currentFee || 0;
+
+  if (modal) modal.style.display = 'flex';
+}
+
+function closePriceOverrideModal() {
+  const modal = document.getElementById('priceOverrideModal');
+  if (modal) modal.style.display = 'none';
+}
+
+document.getElementById('priceOverrideForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('overrideAptId')?.value;
+  const price = document.getElementById('overridePriceInput')?.value;
+  const reason = document.getElementById('overrideReasonInput')?.value?.trim();
+
+  try {
+    const res = await fetch(`/api/admin/appointments/${id}/override-price`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adjusted_price: parseFloat(price),
+        reason: reason || 'Financial relief concession'
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Fee adjusted successfully!', 'success');
+      closePriceOverrideModal();
+      loadAppointmentsList();
+    } else {
+      showToast(data.error || 'Failed to adjust fee.', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to adjust fee.', 'error');
+  }
+});
 
 document.getElementById('clinicSettingsForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();

@@ -245,12 +245,16 @@ router.post('/unblock-slot', (req, res) => {
  */
 router.put('/settings', (req, res) => {
   try {
-    const { weekly_holiday_day, slot_duration_minutes, break_start, break_end, opening_time, closing_time } = req.body;
+    const { weekly_holiday_day, weekly_holiday_enabled, slot_duration_minutes, break_start, break_end, opening_time, closing_time } = req.body;
+
+    const holDay = weekly_holiday_day !== undefined ? parseInt(weekly_holiday_day, 10) : null;
+    const holEnabled = weekly_holiday_enabled !== undefined ? (weekly_holiday_enabled ? 1 : 0) : (holDay === -1 ? 0 : 1);
 
     db.prepare(`
       UPDATE availability_settings
       SET 
         weekly_holiday_day = COALESCE(?, weekly_holiday_day),
+        weekly_holiday_enabled = COALESCE(?, weekly_holiday_enabled),
         slot_duration_minutes = COALESCE(?, slot_duration_minutes),
         break_start = COALESCE(?, break_start),
         break_end = COALESCE(?, break_end),
@@ -259,7 +263,8 @@ router.put('/settings', (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       WHERE id = 1
     `).run(
-      weekly_holiday_day !== undefined ? parseInt(weekly_holiday_day, 10) : null,
+      holDay,
+      holEnabled,
       slot_duration_minutes !== undefined ? parseInt(slot_duration_minutes, 10) : null,
       break_start || null,
       break_end || null,

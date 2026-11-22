@@ -425,9 +425,14 @@
               <div class="form-group" style="flex: 1; margin: 0;">
                 <label class="form-label">Regular Weekly Holiday Day:</label>
                 <select id="weeklyHolidaySelect" class="form-control">
-                  <option value="5">Friday (Jummah - Default)</option>
-                  <option value="6">Saturday</option>
-                  <option value="0">Sunday</option>
+                  <option value="-1">No Weekly Holiday (Open 7 Days / সপ্তাহের ৭ দিনই খোলা)</option>
+                  <option value="5">Friday (শুক্রবার / Jummah - Default)</option>
+                  <option value="6">Saturday (শনিবার)</option>
+                  <option value="0">Sunday (রবিবার)</option>
+                  <option value="1">Monday (সোমবার)</option>
+                  <option value="2">Tuesday (মঙ্গলবার)</option>
+                  <option value="3">Wednesday (বুধবার)</option>
+                  <option value="4">Thursday (বৃহস্পতিবার)</option>
                 </select>
               </div>
               <button id="saveHolidaySettingsBtn" class="btn btn-primary">Save Setting</button>
@@ -846,6 +851,31 @@
             <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
               Manage business contact information, change administrator password, export database backup, and review audit trail.
             </p>
+          </div>
+
+          <!-- Notice Management Card -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h3 style="color: var(--primary); font-size: 1.15rem; margin: 0;">Homepage Scrolling Notice (জরুরি বিজ্ঞপ্তি)</h3>
+              <span id="noticeStatusBadge" class="badge badge-success">Published</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+              Manage the continuous scrolling announcement marquee visible on the public homepage.
+            </p>
+            <form id="announcementNoticeForm">
+              <div class="form-group">
+                <label class="form-label">Notice Content (বাংলা) *</label>
+                <textarea id="noticeContentBn" class="form-control" rows="3" required placeholder="হোমপেজে প্রদর্শিত বাংলা নোটিশ লিখুন..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notice Content (English)</label>
+                <textarea id="noticeContentEn" class="form-control" rows="2" placeholder="English announcement text (optional)..."></textarea>
+              </div>
+              <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" id="saveNoticeBtn">Save Notice</button>
+                <button type="button" class="btn btn-secondary" id="toggleNoticeBtn">Unpublish Notice</button>
+              </div>
+            </form>
           </div>
 
           <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1.5rem; margin-bottom: 2rem;">
@@ -1540,6 +1570,35 @@
           </div>
         </form>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Override Appointment Price / Fee Adjustment -->
+  <div id="priceOverrideModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; font-size: 1.15rem; color: var(--primary);">Adjust Appointment Fee (ফি সমন্বয়)</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('priceOverrideModal')">✕</button>
+      </div>
+      <form id="priceOverrideForm" style="padding: 1.25rem;">
+        <input type="hidden" id="overrideAptId" value="">
+        <div style="margin-bottom: 0.75rem; background: #F8FAFC; padding: 0.75rem; border-radius: 6px;">
+          <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 600;" id="overridePatientInfo"></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);" id="overrideCurrentFee"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adjusted Fee (সমন্বিত ফি - BDT) *</label>
+          <input type="number" id="overridePriceInput" class="form-control" min="0" step="10" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reason for Adjustment (সমন্বয়ের কারণ / মন্তব্য)</label>
+          <input type="text" id="overrideReasonInput" class="form-control" placeholder="e.g. Low-income concession / Financial relief">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('priceOverrideModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Fee</button>
+        </div>
+      </form>
     </div>
   </div>
 

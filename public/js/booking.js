@@ -21,12 +21,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmationCard = document.getElementById('confirmationCard');
 
   const cardRuqyah = document.getElementById('cardRuqyah');
+  const cardFamily = document.getElementById('cardFamily');
   const cardHijama = document.getElementById('cardHijama');
   const radioRuqyah = document.getElementById('radioRuqyah');
+  const radioFamily = document.getElementById('radioFamily');
   const radioHijama = document.getElementById('radioHijama');
+  const packageTypeInput = document.getElementById('packageTypeInput');
+  const numPatientsSelect = document.getElementById('numPatients');
+  const pricingFormulaDetail = document.getElementById('pricingFormulaDetail');
+  const pricingTotalAmount = document.getElementById('pricingTotalAmount');
+  const pricingFormulaLabel = document.getElementById('pricingFormulaLabel');
 
   let activeServices = [];
   let selectedSlot = null;
+
+  function toBnNumber(num) {
+    if (num === null || num === undefined) return '';
+    const enStr = Number(num).toLocaleString('en-IN');
+    const bnDigits = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯', ',': ',' };
+    return enStr.split('').map(c => bnDigits[c] || c).join('');
+  }
+
+  function updatePriceCalculation() {
+    const sType = selectedServiceType ? selectedServiceType.value : 'ruqyah';
+    const num = parseInt(numPatientsSelect ? numPatientsSelect.value : 1, 10) || 1;
+
+    if (sType === 'family') {
+      const familySvc = activeServices.find(s => s.code === 'family' || (s.name && s.name.includes('ফ্যামিলি')));
+      const fee = familySvc ? (familySvc.discount_price || familySvc.price || 6000) : 6000;
+      if (pricingFormulaDetail) pricingFormulaDetail.textContent = `ফ্যামিলি প্যাকেজ (${num} জন রোগী, সর্বোচ্চ ৬ জন)`;
+      if (pricingTotalAmount) pricingTotalAmount.textContent = `${toBnNumber(fee)} টাকা`;
+      if (pricingFormulaLabel) pricingFormulaLabel.textContent = 'নির্ধারিত প্যাকেজ ফি:';
+    } else if (sType === 'ruqyah') {
+      const ruqyahSvc = activeServices.find(s => s.code === 'ruqyah' || (s.name && s.name.includes('রুকইয়াহ') && s.code !== 'family'));
+      const unitFee = ruqyahSvc ? (ruqyahSvc.discount_price || ruqyahSvc.price || 2050) : 2050;
+      const totalFee = unitFee * num;
+      if (pricingFormulaDetail) pricingFormulaDetail.textContent = `${num} জন রোগী × ${toBnNumber(unitFee)} টাকা`;
+      if (pricingTotalAmount) pricingTotalAmount.textContent = `${toBnNumber(totalFee)} টাকা`;
+      if (pricingFormulaLabel) pricingFormulaLabel.textContent = 'হিসাব বিবরণী:';
+    } else if (sType === 'hijama') {
+      if (pricingFormulaDetail) pricingFormulaDetail.textContent = `সুন্নাতী কাপিং থেরাপি (${num} জন রোগী)`;
+      if (pricingTotalAmount) pricingTotalAmount.textContent = `পরামর্শ অনুযায়ী নির্ধারণ`;
+      if (pricingFormulaLabel) pricingFormulaLabel.textContent = 'ফি বিবরণী:';
+    }
+  }
 
   // Set min date to today in local/BST
   const now = new Date();
@@ -50,16 +88,37 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success && data.data) {
         activeServices = data.data;
 
+        // Dynamically update card prices from database
+        const ruqyahSvc = activeServices.find(s => s.code === 'ruqyah' || (s.name && s.name.includes('রুকইয়াহ') && s.code !== 'family'));
+        if (ruqyahSvc) {
+          const uPrice = ruqyahSvc.discount_price || ruqyahSvc.price || 2050;
+          const feeRuqyahBadge = document.getElementById('feeRuqyahBadge');
+          const feeRuqyahAmount = document.getElementById('feeRuqyahAmount');
+          if (feeRuqyahBadge) feeRuqyahBadge.textContent = `প্রতি রোগী: ${toBnNumber(uPrice)} টাকা`;
+          if (feeRuqyahAmount) feeRuqyahAmount.textContent = `${toBnNumber(uPrice)} টাকা`;
+        }
+
+        const familySvc = activeServices.find(s => s.code === 'family' || (s.name && s.name.includes('ফ্যামিলি')));
+        if (familySvc) {
+          const fPrice = familySvc.discount_price || familySvc.price || 6000;
+          const feeFamilyAmount = document.getElementById('feeFamilyAmount');
+          if (feeFamilyAmount) feeFamilyAmount.textContent = `${toBnNumber(fPrice)} টাকা`;
+        }
+
         // Check if URL has service query param
         const urlParams = new URLSearchParams(window.location.search);
         const serviceParam = urlParams.get('service');
         if (serviceParam) {
           const sp = serviceParam.toLowerCase();
-          if (sp.includes('hijama') || sp.includes('হিজামা')) {
+          if (sp.includes('family') || sp.includes('ফ্যামিলি')) {
+            selectService('family');
+          } else if (sp.includes('hijama') || sp.includes('হিজামা')) {
             selectService('hijama');
           } else {
             selectService('ruqyah');
           }
+        } else {
+          selectService('ruqyah');
         }
       }
     } catch (err) {
@@ -69,42 +128,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle service card selection
   function selectService(type) {
-    const isBn = typeof getCurrentLang === 'function' ? getCurrentLang() === 'bn' : true;
-
     if (type === 'ruqyah') {
       if (radioRuqyah) radioRuqyah.checked = true;
       if (cardRuqyah) cardRuqyah.classList.add('selected');
+      if (cardFamily) cardFamily.classList.remove('selected');
       if (cardHijama) cardHijama.classList.remove('selected');
       if (selectedServiceType) selectedServiceType.value = 'ruqyah';
+      if (packageTypeInput) packageTypeInput.value = 'standard';
 
-      const s = activeServices.find(x => x.code === 'ruqyah' || (x.name && x.name.includes('রুকইয়াহ')));
+      const s = activeServices.find(x => x.code === 'ruqyah' || (x.name && x.name.includes('রুকইয়াহ') && x.code !== 'family'));
+      if (s && serviceSelect) serviceSelect.value = s.id;
+    } else if (type === 'family') {
+      if (radioFamily) radioFamily.checked = true;
+      if (cardFamily) cardFamily.classList.add('selected');
+      if (cardRuqyah) cardRuqyah.classList.remove('selected');
+      if (cardHijama) cardHijama.classList.remove('selected');
+      if (selectedServiceType) selectedServiceType.value = 'family';
+      if (packageTypeInput) packageTypeInput.value = 'family';
+
+      const s = activeServices.find(x => x.code === 'family' || (x.name && x.name.includes('ফ্যামিলি')));
       if (s && serviceSelect) serviceSelect.value = s.id;
     } else if (type === 'hijama') {
       if (radioHijama) radioHijama.checked = true;
       if (cardHijama) cardHijama.classList.add('selected');
       if (cardRuqyah) cardRuqyah.classList.remove('selected');
+      if (cardFamily) cardFamily.classList.remove('selected');
       if (selectedServiceType) selectedServiceType.value = 'hijama';
+      if (packageTypeInput) packageTypeInput.value = 'standard';
 
       const s = activeServices.find(x => x.code === 'hijama' || (x.name && x.name.includes('হিজামা')));
       if (s && serviceSelect) serviceSelect.value = s.id;
     }
+
+    updatePriceCalculation();
   }
 
   if (cardRuqyah) {
-    cardRuqyah.addEventListener('click', (e) => {
-      selectService('ruqyah');
-    });
+    cardRuqyah.addEventListener('click', () => selectService('ruqyah'));
+  }
+  if (cardFamily) {
+    cardFamily.addEventListener('click', () => selectService('family'));
   }
   if (cardHijama) {
-    cardHijama.addEventListener('click', (e) => {
-      selectService('hijama');
-    });
+    cardHijama.addEventListener('click', () => selectService('hijama'));
   }
   if (radioRuqyah) {
     radioRuqyah.addEventListener('change', () => selectService('ruqyah'));
   }
+  if (radioFamily) {
+    radioFamily.addEventListener('change', () => selectService('family'));
+  }
   if (radioHijama) {
     radioHijama.addEventListener('change', () => selectService('hijama'));
+  }
+  if (numPatientsSelect) {
+    numPatientsSelect.addEventListener('change', updatePriceCalculation);
   }
 
   // Load Real-time Availability for Date
@@ -295,6 +373,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      if (serviceType === 'family' && parseInt(numPatients, 10) > 6) {
+        const msg = isBn ? 'ফ্যামিলি প্যাকেজে সর্বোচ্চ ৬ জন রোগীর জন্য বুকিং করা সম্ভব।' : 'Family package allows maximum 6 patients.';
+        if (typeof showToast === 'function') showToast(msg, 'error'); else alert(msg);
+        return;
+      }
+
       const submitBtn = document.getElementById('submitBookingBtn');
       const originalText = submitBtn.innerHTML;
       submitBtn.disabled = true;
@@ -312,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
           address: address,
           service_type: serviceType,
           service_id: serviceId ? parseInt(serviceId, 10) : undefined,
+          package_type: packageTypeInput ? packageTypeInput.value : (serviceType === 'family' ? 'family' : 'standard'),
           number_of_patients: parseInt(numPatients, 10),
           appointment_date: date,
           time_slot: timeSlot,

@@ -170,37 +170,53 @@
             অনুগ্রহ করে অগ্রসর হওয়ার পূর্বে আপনার কাঙ্ক্ষিত সেবাটি নির্বাচন করুন:
           </p>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;" id="serviceCardsContainer">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;" id="serviceCardsContainer">
             
-            <!-- Choice 1: Ruqyah -->
-            <label class="service-choice-card" id="cardRuqyah" style="padding: 1.25rem; display: block;">
+            <!-- Choice 1: Standard Ruqyah -->
+            <label class="service-choice-card" id="cardRuqyah" style="padding: 1.25rem; display: block; cursor: pointer;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                <span class="badge badge-primary" style="font-size: 0.75rem;" data-i18n="service_ruqyah_badge">নির্ধারিত ফি: ২,০৫০ টাকা</span>
+                <span class="badge badge-primary" id="feeRuqyahBadge" style="font-size: 0.75rem;">প্রতি রোগী: ২,০৫০ টাকা</span>
                 <input type="radio" name="serviceChoice" value="ruqyah" id="radioRuqyah" style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary); cursor: pointer;" required>
               </div>
-              <h3 style="color: var(--primary); font-size: 1.35rem; margin-bottom: 0.5rem;" data-i18n="service_ruqyah_title">রুকইয়াহ</h3>
-              <p style="font-size: 0.95rem; color: var(--text-body); line-height: 1.5; margin-bottom: 0.85rem;" data-i18n="service_ruqyah_desc">
-                রুকইয়াহ ডায়াগনোসিস, কনসালটেন্ট ফি এবং প্রাথমিক ট্রিটমেন্টসহ: ২,০৫০ টাকা
+              <h3 style="color: var(--primary); font-size: 1.25rem; margin-bottom: 0.4rem;" data-i18n="service_ruqyah_title">রুকইয়াহ শারঈয়্যাহ</h3>
+              <p style="font-size: 0.88rem; color: var(--text-body); line-height: 1.45; margin-bottom: 0.75rem;" data-i18n="service_ruqyah_desc">
+                রুকইয়াহ ডায়াগনোসিস, কনসালটেন্সি ও ট্রিটমেন্ট। রোগীর সংখ্যা অনুপাতে ফি নির্ধারিত।
               </p>
               <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed var(--border-light); padding-top: 0.5rem;">
-                <span style="font-weight: 800; color: var(--primary); font-size: 1.25rem;" data-i18n="service_ruqyah_fee">২,০৫০ টাকা</span>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">১ ঘণ্টার সেশন</span>
+                <span id="feeRuqyahAmount" style="font-weight: 800; color: var(--primary); font-size: 1.15rem;">২,০৫০ টাকা</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">১ ঘণ্টার সেশন</span>
               </div>
             </label>
 
-            <!-- Choice 2: Hijama -->
-            <label class="service-choice-card" id="cardHijama" style="padding: 1.25rem; display: block;">
+            <!-- Choice 2: Family Package -->
+            <label class="service-choice-card" id="cardFamily" style="padding: 1.25rem; display: block; cursor: pointer; border-color: #F59E0B;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <span class="badge badge-gold" id="feeFamilyBadge" style="font-size: 0.75rem;">পারিবারিক সাশ্রয়ী প্যাকেজ</span>
+                <input type="radio" name="serviceChoice" value="family" id="radioFamily" style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary); cursor: pointer;">
+              </div>
+              <h3 style="color: var(--primary); font-size: 1.25rem; margin-bottom: 0.4rem;">ফ্যামিলি প্যাকেজ (রুকইয়াহ)</h3>
+              <p style="font-size: 0.88rem; color: var(--text-body); line-height: 1.45; margin-bottom: 0.75rem;">
+                পরিবারের ১ থেকে ৬ জন সদস্যের জন্য নির্ধারিত ফিক্সড ফি। সদস্য সংখ্যা বাড়লেও ফি বাড়বে না।
+              </p>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed var(--border-light); padding-top: 0.5rem;">
+                <span id="feeFamilyAmount" style="font-weight: 800; color: #B45309; font-size: 1.15rem;">৬,০০০ টাকা</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">১-৬ জন রোগী</span>
+              </div>
+            </label>
+
+            <!-- Choice 3: Hijama -->
+            <label class="service-choice-card" id="cardHijama" style="padding: 1.25rem; display: block; cursor: pointer;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                 <span class="badge badge-gold" style="font-size: 0.75rem;" data-i18n="service_hijama_badge">পরামর্শ ভিত্তিক ফি</span>
                 <input type="radio" name="serviceChoice" value="hijama" id="radioHijama" style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary); cursor: pointer;">
               </div>
-              <h3 style="color: var(--primary); font-size: 1.35rem; margin-bottom: 0.5rem;" data-i18n="service_hijama_title">হিজামা</h3>
-              <p style="font-size: 0.95rem; color: var(--text-body); line-height: 1.5; margin-bottom: 0.85rem;" data-i18n="service_hijama_desc">
-                খরচ পরামর্শের মাধ্যমে নির্ধারণ করা হবে।
+              <h3 style="color: var(--primary); font-size: 1.25rem; margin-bottom: 0.4rem;" data-i18n="service_hijama_title">সুন্নাতী হিজামা</h3>
+              <p style="font-size: 0.88rem; color: var(--text-body); line-height: 1.45; margin-bottom: 0.75rem;" data-i18n="service_hijama_desc">
+                স্বাস্থ্যসম্মত সুন্নাতী কাপিং থেরাপি। কাপের সংখ্যা ও রোগের ধরন অনুযায়ী ফি নির্ধারণ।
               </p>
               <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed var(--border-light); padding-top: 0.5rem;">
-                <span style="font-weight: 700; color: #92400E; font-size: 0.95rem;" data-i18n="service_hijama_fee">পরামর্শের মাধ্যমে নির্ধারণ করা হবে</span>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">সুন্নাতী কাপিং</span>
+                <span style="font-weight: 700; color: #92400E; font-size: 0.92rem;" data-i18n="service_hijama_fee">পরামর্শের মাধ্যমে নির্ধারণ</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">সুন্নাতী কাপিং</span>
               </div>
             </label>
 
@@ -209,6 +225,7 @@
           <!-- Hidden storage inputs for form submission -->
           <input type="hidden" id="selectedServiceType" name="service_type" value="">
           <input type="hidden" id="serviceSelect" name="service_id" value="">
+          <input type="hidden" id="packageTypeInput" name="package_type" value="standard">
           <div id="serviceSummaryBox" style="display: none;"></div>
         </div>
 
@@ -225,10 +242,25 @@
           <div class="form-group">
             <label class="form-label" for="numPatients" data-i18n="booking_num_label">রোগীর সংখ্যা</label>
             <select id="numPatients" class="form-control">
-              <option value="1">১ জন রোগী (নির্ধারিত ১ ঘণ্টার সেশন)</option>
-              <option value="2">২ জন রোগী (পারিবারিক / একই সাথে)</option>
-              <option value="3">৩ বা ততোধিক রোগী</option>
+              <option value="1">১ জন রোগী</option>
+              <option value="2">২ জন রোগী</option>
+              <option value="3">৩ জন রোগী</option>
+              <option value="4">৪ জন রোগী</option>
+              <option value="5">৫ জন রোগী</option>
+              <option value="6">৬ জন রোগী</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Dynamic Live Price Calculation Breakdown Banner -->
+        <div id="priceCalculationBanner" style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <div style="font-size: 0.78rem; color: #166534; font-weight: 600;" id="pricingFormulaLabel">হিসাব বিবরণী:</div>
+            <div style="font-size: 0.95rem; color: #14532D; font-weight: 700;" id="pricingFormulaDetail">১ জন রোগী × ২,০৫০ টাকা</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.75rem; color: #166534;">মোট প্রদেয় ফি:</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #047857;" id="pricingTotalAmount">২,০৫০ টাকা</div>
           </div>
         </div>
 

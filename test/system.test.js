@@ -1009,6 +1009,173 @@ async function runTests() {
     assert(sEnRes.headers['content-disposition'].includes('_EN.pdf'));
   });
 
+  // 17. Scrolling Announcement Notice APIs
+  await test('Scrolling Notice API: Public GET, Admin PUT, and Toggle Publish', async () => {
+    // Public notice
+    const pubRes = await request('GET', '/api/public/notice');
+    assert.strictEqual(pubRes.statusCode, 200);
+    assert.strictEqual(pubRes.data.success, true);
+    assert(pubRes.data.data !== null);
+    assert(pubRes.data.data.content_bn.length > 0);
+
+    // Admin get notice
+    const admGet = await request('GET', '/api/admin/settings/notice');
+    assert.strictEqual(admGet.statusCode, 200);
+    assert.strictEqual(admGet.data.success, true);
+
+    // Admin update notice
+    const admPut = await request('PUT', '/api/admin/settings/notice', {
+      title_bn: 'বিশেষ ঘোষণা',
+      content_bn: 'টেস্ট নোটিশ: ফেনী শাখায় শনি-বৃহস্পতিবার সকাল ৯টা থেকে রাত ৮টা পর্যন্ত সেবা খোলা থাকে।',
+      content_en: 'Test notice: Open Sat-Thu 9 AM - 8 PM.',
+      is_active: 1
+    });
+    assert.strictEqual(admPut.statusCode, 200);
+    assert.strictEqual(admPut.data.success, true);
+
+    // Toggle unpublish
+    const togRes = await request('POST', '/api/admin/settings/notice/toggle');
+    assert.strictEqual(togRes.statusCode, 200);
+    assert.strictEqual(togRes.data.is_active, 0);
+
+    // Toggle back to publish
+    const togBack = await request('POST', '/api/admin/settings/notice/toggle');
+    assert.strictEqual(togBack.statusCode, 200);
+    assert.strictEqual(togBack.data.is_active, 1);
+  });
+
+  // 18. Multi-Patient Pricing: Standard Ruqyah calculates Total = Per-Patient × Count
+  let multiAptId = null;
+  await test('Multi-Patient Pricing: Standard Ruqyah calculates Total = 2 × 2050 = 4100 BDT', async () => {
+    const bookRes = await request('POST', '/api/public/book', {
+      full_name: 'Test Multi Patient',
+      phone: '01719998877',
+      address: 'Rampur, Feni',
+      service_type: 'ruqyah',
+      number_of_patients: 2,
+      appointment_date: testDateStr,
+      time_slot: '04:00 PM – 05:00 PM',
+      additional_notes: 'Booking for 2 family members'
+    });
+
+    assert.strictEqual(bookRes.statusCode, 201);
+    assert.strictEqual(bookRes.data.success, true);
+    assert.strictEqual(bookRes.data.data.price, 4100);
+    assert.strictEqual(bookRes.data.data.package_type, 'standard');
+    assert(bookRes.data.data.price_display.includes('৪,১০০'));
+
+    multiAptId = bookRes.data.data.appointment_id;
+
+    // Verify database row
+    const row = db.prepare('SELECT service_price, original_price, per_patient_price, package_type FROM appointments WHERE appointment_id = ?').get(multiAptId);
+    assert.strictEqual(row.service_price, 4100);
+    assert.strictEqual(row.per_patient_price, 2050);
+    assert.strictEqual(row.package_type, 'standard');
+  });
+
+  // 19. Family Package: Fixed 6,000 BDT for 1-6 patients
+  let familyAptId = null;
+  await test('Family Package: Fixed 6,000 BDT regardless of patient count (up to 6 patients)', async () => {
+    const famRes = await request('POST', '/api/public/book', {
+      full_name: 'Test Family Patient',
+      phone: '01899990000',
+      address: 'Daganbhuiyan, Feni',
+      service_type: 'family',
+      package_type: 'family',
+      number_of_patients: 4,
+      appointment_date: testDateStr,
+      time_slot: '05:00 PM – 06:00 PM',
+      additional_notes: 'Family session for 4 members'
+    });
+
+    assert.strictEqual(famRes.statusCode, 201);
+    assert.strictEqual(famRes.data.success, true);
+    assert.strictEqual(famRes.data.data.price, 6000);
+    assert.strictEqual(famRes.data.data.package_type, 'family');
+    assert(famRes.data.data.price_display.includes('৬,০০০'));
+
+    familyAptId = famRes.data.data.appointment_id;
+
+    const row = db.prepare('SELECT service_price, package_type, number_of_patients FROM appointments WHERE appointment_id = ?').get(familyAptId);
+    assert.strictEqual(row.service_price, 6000);
+    assert.strictEqual(row.package_type, 'family');
+    assert.strictEqual(row.number_of_patients, 4);
+  });
+
+  // 20. Family Package Rejection: strictly rejects > 6 patients
+  await test('Family Package Validation: strictly rejects > 6 patients', async () => {
+    const invalidRes = await request('POST', '/api/public/book', {
+      full_name: 'Test Over Limit Family',
+      phone: '01955443322',
+      address: 'Chhagalnaiya, Feni',
+      service_type: 'family',
+      package_type: 'family',
+      number_of_patients: 7,
+      appointment_date: testDateStr,
+      time_slot: '06:00 PM – 07:00 PM'
+    });
+
+    assert.strictEqual(invalidRes.statusCode, 400);
+    assert.strictEqual(invalidRes.data.success, false);
+    assert(invalidRes.data.error.includes('সর্বোচ্চ ৬'));
+  });
+
+  // 21. Admin Price Override / Financial Concession
+  await test('Admin Price Override: allows financial concession adjustment for low-income patients', async () => {
+    assert(multiAptId, 'Must have multiAptId from previous test');
+
+    const overrideRes = await request('POST', `/api/admin/appointments/${multiAptId}/override-price`, {
+      adjusted_price: 1500,
+      reason: 'অসচ্ছল রোগীর জন্য বিশেষ ছাড় / Financial concession'
+    });
+
+    assert.strictEqual(overrideRes.statusCode, 200);
+    assert.strictEqual(overrideRes.data.success, true);
+    assert.strictEqual(overrideRes.data.adjusted_price, 1500);
+
+    const row = db.prepare('SELECT service_price, adjusted_price, is_price_overridden, admin_notes FROM appointments WHERE appointment_id = ?').get(multiAptId);
+    assert.strictEqual(row.service_price, 1500);
+    assert.strictEqual(row.adjusted_price, 1500);
+    assert.strictEqual(row.is_price_overridden, 1);
+    assert(row.admin_notes.includes('Financial concession') || row.admin_notes.includes('বিশেষ ছাড়'));
+  });
+
+  // 22. Flexible Weekly Holiday Setting: -1 opens 7 days a week
+  await test('Flexible Weekly Holiday: setting -1 opens booking 7 days a week', async () => {
+    // Find next Friday
+    let friday = new Date(Date.now() + 86400000);
+    while (friday.getDay() !== 5) {
+      friday = new Date(friday.getTime() + 86400000);
+    }
+    const fridayStr = friday.toISOString().split('T')[0];
+
+    // Under normal settings (Friday = 5 holiday), Friday is closed
+    const normalAvail = await request('GET', `/api/public/availability?date=${fridayStr}`);
+    assert.strictEqual(normalAvail.statusCode, 200);
+    assert.strictEqual(normalAvail.data.isWeeklyHoliday, true);
+    assert.strictEqual(normalAvail.data.slots.length, 0);
+
+    // Now Admin updates weekly holiday to -1 (No weekly holiday)
+    const updateHolRes = await request('PUT', '/api/admin/availability/settings', {
+      weekly_holiday_day: -1,
+      weekly_holiday_enabled: 0
+    });
+    assert.strictEqual(updateHolRes.statusCode, 200);
+    assert.strictEqual(updateHolRes.data.success, true);
+
+    // Verify Friday is now open!
+    const openAvail = await request('GET', `/api/public/availability?date=${fridayStr}`);
+    assert.strictEqual(openAvail.statusCode, 200);
+    assert.strictEqual(openAvail.data.isWeeklyHoliday, undefined);
+    assert.strictEqual(openAvail.data.slots.length, 10);
+
+    // Revert holiday setting back to Friday (5)
+    await request('PUT', '/api/admin/availability/settings', {
+      weekly_holiday_day: 5,
+      weekly_holiday_enabled: 1
+    });
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');

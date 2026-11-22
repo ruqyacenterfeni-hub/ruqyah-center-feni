@@ -143,6 +143,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // --- Homepage Scrolling Notice Loader ---
+  const marqueeContainer = document.getElementById('marqueeNoticeContainer');
+  const marqueeText = document.getElementById('marqueeNoticeText');
+  const marqueeTrack = document.getElementById('marqueeNoticeTrack');
+
+  if (marqueeContainer && marqueeText) {
+    fetch('/api/public/notice')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.hasNotice && json.data) {
+          const notice = json.data;
+          const currentLang = localStorage.getItem('site_lang') || 'bn';
+          const content = currentLang === 'en' ? (notice.content_en || notice.content_bn) : (notice.content_bn || notice.content_en);
+          if (content && content.trim()) {
+            marqueeText.textContent = content.trim();
+            if (marqueeTrack) {
+              const duplicate = document.createElement('span');
+              duplicate.className = 'marquee-text';
+              duplicate.style.marginLeft = '4rem';
+              duplicate.textContent = content.trim();
+              marqueeTrack.appendChild(duplicate);
+            }
+            marqueeContainer.style.display = 'block';
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('Notice fetch error:', err);
+      });
+  }
 });
 
 /**

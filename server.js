@@ -72,6 +72,9 @@ app.get('/health', (req, res) => res.status(200).json({ status: 'ok', uptime: pr
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (err instanceof URIError) {
+    return res.status(400).send('Bad Request: Invalid URL encoding');
+  }
   console.error('Unhandled Application Error:', err);
   res.status(500).json({ success: false, error: 'An internal server error occurred.' });
 });
@@ -80,7 +83,7 @@ app.use((err, req, res, next) => {
 const isTestEnv = process.env.NODE_ENV === 'test' || (process.argv[1] && process.argv[1].endsWith('system.test.js'));
 
 if (!isTestEnv) {
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     const addr = server.address();
     const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr ? addr.port : PORT}`;
     console.log(`=======================================================`);

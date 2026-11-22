@@ -26,7 +26,9 @@ router.get('/', (req, res) => {
     let query = `
       SELECT 
         a.id, a.appointment_id, a.patient_id, a.patient_name, a.patient_phone, a.patient_address,
-        a.service_id, a.service_name, a.service_type, a.service_price, a.appointment_date, a.time_slot, a.appointment_time, a.slot_start_time,
+        a.service_id, a.service_name, a.service_type, a.service_price, a.package_type,
+        a.original_price, a.adjusted_price, a.is_price_overridden, a.per_patient_price,
+        a.appointment_date, a.time_slot, a.appointment_time, a.slot_start_time,
         a.number_of_patients, a.additional_notes, a.notes, a.status, a.admin_notes, a.created_at,
         p.age as patient_age, p.gender as patient_gender
       FROM appointments a
@@ -330,14 +332,33 @@ router.post('/create', (req, res) => {
       const appointmentId = `APT-${datePart}-${randomSuffix}`;
 
       const sType = (service.code === 'hijama' || (service.name && service.name.includes('হিজামা'))) ? 'hijama' : 'ruqyah';
-      const sPrice = sType === 'hijama' ? null : 2050;
+      const isFamily = service.code === 'family' || (service.name && service.name.includes('ফ্যামিলি'));
+      const packType = isFamily ? 'family' : 'standard';
+      const numPts = parseInt(number_of_patients, 10) || 1;
+
+      let defaultPrice = null;
+      let perPtPrice = null;
+      if (sType !== 'hijama') {
+        if (isFamily) {
+          defaultPrice = service.discount_price || service.price || 6000;
+        } else {
+          perPtPrice = service.discount_price || service.price || 2050;
+          defaultPrice = perPtPrice * numPts;
+        }
+      }
+
+      const hasCustom = custom_price !== undefined && custom_price !== null && custom_price !== '';
+      const finalPrice = hasCustom ? parseFloat(custom_price) : defaultPrice;
+      const isOverridden = hasCustom ? 1 : 0;
 
       db.prepare(`
         INSERT INTO appointments (
           appointment_id, patient_id, patient_name, patient_phone, patient_address,
-          service_id, service_name, service_type, service_price, appointment_date, time_slot, appointment_time, slot_start_time,
+          service_id, service_name, service_type, service_price, original_price,
+          adjusted_price, is_price_overridden, per_patient_price, package_type,
+          appointment_date, time_slot, appointment_time, slot_start_time,
           number_of_patients, additional_notes, notes, status, admin_notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         appointmentId,
         pId,
@@ -347,16 +368,21 @@ router.post('/create', (req, res) => {
         service.id,
         service.name,
         sType,
-        sPrice,
+        finalPrice,
+        defaultPrice,
+        finalPrice,
+        isOverridden,
+        perPtPrice,
+        packType,
         appointment_date,
         time_slot,
         time_slot,
         validSlot.start,
-        parseInt(number_of_patients, 10) || 1,
+        numPts,
         additional_notes || null,
         additional_notes || null,
         status,
-        `Booked manually by admin ${req.admin.name}`
+        hasCustom ? `Price customized to ${finalPrice} BDT by admin ${req.admin.name}` : `Booked manually by admin ${req.admin.name}`
       );
 
       return appointmentId;
@@ -373,6 +399,41 @@ router.post('/create', (req, res) => {
     });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/appointments/:id/override-price
+ * Admin can adjust/override fee for low-income patients
+ */
+router.post('/:id/override-price', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adjusted_price, reason } = req.body;
+
+    const apt = db.prepare('SELECT * FROM appointments WHERE id = ? OR appointment_id = ?').get(id, id);
+    if (!apt) {
+      return res.status(404).json({ success: false, error: 'Appointment not found.' });
+    }
+
+    const newPrice = adjusted_price !== undefined ? parseFloat(adjusted_price) : 0;
+    const notes = apt.admin_notes ? `${apt.admin_notes} | Price adjusted to ${newPrice} BDT: ${reason || 'Financial relief'}` : `Price adjusted to ${newPrice} BDT: ${reason || 'Financial relief'}`;
+
+    db.prepare(`
+      UPDATE appointments
+      SET service_price = ?, adjusted_price = ?, is_price_overridden = 1, admin_notes = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(newPrice, newPrice, notes, apt.id);
+
+    logAudit(req.admin.username, 'OVERRIDE_PRICE', 'APPOINTMENT', apt.appointment_id, `Adjusted price from ${apt.service_price} to ${newPrice} BDT (${reason || 'Financial relief'})`, req);
+
+    res.json({
+      success: true,
+      message: 'Appointment fee adjusted successfully.',
+      adjusted_price: newPrice
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
