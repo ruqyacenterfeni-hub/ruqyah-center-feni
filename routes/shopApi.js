@@ -75,8 +75,8 @@ router.get('/products/:slug', (req, res) => {
   }
 });
 
-// 4. Place Order (Checkout)
-router.post('/orders/checkout', (req, res) => {
+// 4. Place Order (Checkout) - supports both /orders/checkout and /checkout
+router.post(['/orders/checkout', '/checkout'], (req, res) => {
   try {
     const { customer_name, customer_phone, shipping_address, district, items, customer_notes } = req.body;
 

@@ -192,4 +192,169 @@ router.get('/prescriptions/patient/:patientId', (req, res) => {
   }
 });
 
+// ==================== PRODUCT TOGGLE & DELETE ====================
+router.post('/products/:id/toggle', (req, res) => {
+  try {
+    const prod = db.prepare('SELECT id, is_active FROM products WHERE id = ?').get(req.params.id);
+    if (!prod) return res.status(404).json({ success: false, error: 'Product not found' });
+    const newStatus = prod.is_active === 1 ? 0 : 1;
+    db.prepare('UPDATE products SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newStatus, prod.id);
+    res.json({ success: true, is_active: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/products/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==================== RUQYAH AUDIOS ADMIN CRUD ====================
+router.get('/ruqyah-audios', (req, res) => {
+  try {
+    const items = db.prepare('SELECT * FROM ruqyah_resources ORDER BY id DESC').all();
+    res.json({ success: true, items });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/ruqyah-audios', (req, res) => {
+  try {
+    const { category, title_bn, title_en, title_ar, text_bn, audio_url, pdf_url, duration, is_active } = req.body;
+    if (!title_bn) return res.status(400).json({ success: false, error: 'Title (Bengali) is required' });
+    const stmt = db.prepare(`
+      INSERT INTO ruqyah_resources (category, title_bn, title_en, title_ar, text_bn, audio_url, pdf_url, duration, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const r = stmt.run(category || 'general_ruqyah', title_bn, title_en || '', title_ar || '', text_bn || '', audio_url || '', pdf_url || '', duration || '২৫ মিনিট', is_active !== undefined ? is_active : 1);
+    res.status(201).json({ success: true, id: r.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.put('/ruqyah-audios/:id', (req, res) => {
+  try {
+    const { category, title_bn, title_en, title_ar, text_bn, audio_url, pdf_url, duration, is_active } = req.body;
+    db.prepare(`
+      UPDATE ruqyah_resources
+      SET category = ?, title_bn = ?, title_en = ?, title_ar = ?, text_bn = ?, audio_url = ?, pdf_url = ?, duration = ?, is_active = ?
+      WHERE id = ?
+    `).run(category, title_bn, title_en, title_ar, text_bn, audio_url, pdf_url, duration, is_active !== undefined ? is_active : 1, req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/ruqyah-audios/:id/toggle', (req, res) => {
+  try {
+    const item = db.prepare('SELECT id, is_active FROM ruqyah_resources WHERE id = ?').get(req.params.id);
+    if (!item) return res.status(404).json({ success: false, error: 'Audio resource not found' });
+    const newStatus = item.is_active === 1 ? 0 : 1;
+    db.prepare('UPDATE ruqyah_resources SET is_active = ? WHERE id = ?').run(newStatus, item.id);
+    res.json({ success: true, is_active: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/ruqyah-audios/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM ruqyah_resources WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==================== HIJAMA PACKAGES TOGGLE & DELETE ====================
+router.post('/hijama-packages/:id/toggle', (req, res) => {
+  try {
+    const pkg = db.prepare('SELECT id, is_active FROM hijama_packages WHERE id = ?').get(req.params.id);
+    if (!pkg) return res.status(404).json({ success: false, error: 'Hijama package not found' });
+    const newStatus = pkg.is_active === 1 ? 0 : 1;
+    db.prepare('UPDATE hijama_packages SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newStatus, pkg.id);
+    res.json({ success: true, is_active: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/hijama-packages/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM hijama_packages WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==================== COURSES ADMIN CRUD & TOGGLE ====================
+router.get('/courses', (req, res) => {
+  try {
+    const courses = db.prepare('SELECT * FROM courses ORDER BY id DESC').all();
+    res.json({ success: true, courses });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/courses', (req, res) => {
+  try {
+    const { title_bn, title_en, fee, duration, description_bn, is_active } = req.body;
+    if (!title_bn) return res.status(400).json({ success: false, error: 'Course title is required' });
+    const slug = (title_en || title_bn).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString().slice(-4);
+    const stmt = db.prepare(`
+      INSERT INTO courses (title_bn, title_en, slug, fee, duration, description_bn, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    const r = stmt.run(title_bn, title_en || title_bn, slug, fee || 0, duration || '৪ সপ্তাহ', description_bn || '', is_active !== undefined ? is_active : 1);
+    res.status(201).json({ success: true, id: r.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.put('/courses/:id', (req, res) => {
+  try {
+    const { title_bn, title_en, fee, duration, description_bn, is_active } = req.body;
+    db.prepare(`
+      UPDATE courses
+      SET title_bn = ?, title_en = ?, fee = ?, duration = ?, description_bn = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(title_bn, title_en, fee || 0, duration, description_bn, is_active !== undefined ? is_active : 1, req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/courses/:id/toggle', (req, res) => {
+  try {
+    const course = db.prepare('SELECT id, is_active FROM courses WHERE id = ?').get(req.params.id);
+    if (!course) return res.status(404).json({ success: false, error: 'Course not found' });
+    const newStatus = course.is_active === 1 ? 0 : 1;
+    db.prepare('UPDATE courses SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newStatus, course.id);
+    res.json({ success: true, is_active: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/courses/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM courses WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

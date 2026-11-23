@@ -1367,6 +1367,99 @@ async function runTests() {
     assert.strictEqual(pSessPdf.headers['content-type'], 'application/pdf');
   });
 
+  await test('HOMEPAGE INTEGRATION: Dedicated sections for Supplements, Audio Library, Hijama Packages, Courses, Articles & Quick Order Modal exist', async () => {
+    const res = await request('GET', '/');
+    assert.strictEqual(res.statusCode, 200);
+    const html = res.data;
+    assert.ok(html.includes('id="hijamaPackagesSection"'), 'Hijama Packages section must be present on homepage');
+    assert.ok(html.includes('id="ruqyahAudioSection"'), 'Ruqyah Audio Library section must be present on homepage');
+    assert.ok(html.includes('id="supplementsSection"'), 'Sunnah Supplements Store section must be present on homepage');
+    assert.ok(html.includes('id="coursesSection"'), 'Courses section must be present on homepage');
+    assert.ok(html.includes('id="articlesSection"'), 'Articles & Case History section must be present on homepage');
+    assert.ok(html.includes('id="quickOrderModal"'), 'Quick Order Modal must be present on homepage');
+    assert.ok(html.includes('id="homepageProductsContainer"'), 'Products container must exist');
+    assert.ok(html.includes('id="homepageAudioContainer"'), 'Audio container must exist');
+    assert.ok(html.includes('id="homepageHijamaContainer"'), 'Hijama container must exist');
+    assert.ok(html.includes('id="homepageCoursesContainer"'), 'Courses container must exist');
+    assert.ok(html.includes('id="homepageArticlesContainer"'), 'Articles container must exist');
+    assert.ok(html.includes('openQuickOrder'), 'openQuickOrder JS function must exist');
+    assert.ok(html.includes('submitQuickOrder'), 'submitQuickOrder JS function must exist');
+  });
+
+  await test('ADMIN COMMERCE & CMS TOGGLES: Admin can toggle visibility of products, hijama packages, ruqyah audios, and courses', async () => {
+    // 1. Toggle product
+    const prodToggle1 = await request('POST', '/api/admin/commerce/products/1/toggle', null, adminCookie);
+    assert.strictEqual(prodToggle1.statusCode, 200);
+    assert.strictEqual(prodToggle1.data.success, true);
+    assert.strictEqual(prodToggle1.data.is_active, 0);
+
+    const prodToggle2 = await request('POST', '/api/admin/commerce/products/1/toggle', null, adminCookie);
+    assert.strictEqual(prodToggle2.statusCode, 200);
+    assert.strictEqual(prodToggle2.data.success, true);
+    assert.strictEqual(prodToggle2.data.is_active, 1);
+
+    // 2. Toggle hijama package
+    const pkgToggle1 = await request('POST', '/api/admin/commerce/hijama-packages/1/toggle', null, adminCookie);
+    assert.strictEqual(pkgToggle1.statusCode, 200);
+    assert.strictEqual(pkgToggle1.data.success, true);
+    assert.strictEqual(pkgToggle1.data.is_active, 0);
+
+    const pkgToggle2 = await request('POST', '/api/admin/commerce/hijama-packages/1/toggle', null, adminCookie);
+    assert.strictEqual(pkgToggle2.statusCode, 200);
+    assert.strictEqual(pkgToggle2.data.success, true);
+    assert.strictEqual(pkgToggle2.data.is_active, 1);
+
+    // 3. Toggle ruqyah audio
+    const audioToggle1 = await request('POST', '/api/admin/commerce/ruqyah-audios/1/toggle', null, adminCookie);
+    assert.strictEqual(audioToggle1.statusCode, 200);
+    assert.strictEqual(audioToggle1.data.success, true);
+    assert.strictEqual(audioToggle1.data.is_active, 0);
+
+    const audioToggle2 = await request('POST', '/api/admin/commerce/ruqyah-audios/1/toggle', null, adminCookie);
+    assert.strictEqual(audioToggle2.statusCode, 200);
+    assert.strictEqual(audioToggle2.data.success, true);
+    assert.strictEqual(audioToggle2.data.is_active, 1);
+
+    // 4. Toggle course
+    const courseToggle1 = await request('POST', '/api/admin/commerce/courses/1/toggle', null, adminCookie);
+    assert.strictEqual(courseToggle1.statusCode, 200);
+    assert.strictEqual(courseToggle1.data.success, true);
+    assert.strictEqual(courseToggle1.data.is_active, 0);
+
+    const courseToggle2 = await request('POST', '/api/admin/commerce/courses/1/toggle', null, adminCookie);
+    assert.strictEqual(courseToggle2.statusCode, 200);
+    assert.strictEqual(courseToggle2.data.success, true);
+    assert.strictEqual(courseToggle2.data.is_active, 1);
+  });
+
+  await test('HOMEPAGE QUICK ORDER COD: Visitor places an order via /api/shop/checkout and order appears in admin list', async () => {
+    const orderPayload = {
+      customer_name: 'আব্দুর রহমান',
+      customer_phone: '01811223344',
+      shipping_address: 'শান্তিনিকেতন রোড, শান্তি কোম্পানি, মহিপাল',
+      district: 'Feni',
+      items: [
+        { product_id: 1, quantity: 2 }
+      ],
+      customer_notes: 'হোমপেজ কুইক অর্ডার টেস্ট'
+    };
+
+    const res = await request('POST', '/api/shop/checkout', orderPayload);
+    assert.strictEqual(res.statusCode, 201);
+    assert.strictEqual(res.data.success, true);
+    assert.ok(res.data.order && res.data.order.order_number, 'Order number must be generated');
+    assert.ok(res.data.order.order_number.startsWith('ORD-'));
+
+    // Verify order is visible in Admin Orders list
+    const adminOrdersRes = await request('GET', '/api/admin/commerce/orders', null, adminCookie);
+    assert.strictEqual(adminOrdersRes.statusCode, 200);
+    assert.strictEqual(adminOrdersRes.data.success, true);
+    const placedOrder = adminOrdersRes.data.orders.find(o => o.order_number === res.data.order.order_number);
+    assert.ok(placedOrder, 'Placed order must exist in admin orders list');
+    assert.strictEqual(placedOrder.customer_name, 'আব্দুর রহমান');
+    assert.strictEqual(placedOrder.customer_phone, '01811223344');
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');

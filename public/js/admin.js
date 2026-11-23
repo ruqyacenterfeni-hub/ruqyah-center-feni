@@ -3546,6 +3546,7 @@ async function loadCommerceData() {
             <td><span class="badge ${p.is_active ? 'badge-success' : 'badge-danger'}">${p.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
             <td>
               <button class="btn btn-xs btn-secondary" onclick="promptEditProductPrice(${p.id}, ${p.price})">মূল্য পরিবর্তন</button>
+              <button class="btn btn-xs ${p.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleProductStatus(${p.id})">${p.is_active ? 'হাইড করুন' : 'পাবলিশ করুন'}</button>
             </td>
           </tr>
         `).join('');
@@ -3594,6 +3595,19 @@ async function promptEditProductPrice(prodId, currentPrice) {
   }
 }
 
+async function toggleProductStatus(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/products/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('পণ্যের স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে!', 'success');
+      loadCommerceData();
+    }
+  } catch (e) {
+    showToast('ত্রুটি: ' + e.message, 'error');
+  }
+}
+
 async function loadHijamaMgrData() {
   try {
     const res = await fetch('/api/admin/commerce/hijama-packages');
@@ -3609,12 +3623,26 @@ async function loadHijamaMgrData() {
           <td><span class="badge ${pkg.is_active ? 'badge-success' : 'badge-danger'}">${pkg.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
           <td>
             <button class="btn btn-xs btn-secondary" onclick="promptEditPackagePrice(${pkg.id}, ${pkg.price})">ফি পরিবর্তন</button>
+            <button class="btn btn-xs ${pkg.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleHijamaPackageStatus(${pkg.id})">${pkg.is_active ? 'হাইড করুন' : 'পাবলিশ করুন'}</button>
           </td>
         </tr>
       `).join('');
     }
   } catch (e) {
     console.error(e);
+  }
+}
+
+async function toggleHijamaPackageStatus(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/hijama-packages/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('হিজামা প্যাকেজ স্ট্যাটাস আপডেট সফল হয়েছে!', 'success');
+      loadHijamaMgrData();
+    }
+  } catch (e) {
+    showToast('ত্রুটি: ' + e.message, 'error');
   }
 }
 
@@ -3640,7 +3668,7 @@ async function promptEditPackagePrice(pkgId, currentPrice) {
 
 async function loadRuqyahMgrData() {
   try {
-    const res = await fetch('/api/resources/ruqyah-audios');
+    const res = await fetch('/api/admin/commerce/ruqyah-audios');
     const data = await res.json();
     const tbody = document.getElementById('adminRuqyahAudiosTbody');
     if (data.success && data.items) {
@@ -3650,7 +3678,10 @@ async function loadRuqyahMgrData() {
           <td><span class="badge badge-secondary">${i.category}</span></td>
           <td>${i.duration || '২৫ মিনিট'}</td>
           <td><a href="${i.audio_url}" target="_blank" style="font-size:0.8rem; color:var(--primary);">▶ শুনুন / লিংক</a></td>
-          <td>${i.pdf_url ? `<a href="${i.pdf_url}" target="_blank" style="font-size:0.8rem;">📄 ডাউনলোড PDF</a>` : '—'}</td>
+          <td><span class="badge ${i.is_active ? 'badge-success' : 'badge-danger'}">${i.is_active ? 'প্রকাশিত' : 'লুকানো'}</span></td>
+          <td>
+            <button class="btn btn-xs ${i.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleRuqyahAudioStatus(${i.id})">${i.is_active ? 'হাইড করুন' : 'পাবলিশ করুন'}</button>
+          </td>
         </tr>
       `).join('');
     }
@@ -3659,24 +3690,52 @@ async function loadRuqyahMgrData() {
   }
 }
 
+async function toggleRuqyahAudioStatus(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/ruqyah-audios/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('অডিও স্ট্যাটাস আপডেট সফল হয়েছে!', 'success');
+      loadRuqyahMgrData();
+    }
+  } catch (e) {
+    showToast('ত্রুটি: ' + e.message, 'error');
+  }
+}
+
 async function loadCoursesMgrData() {
   try {
-    const res = await fetch('/api/courses');
+    const res = await fetch('/api/admin/commerce/courses');
     const data = await res.json();
     const tbody = document.getElementById('adminCoursesTbody');
     if (data.success && data.courses) {
       tbody.innerHTML = data.courses.map(c => `
         <tr>
-          <td><strong>${c.title_bn}</strong></td>
+          <td><strong>${c.title_bn}</strong><br><small style="color:var(--text-muted);">${c.title_en || ''}</small></td>
           <td><strong>${c.fee === 0 ? 'ফ্রি' : '৳' + c.fee}</strong></td>
           <td>${c.duration || '৪ সপ্তাহ'}</td>
-          <td>${c.module_count || 1} টি মডিউল (${c.lesson_count || 3} টি পাঠ)</td>
-          <td><span class="badge badge-success">সক্রিয়</span></td>
+          <td><span class="badge ${c.is_active ? 'badge-success' : 'badge-danger'}">${c.is_active ? 'প্রকাশিত' : 'লুকানো'}</span></td>
+          <td>
+            <button class="btn btn-xs ${c.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleCourseStatus(${c.id})">${c.is_active ? 'হাইড করুন' : 'পাবলিশ করুন'}</button>
+          </td>
         </tr>
       `).join('');
     }
   } catch (e) {
     console.error(e);
+  }
+}
+
+async function toggleCourseStatus(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/courses/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('কোর্স স্ট্যাটাস আপডেট সফল হয়েছে!', 'success');
+      loadCoursesMgrData();
+    }
+  } catch (e) {
+    showToast('ত্রুটি: ' + e.message, 'error');
   }
 }
 
@@ -3720,5 +3779,160 @@ async function loadAdsMgrData() {
     }
   } catch (e) {
     console.error(e);
+  }
+}
+
+// ==================== MODALS: PRODUCT, HIJAMA, AUDIO, COURSE ====================
+function openAddProductModal() {
+  document.getElementById('addProductForm').reset();
+  openModal('addProductModal');
+}
+
+async function saveNewProduct(e) {
+  e.preventDefault();
+  const nameBn = document.getElementById('addProdNameBn').value.trim();
+  const nameEn = document.getElementById('addProdNameEn').value.trim();
+  const price = parseFloat(document.getElementById('addProdPrice').value);
+  const discountPrice = parseFloat(document.getElementById('addProdDiscount').value) || null;
+  const stockQuantity = parseInt(document.getElementById('addProdStock').value, 10) || 50;
+  const imageUrl = document.getElementById('addProdImage').value.trim() || '/images/products/honey.jpg';
+  const descriptionBn = document.getElementById('addProdDescBn').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/commerce/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name_bn: nameBn,
+        name_en: nameEn,
+        price,
+        discount_price: discountPrice,
+        stock_quantity: stockQuantity,
+        image_url: imageUrl,
+        description_bn: descriptionBn
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('নতুন পণ্য সফলভাবে যুক্ত করা হয়েছে!', 'success');
+      closeModal('addProductModal');
+      loadCommerceData();
+    } else {
+      showToast(data.error || 'পণ্য যুক্ত করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+function openAddHijamaPackageModal() {
+  document.getElementById('addHijamaPackageForm').reset();
+  openModal('addHijamaPackageModal');
+}
+
+async function saveNewHijamaPackage(e) {
+  e.preventDefault();
+  const titleBn = document.getElementById('addPkgTitleBn').value.trim();
+  const pointCount = parseInt(document.getElementById('addPkgPoints').value, 10);
+  const price = parseFloat(document.getElementById('addPkgPrice').value);
+  const descriptionBn = document.getElementById('addPkgDescBn').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/commerce/hijama-packages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title_bn: titleBn,
+        point_count: pointCount,
+        price,
+        description_bn: descriptionBn
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('নতুন হিজামা প্যাকেজ সফলভাবে যুক্ত করা হয়েছে!', 'success');
+      closeModal('addHijamaPackageModal');
+      loadHijamaMgrData();
+    } else {
+      showToast(data.error || 'প্যাকেজ যুক্ত করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+function openAddRuqyahAudioModal() {
+  document.getElementById('addRuqyahAudioForm').reset();
+  openModal('addRuqyahAudioModal');
+}
+
+async function saveNewRuqyahAudio(e) {
+  e.preventDefault();
+  const titleBn = document.getElementById('addAudioTitleBn').value.trim();
+  const titleAr = document.getElementById('addAudioTitleAr').value.trim();
+  const category = document.getElementById('addAudioCategory').value;
+  const duration = document.getElementById('addAudioDuration').value.trim();
+  const audioUrl = document.getElementById('addAudioUrl').value.trim();
+  const textBn = document.getElementById('addAudioTextBn').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/commerce/ruqyah-audios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title_bn: titleBn,
+        title_ar: titleAr,
+        category,
+        duration,
+        audio_url: audioUrl,
+        text_bn: textBn
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('নতুন রুকইয়াহ অডিও সফলভাবে যুক্ত করা হয়েছে!', 'success');
+      closeModal('addRuqyahAudioModal');
+      loadRuqyahMgrData();
+    } else {
+      showToast(data.error || 'অডিও যুক্ত করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+function openAddCourseModal() {
+  document.getElementById('addCourseForm').reset();
+  openModal('addCourseModal');
+}
+
+async function saveNewCourse(e) {
+  e.preventDefault();
+  const titleBn = document.getElementById('addCourseTitleBn').value.trim();
+  const fee = parseFloat(document.getElementById('addCourseFee').value) || 0;
+  const duration = document.getElementById('addCourseDuration').value.trim();
+  const descriptionBn = document.getElementById('addCourseDescBn').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/commerce/courses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title_bn: titleBn,
+        fee,
+        duration,
+        description_bn: descriptionBn
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('নতুন কোর্স সফলভাবে যুক্ত করা হয়েছে!', 'success');
+      closeModal('addCourseModal');
+      loadCoursesMgrData();
+    } else {
+      showToast(data.error || 'কোর্স যুক্ত করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
   }
 }

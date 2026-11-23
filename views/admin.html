@@ -1125,11 +1125,14 @@
         <!-- TAB 15: RUQYAH AUDIO LIBRARY -->
         <!-- ============================================================== -->
         <div id="tab-ruqyah-mgr" class="admin-tab-content">
-          <div style="margin-bottom: 1.5rem;">
-            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">রুকইয়াহ অডিও ও দোয়া লাইব্রেরি</h1>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-              পাবলিক পেজে প্রদর্শিত কুরআন ও হাদিস ভিত্তিক রুকইয়াহ অডিও এবং পিডিএফ ফাইল পরিচালনা করুন।
-            </p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">রুকইয়াহ অডিও ও দোয়া লাইব্রেরি</h1>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                পাবলিক পেজে প্রদর্শিত কুরআন ও হাদিস ভিত্তিক রুকইয়াহ অডিও এবং ফাইল পরিচালনা করুন।
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddRuqyahAudioModal()">+ নতুন অডিও যুক্ত করুন</button>
           </div>
 
           <div class="card" style="padding: 1rem; overflow-x: auto;">
@@ -1140,11 +1143,12 @@
                   <th>ক্যাটাগরি</th>
                   <th>সময়কাল</th>
                   <th>অডিও ফাইল লিংক</th>
-                  <th>পিডিএফ শিট লিংক</th>
+                  <th>অবস্থা</th>
+                  <th>অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody id="adminRuqyahAudiosTbody">
-                <tr><td colspan="5" style="text-align: center; padding: 2rem;">রিসোর্সসমূহ লোড হচ্ছে...</td></tr>
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">রিসোর্সসমূহ লোড হচ্ছে...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1154,11 +1158,14 @@
         <!-- TAB 16: ONLINE COURSES CMS -->
         <!-- ============================================================== -->
         <div id="tab-courses-mgr" class="admin-tab-content">
-          <div style="margin-bottom: 1.5rem;">
-            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">অনলাইন ও অফলাইন কোর্স ব্যবস্থাপনা</h1>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-              সেলফ রুকইয়াহ ও হিজামা বিষয়ক কোর্সসমূহ ও মডিউল সিলেবাস পরিচালনা করুন।
-            </p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">অনলাইন ও অফলাইন কোর্স ব্যবস্থাপনা</h1>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                সেলফ রুকইয়াহ ও হিজামা বিষয়ক কোর্সসমূহ ও মডিউল সিলেবাস পরিচালনা করুন।
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddCourseModal()">+ নতুন কোর্স যুক্ত করুন</button>
           </div>
 
           <div class="card" style="padding: 1rem; overflow-x: auto;">
@@ -1168,8 +1175,8 @@
                   <th>কোর্সের নাম</th>
                   <th>কোর্স ফি</th>
                   <th>সময়কাল</th>
-                  <th>মডিউল / পাঠ সংখ্যা</th>
                   <th>অবস্থা</th>
+                  <th>অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody id="adminCoursesTbody">
@@ -1846,6 +1853,178 @@
           <button type="submit" class="btn btn-primary">Save Fee</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Product -->
+  <div id="addProductModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">+ নতুন সুন্নাহ পণ্য যুক্ত করুন (Add Product)</h3>
+        <button class="modal-close" onclick="closeModal('addProductModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="addProductForm" onsubmit="saveNewProduct(event)">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">পণ্যের নাম (বাংলা) *</label>
+              <input type="text" id="addProdNameBn" class="form-control" required placeholder="যেমন: সুন্দরবনের খাঁটি মধু">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Product Name (English)</label>
+              <input type="text" id="addProdNameEn" class="form-control" placeholder="e.g. Pure Honey (500g)">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">বিক্রয় মূল্য (BDT) *</label>
+              <input type="number" id="addProdPrice" class="form-control" required min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ছাড়ের মূল্য (BDT)</label>
+              <input type="number" id="addProdDiscount" class="form-control" min="0" placeholder="ঐচ্ছিক">
+            </div>
+            <div class="form-group">
+              <label class="form-label">প্রাথমিক স্টক (টি) *</label>
+              <input type="number" id="addProdStock" class="form-control" value="50" min="0" required>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">ছবির লিংক (Image URL)</label>
+            <input type="text" id="addProdImage" class="form-control" placeholder="/images/products/product.jpg" value="/images/products/honey.jpg">
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">সংক্ষিপ্ত বিবরণ (বাংলা) *</label>
+            <textarea id="addProdDescBn" class="form-control" rows="3" required placeholder="পণ্যের গুণাগুণ ও ব্যবহারবিধি লিখুন..."></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addProductModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">+ পণ্য সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Hijama Package -->
+  <div id="addHijamaPackageModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">+ নতুন হিজামা প্যাকেজ যুক্ত করুন</h3>
+        <button class="modal-close" onclick="closeModal('addHijamaPackageModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="addHijamaPackageForm" onsubmit="saveNewHijamaPackage(event)">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">প্যাকেজের নাম (বাংলা) *</label>
+            <input type="text" id="addPkgTitleBn" class="form-control" required placeholder="যেমন: সম্পূর্ণ বডি ডিটক্স হিজামা">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">পয়েন্ট সংখ্যা *</label>
+              <input type="number" id="addPkgPoints" class="form-control" required min="1" max="30" value="7">
+            </div>
+            <div class="form-group">
+              <label class="form-label">নির্ধারিত ফি (BDT) *</label>
+              <input type="number" id="addPkgPrice" class="form-control" required min="0" step="50" value="1000">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">প্যাকেজ বিবরণ (বাংলা) *</label>
+            <textarea id="addPkgDescBn" class="form-control" rows="3" required placeholder="কোন কোন রোগের জন্য প্রযোজ্য এবং বিশেষ উপকারিতা..."></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addHijamaPackageModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">+ প্যাকেজ সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Ruqyah Audio -->
+  <div id="addRuqyahAudioModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">+ নতুন রুকইয়াহ অডিও যুক্ত করুন</h3>
+        <button class="modal-close" onclick="closeModal('addRuqyahAudioModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="addRuqyahAudioForm" onsubmit="saveNewRuqyahAudio(event)">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">শিরোনাম (বাংলা) *</label>
+            <input type="text" id="addAudioTitleBn" class="form-control" required placeholder="যেমন: সূরা আল-বাক্বারাহ সম্পূর্ণ তিলাওয়াত">
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">Title / Verses (Arabic)</label>
+            <input type="text" id="addAudioTitleAr" class="form-control" placeholder="سورة البقرة" dir="rtl">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">ক্যাটাগরি *</label>
+              <select id="addAudioCategory" class="form-control" required>
+                <option value="general_ruqyah">সাধারণ রুকইয়াহ (General Ruqyah)</option>
+                <option value="ayn_hasad">বদনজর ও হিংসা (Evil Eye)</option>
+                <option value="sihr_jinn">সিহর ও জিন নিরাময় (Sihr & Jinn)</option>
+                <option value="sleep_protection">ঘুমের দোয়া ও দুঃস্বপ্ন</option>
+                <option value="children_family">শিশু ও পরিবারের নিরাপত্তা</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">সময়কাল (যেমন: ২৫ মিনিট) *</label>
+              <input type="text" id="addAudioDuration" class="form-control" required value="২৫ মিনিট">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">অডিও ফাইল লিংক (MP3 URL) *</label>
+            <input type="text" id="addAudioUrl" class="form-control" required placeholder="/audio/filename.mp3 বা অনলাইন URL">
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">সংক্ষিপ্ত বর্ণনা বা দোয়া (বাংলা)</label>
+            <textarea id="addAudioTextBn" class="form-control" rows="2" placeholder="দোয়া বা আয়াতের তাৎপর্য..."></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addRuqyahAudioModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">+ অডিও সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Course -->
+  <div id="addCourseModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">+ নতুন কোর্স যুক্ত করুন</h3>
+        <button class="modal-close" onclick="closeModal('addCourseModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="addCourseForm" onsubmit="saveNewCourse(event)">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">কোর্সের নাম (বাংলা) *</label>
+            <input type="text" id="addCourseTitleBn" class="form-control" required placeholder="যেমন: সহীহ সুন্নাহ মোতাবেক সেলফ রুকইয়াহ">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">কোর্স ফি (০ হলে ফ্রি) *</label>
+              <input type="number" id="addCourseFee" class="form-control" required min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">সময়কাল (যেমন: ৪ সপ্তাহ) *</label>
+              <input type="text" id="addCourseDuration" class="form-control" required value="৪ সপ্তাহ">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">কোর্স সিলেবাস ও বিবরণ (বাংলা) *</label>
+            <textarea id="addCourseDescBn" class="form-control" rows="3" required placeholder="কোর্সের উদ্দেশ্য ও শিক্ষণীয় বিষয়সমূহ..."></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addCourseModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">+ কোর্স সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
