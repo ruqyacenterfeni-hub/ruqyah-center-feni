@@ -1311,6 +1311,51 @@ async function runTests() {
     }
   });
 
+  await test('MODULE 21 & 08: Automatic Winner Calculation, Poster Generator & Shareable Dual Report', async () => {
+    // 1. Calculate winners as admin
+    const calcRes = await request('POST', '/api/lifestyle/admin/calculate-winners', {});
+    assert.strictEqual(calcRes.statusCode, 200);
+    assert.strictEqual(calcRes.data.success, true);
+    assert.ok(calcRes.data.winners.length > 0);
+
+    const winnerId = calcRes.data.winners[0].id;
+
+    // 2. Publish winners
+    const pubRes = await request('POST', '/api/lifestyle/admin/publish-winners', { is_published: 1 });
+    assert.strictEqual(pubRes.statusCode, 200);
+
+    // 3. Update gift info
+    const giftRes = await request('PUT', `/api/lifestyle/admin/winners/${winnerId}/gift`, {
+      gift_details: 'Special Sunnah Honey & Pure Ajwa Dates Box',
+      gift_status: 'Awarded',
+      gift_awarded_date: '2026-11-23'
+    });
+    assert.strictEqual(giftRes.statusCode, 200);
+
+    // 4. Public winners API returns published list
+    const pubWinners = await request('GET', '/api/lifestyle/winners');
+    assert.strictEqual(pubWinners.statusCode, 200);
+    assert.strictEqual(pubWinners.data.success, true);
+    assert.ok(pubWinners.data.winners.length > 0);
+    assert.strictEqual(pubWinners.data.winners[0].gift_status, 'Awarded');
+
+    // 5. Winner Poster Generator HTML endpoint
+    const posterRes = await request('GET', `/api/lifestyle/poster/${winnerId}`);
+    assert.strictEqual(posterRes.statusCode, 200);
+    assert.ok(posterRes.data.includes('৪০ দিনের সুন্নাহ আমল প্রতিযোগিতা ২০২৬'));
+    assert.ok(posterRes.data.includes('মুহাম্মদুল্লাহ মিয়া'));
+
+    // 6. Shareable Patient History PDF download with ?shareable=1
+    const pHistPdf = await request('GET', `/api/admin/reports/patient/${testPatientId}/pdf?shareable=1`);
+    assert.strictEqual(pHistPdf.statusCode, 200);
+    assert.strictEqual(pHistPdf.headers['content-type'], 'application/pdf');
+
+    // 7. Shareable Ruqyah Session PDF download with ?shareable=1
+    const pSessPdf = await request('GET', `/api/admin/reports/session/${recordedSessionId}/pdf?shareable=1`);
+    assert.strictEqual(pSessPdf.statusCode, 200);
+    assert.strictEqual(pSessPdf.headers['content-type'], 'application/pdf');
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');

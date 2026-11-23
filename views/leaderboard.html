@@ -66,6 +66,12 @@
       🔒 <strong>গোপনীয়তা রক্ষা:</strong> অংশগ্রহণকারীদের সুরক্ষার স্বার্থে মোবাইল নম্বরের মধ্যবর্তী অংশ সম্পূর্ণ গোপন (Masked) রাখা হয়েছে।
     </div>
 
+    <!-- Official Winners Gallery & Podium (Shows when published) -->
+    <div id="winnersGallerySection" style="display: none; margin-bottom: 2.5rem;">
+      <h2 style="font-size: 1.35rem; color: #065F46; text-align: center; margin-bottom: 1rem;">🏆 অফিসিয়াল বিজয়ী ও কৃতি অংশগ্রহণকারী</h2>
+      <div id="winnersCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;"></div>
+    </div>
+
     <table class="rank-table">
       <thead>
         <tr>
@@ -93,8 +99,46 @@
 
   <script src="/js/main.js"></script>
   <script>
+    async function loadWinners() {
+      try {
+        const res = await fetch('/api/lifestyle/winners');
+        const data = await res.json();
+        if (data.success && data.winners && data.winners.length > 0) {
+          const section = document.getElementById('winnersGallerySection');
+          const grid = document.getElementById('winnersCardsGrid');
+          section.style.display = 'block';
+
+          grid.innerHTML = data.winners.map(w => {
+            const badgeBg = w.position === 1 ? '#FEF3C7' : w.position === 2 ? '#F1F5F9' : '#FFEDD5';
+            const badgeColor = w.position === 1 ? '#B45309' : w.position === 2 ? '#334155' : '#C2410C';
+            const trophy = w.position === 1 ? '🥇 ১ম স্থান' : w.position === 2 ? '🥈 ২য় স্থান' : w.position === 3 ? '🥉 ৩য় স্থান' : `#${w.position} স্থান`;
+
+            return `
+              <div style="background: #FFF; border: 2px solid ${badgeBg}; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="background: ${badgeBg}; color: ${badgeColor}; display: inline-block; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.75rem;">
+                  ${trophy}
+                </div>
+                <h3 style="font-size: 1.25rem; color: #0F172A; margin-bottom: 0.25rem;">${w.full_name}</h3>
+                <div style="color: #64748B; font-size: 0.85rem; margin-bottom: 0.75rem;">${w.masked_phone}</div>
+                <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.5rem; margin-bottom: 1rem;">
+                  <span style="font-weight: 700; color: #065F46; font-size: 1.1rem;">${w.final_score}</span> <span style="font-size: 0.85rem; color: #64748B;">/ ৪০০০ পয়েন্ট</span>
+                  <div style="font-size: 0.85rem; color: #059669; font-weight: 600;">স্তর: ${w.awarded_level}</div>
+                </div>
+                <a href="${w.poster_url}" target="_blank" style="display: inline-block; background: #065F46; color: #FFF; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">
+                  📜 সনদ ও পোস্টার দেখুন
+                </a>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load winners:', err);
+      }
+    }
+
     async function loadLeaderboard() {
       try {
+        await loadWinners();
         const res = await fetch('/api/lifestyle/leaderboard');
         const data = await res.json();
         if (data.success && data.leaderboard) {

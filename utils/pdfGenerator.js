@@ -626,7 +626,7 @@ function wrapText(text, maxChars = 52) {
 /**
  * Builds high-resolution SVG and converts to PDF for Patient History Report
  */
-async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn') {
+async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn', options = {}) {
   const isBn = lang === 'bn';
   const width = 1240;
   const height = 1754;
@@ -638,7 +638,7 @@ async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn
     clinicName: isBn ? 'রুকইয়াহ সাপোর্ট এন্ড কাপিং সেন্টার' : 'RUQYAH SUPPORT & CUPPING CENTER',
     clinicSub: isBn ? 'ফেনী শাখা  |  ভূঞা ম্যানশন, আদর্শ হাউজিং সোসাইটি, মহিপাল, ফেনী' : 'FENI BRANCH  |  Bhuya Mansion, Adarsha Housing Society, Mohipal, Feni',
     phoneRaqi: isBn ? 'হটলাইন / হোয়াটসঅ্যাপ: ০১৭৫৮-৩৫৪৯২০  |  পরিচালক ও প্রধান রাকি: মুহাম্মদুল্লাহ মিয়া' : 'Hotline / WhatsApp: 01758-354920  |  Lead Raqi: Muhammadullah Miah',
-    reportTitle: isBn ? 'রোগীর পূর্ণাঙ্গ স্বাস্থ্য বিবরণী ও হিস্ট্রি রিপোর্ট' : 'PATIENT CLINICAL HISTORY REPORT',
+    reportTitle: (options.isShareable ? (isBn ? 'রোগী কপি — ' : 'PATIENT COPY — ') : '') + (isBn ? 'রোগীর পূর্ণাঙ্গ স্বাস্থ্য বিবরণী ও হিস্ট্রি রিপোর্ট' : 'PATIENT CLINICAL HISTORY REPORT'),
     ref: isBn ? `রেফারেন্স: ${patient.patient_id}` : `Ref: ${patient.patient_id}`,
     date: isBn ? `তারিখ: ${toBengaliDigits(new Date().toISOString().split('T')[0])}` : `Date: ${new Date().toISOString().split('T')[0]}`,
     demographics: isBn ? 'রোগীর সাধারণ পরিচিতি ও তথ্য' : 'PATIENT IDENTIFICATION & DEMOGRAPHICS',
@@ -963,7 +963,7 @@ async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn
 /**
  * Builds high-resolution SVG and converts to PDF for Ruqyah Session Report
  */
-async function generateRuqyahSessionPdf(session, patient, lang = 'bn') {
+async function generateRuqyahSessionPdf(session, patient, lang = 'bn', options = {}) {
   const isBn = lang === 'bn';
   const width = 1240;
   const height = 1754;
@@ -974,7 +974,7 @@ async function generateRuqyahSessionPdf(session, patient, lang = 'bn') {
     clinicName: isBn ? 'রুকইয়াহ সাপোর্ট এন্ড কাপিং সেন্টার' : 'RUQYAH SUPPORT & CUPPING CENTER',
     clinicSub: isBn ? 'ফেনী শাখা  |  ভূঁইয়া ম্যানশন, আদর্শ হাউজিং সোসাইটি, মহিপাল, ফেনী' : 'FENI BRANCH  |  Bhuya Mansion, Adarsha Housing Society, Mohipal, Feni',
     phoneRaqi: isBn ? 'হটলাইন / হোয়াটসঅ্যাপ: ০১৭৫৮-৩৫৪৯২০  |  পরিচালক ও প্রধান রাকি: মুহাম্মদুল্লাহ মিয়া' : 'Hotline / WhatsApp: 01758-354920  |  Lead Raqi: Muhammadullah Miah',
-    reportTitle: isBn ? 'রুকইয়াহ শারঈয়্যাহ সেশন প্রেসক্রিপশন রিপোর্ট' : 'RUQYAH SESSION CLINICAL REPORT',
+    reportTitle: (options.isShareable ? (isBn ? 'রোগী কপি — ' : 'PATIENT COPY — ') : '') + (isBn ? 'রুকইয়াহ শারঈয়্যাহ সেশন প্রেসক্রিপশন রিপোর্ট' : 'RUQYAH SESSION CLINICAL REPORT'),
     ref: isBn ? `সেশন আইডি: ${session.session_id}` : `Session Ref: ${session.session_id}`,
     date: isBn ? `তারিখ: ${toBengaliDigits(session.session_date)}` : `Date: ${session.session_date}`,
     sessionHeader: isBn ? `রুকইয়াহ সেশন #${toBengaliDigits(session.session_number)} বিবরণ` : `SESSION #${session.session_number} DETAILS`,
