@@ -51,6 +51,23 @@ function requireAdmin(req, res, next) {
   }
 }
 
+function requireRole(...allowedRoles) {
+  return (req, res, next) => {
+    requireAdmin(req, res, () => {
+      if (
+        allowedRoles.length === 0 || 
+        req.admin.role === 'superadmin' || 
+        allowedRoles.includes(req.admin.role)
+      ) {
+        return next();
+      }
+      return res.status(403).json({ success: false, error: 'Access denied: insufficient privileges' });
+    });
+  };
+}
+
 module.exports = {
-  requireAdmin
+  requireAdmin,
+  requireAuth: requireAdmin,
+  requireRole
 };

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>দৈনিক আমল ট্র্যাকার (সর্বোচ্চ ১০০ পয়েন্ট) | রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <style>
+    .score-sticky-bar {
+      position: sticky;
+      top: 0;
+      background: #065F46;
+      color: #FFF;
+      padding: 0.85rem 1.25rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .amal-category-box {
+      background: #FFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .prayer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #F1F5F9;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: #334155;
+    }
+  </style>
+</head>
+<body style="background: #F8FAFC;">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand-logo">
+        <img src="/images/logo.png" alt="রুকইয়াহ সাপোর্ট সেন্টার" style="height: 52px; width: auto; object-fit: contain;">
+      </a>
+      <nav class="desktop-nav">
+        <a href="/">হোম</a>
+        <a href="/lifestyle">সুন্নাহ লাইফস্টাইল</a>
+        <a href="/lifestyle/leaderboard">লিডারবোর্ড</a>
+        <a href="/shop">সুন্নাহ শপ</a>
+        <button onclick="handleLogout()" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+          🚪 লগআউট
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 2rem 0; max-width: 780px;">
+    <!-- Profile & Competition Overview Banner -->
+    <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="margin: 0; color: #0F172A; font-size: 1.35rem;" id="userProfileName">স্বাগতম!</h2>
+        <div style="font-size: 0.85rem; color: #64748B; margin-top: 0.25rem;" id="userProfileRank">প্রতিযোগিতা র‍্যাংক: লোড হচ্ছে...</div>
+      </div>
+      <div style="text-align: right;">
+        <span style="background: #FEF3C7; color: #92400E; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;" id="userLevelBadge">Improvement Level</span>
+        <div style="font-size: 1.1rem; font-weight: 700; color: #065F46; margin-top: 0.25rem;">
+          মোট পয়েন্ট: <span id="userTotalPoints">০</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Score Sticky Bar (Strict Max 100) -->
+    <div class="score-sticky-bar">
+      <div>
+        <span style="font-size: 0.9rem; opacity: 0.9;">আজকের আমল স্কোর:</span>
+        <strong style="font-size: 1.4rem; margin-left: 0.5rem;" id="liveScoreText">০</strong>
+        <span style="font-size: 0.9rem; opacity: 0.8;">/ ১০০ পয়েন্ট</span>
+      </div>
+      <div>
+        <input type="date" id="amalDateInput" class="form-control" style="padding: 0.35rem 0.65rem; font-size: 0.9rem; color: #1E293B; background: #FFF; border: none;" onchange="loadTodaySubmission()">
+      </div>
+    </div>
+
+    <form id="amalForm" onsubmit="submitAmal(event)">
+      <!-- 1. Obligatory Prayers (Max 50) -->
+      <div class="amal-category-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
+          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🕌 ১. পাঁচ ওয়াক্ত ফরজ সালাত</h3>
+          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ৫০ পয়েন্ট</span>
+        </div>
+        <div id="prayersContainer"></div>
+      </div>
+
+      <!-- 2. Sunnah & Nafl (Max 20) -->
+      <div class="amal-category-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
+          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🌙 ২. সুন্নাত ও নফল ইবাদত</h3>
+          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ২০ পয়েন্ট</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <label class="check-label"><input type="checkbox" name="tahajjud" onchange="calculateScore()"> তাহাজ্জুদ সালাত (+৫)</label>
+          <label class="check-label"><input type="checkbox" name="ishraq_duha" onchange="calculateScore()"> ইশরাক / চাশত সালাত (+৫)</label>
+          <label class="check-label"><input type="checkbox" name="rawatib" onchange="calculateScore()"> ১২ রাকাত সুন্নাতে মুয়াক্কাদা (+৫)</label>
+          <label class="check-label"><input type="checkbox" name="witr" onchange="calculateScore()"> বিতর সালাত গুরুত্বসহ আদায় (+৫)</label>
+        </div>
+      </div>
+
+      <!-- 3. Quran & Adhkar (Max 10) -->
+      <div class="amal-category-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
+          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">📖 ৩. কুরআন তিলাওয়াত ও মাসনুন জিকির</h3>
+          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ১০ পয়েন্ট</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <label class="check-label"><input type="checkbox" name="morning_evening_adhkar" onchange="calculateScore()"> সকাল ও সন্ধ্যার মাসনুন হেফাজতের দোয়া (+৫)</label>
+          <label class="check-label"><input type="checkbox" name="quran_tilawat" onchange="calculateScore()"> কমপক্ষে ১ রুকু কুরআন তিলাওয়াত / তাফসির (+৫)</label>
+        </div>
+      </div>
+
+      <!-- 4. Charity & Good Deeds (Max 10) -->
+      <div class="amal-category-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
+          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🤝 ৪. দান-সদকা ও উত্তম চরিত্র</h3>
+          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ১০ পয়েন্ট</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <label class="check-label"><input type="checkbox" name="sadaqah" onchange="calculateScore()"> সাধ্য অনুযায়ী সদকা / দান (+৫)</label>
+          <label class="check-label"><input type="checkbox" name="parents_family_kindness" onchange="calculateScore()"> পিতামাতা ও পরিবারের সাথে সুন্দর ব্যবহার (+৫)</label>
+        </div>
+      </div>
+
+      <!-- 5. Sunnah Habits (Max 10) -->
+      <div class="amal-category-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
+          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🌿 ৫. সুন্নাহ অভ্যাস ও সুস্থতা</h3>
+          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ১০ পয়েন্ট</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <label class="check-label"><input type="checkbox" name="sunnah_food_honey_kalojira" onchange="calculateScore()"> সুন্নাহ খাদ্য গ্রহণ (মধু / কালোজিরা / জয়তুন / খেজুর) (+৪)</label>
+          <label class="check-label"><input type="checkbox" name="early_sleep_sunnah_routine" onchange="calculateScore()"> এশার পর দ্রুত ঘুমানো ও অযুর সাথে নিদ্রা (+৩)</label>
+          <label class="check-label"><input type="checkbox" name="harmless_tongue_gossip_free" onchange="calculateScore()"> পরনিন্দা (গিবত), মিথ্যা ও অনর্থক কথাবার্তা পরিহার (+৩)</label>
+        </div>
+      </div>
+
+      <!-- Mandatory Honesty Declaration -->
+      <div style="background: #FFFBEB; border: 2px solid #FCD34D; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; color: #92400E; font-weight: 600; line-height: 1.5;">
+          <input type="checkbox" id="honestyCheckbox" required style="margin-top: 3px; transform: scale(1.2);">
+          <span>"আমি মহান আল্লাহর সামনে সাক্ষ্য দিচ্ছি যে, এখানে প্রদত্ত সকল তথ্য সম্পূর্ণ সত্য, নিষ্ঠাবান এবং সৎভাবে প্রদান করেছি।" *</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.95rem; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(6, 95, 70, 0.3);">
+        ✅ আজকের আমল জমা দিন
+      </button>
+    </form>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script>
+    const token = localStorage.getItem('lifestyle_token');
+    if (!token) {
+      window.location.href = '/lifestyle';
+    }
+
+    const PRAYERS = [
+      { id: 'fajr', name: 'ফজর' },
+      { id: 'dhuhr', name: 'যোহর' },
+      { id: 'asr', name: 'আসর' },
+      { id: 'maghrib', name: 'মাগরিব' },
+      { id: 'isha', name: 'এশা' }
+    ];
+
+    function renderPrayers() {
+      const container = document.getElementById('prayersContainer');
+      container.innerHTML = PRAYERS.map(p => `
+        <div class="prayer-row">
+          <strong style="color: #1E293B; width: 80px;">${p.name}</strong>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <label class="check-label">
+              <input type="radio" name="${p.id}" value="congregation" onchange="calculateScore()"> জামাতে (+১০)
+            </label>
+            <label class="check-label">
+              <input type="radio" name="${p.id}" value="individual" onchange="calculateScore()"> একা (+৬)
+            </label>
+            <label class="check-label">
+              <input type="radio" name="${p.id}" value="missed" checked onchange="calculateScore()"> অপূর্ণ (০)
+            </label>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function calculateScore() {
+      let pScore = 0;
+      PRAYERS.forEach(p => {
+        const val = document.querySelector(`input[name="${p.id}"]:checked`)?.value;
+        if (val === 'congregation') pScore += 10;
+        else if (val === 'individual') pScore += 6;
+      });
+      if (pScore > 50) pScore = 50;
+
+      let nScore = 0;
+      if (document.querySelector('input[name="tahajjud"]')?.checked) nScore += 5;
+      if (document.querySelector('input[name="ishraq_duha"]')?.checked) nScore += 5;
+      if (document.querySelector('input[name="rawatib"]')?.checked) nScore += 5;
+      if (document.querySelector('input[name="witr"]')?.checked) nScore += 5;
+      if (nScore > 20) nScore = 20;
+
+      let qScore = 0;
+      if (document.querySelector('input[name="morning_evening_adhkar"]')?.checked) qScore += 5;
+      if (document.querySelector('input[name="quran_tilawat"]')?.checked) qScore += 5;
+      if (qScore > 10) qScore = 10;
+
+      let cScore = 0;
+      if (document.querySelector('input[name="sadaqah"]')?.checked) cScore += 5;
+      if (document.querySelector('input[name="parents_family_kindness"]')?.checked) cScore += 5;
+      if (cScore > 10) cScore = 10;
+
+      let hScore = 0;
+      if (document.querySelector('input[name="sunnah_food_honey_kalojira"]')?.checked) hScore += 4;
+      if (document.querySelector('input[name="early_sleep_sunnah_routine"]')?.checked) hScore += 3;
+      if (document.querySelector('input[name="harmless_tongue_gossip_free"]')?.checked) hScore += 3;
+      if (hScore > 10) hScore = 10;
+
+      let total = pScore + nScore + qScore + cScore + hScore;
+      if (total > 100) total = 100;
+      document.getElementById('liveScoreText').innerText = total;
+      return total;
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/lifestyle/profile', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+          document.getElementById('userProfileName').innerText = 'আসসালামু আলাইকুম, ' + data.user.full_name;
+          document.getElementById('userTotalPoints').innerText = data.user.total_points;
+          document.getElementById('userLevelBadge').innerText = data.user.current_level;
+          if (data.competition) {
+            document.getElementById('userProfileRank').innerText = `${data.competition.competition_title} • আপনার বর্তমান র‍্যাংক: #${data.competition.current_rank} (${data.competition.completed_days}/${data.competition.duration_days} দিন পূর্ণ)`;
+          }
+        } else {
+          handleLogout();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function submitAmal(e) {
+      e.preventDefault();
+      const honesty = document.getElementById('honestyCheckbox').checked;
+      if (!honesty) {
+        return alert('অনুগ্রহ করে সততার সাক্ষ্য বক্সে টিক চিহ্ন দিন।');
+      }
+
+      const answers = {
+        fajr: document.querySelector('input[name="fajr"]:checked')?.value,
+        dhuhr: document.querySelector('input[name="dhuhr"]:checked')?.value,
+        asr: document.querySelector('input[name="asr"]:checked')?.value,
+        maghrib: document.querySelector('input[name="maghrib"]:checked')?.value,
+        isha: document.querySelector('input[name="isha"]:checked')?.value,
+        tahajjud: document.querySelector('input[name="tahajjud"]')?.checked,
+        ishraq_duha: document.querySelector('input[name="ishraq_duha"]')?.checked,
+        rawatib: document.querySelector('input[name="rawatib"]')?.checked,
+        witr: document.querySelector('input[name="witr"]')?.checked,
+        morning_evening_adhkar: document.querySelector('input[name="morning_evening_adhkar"]')?.checked,
+        quran_tilawat: document.querySelector('input[name="quran_tilawat"]')?.checked,
+        sadaqah: document.querySelector('input[name="sadaqah"]')?.checked,
+        parents_family_kindness: document.querySelector('input[name="parents_family_kindness"]')?.checked,
+        sunnah_food_honey_kalojira: document.querySelector('input[name="sunnah_food_honey_kalojira"]')?.checked,
+        early_sleep_sunnah_routine: document.querySelector('input[name="early_sleep_sunnah_routine"]')?.checked,
+        harmless_tongue_gossip_free: document.querySelector('input[name="harmless_tongue_gossip_free"]')?.checked
+      };
+
+      const submissionDate = document.getElementById('amalDateInput').value;
+
+      try {
+        const res = await fetch('/api/lifestyle/submit-daily', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            submission_date: submissionDate,
+            answers,
+            honesty_confirmed: true
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          loadProfile();
+        } else {
+          alert('ত্রুটি: ' + (data.error || 'আমল জমা দেওয়া যায়নি'));
+        }
+      } catch (err) {
+        alert('সার্ভার যোগাযোগে ত্রুটি');
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('lifestyle_token');
+      localStorage.removeItem('lifestyle_user');
+      window.location.href = '/lifestyle';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('amalDateInput').value = new Date().toISOString().split('T')[0];
+      renderPrayers();
+      loadProfile();
+    });
+  </script>
+</body>
+</html>

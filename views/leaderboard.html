@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>৪০ দিনের আমল প্রতিযোগিতা লিডারবোর্ড | রুকইয়াহ সাপোর্ট সেন্টার</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <style>
+    .rank-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #FFF;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .rank-table th {
+      background: #065F46;
+      color: #FFF;
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    .rank-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+      font-size: 0.95rem;
+    }
+    .rank-table tr:hover {
+      background: #F8FAFC;
+    }
+    .badge-gold { background: #FEF3C7; color: #92400E; padding: 3px 10px; border-radius: 9999px; font-weight: 700; }
+    .badge-silver { background: #F1F5F9; color: #475569; padding: 3px 10px; border-radius: 9999px; font-weight: 700; }
+    .badge-bronze { background: #FFEDD5; color: #9A3412; padding: 3px 10px; border-radius: 9999px; font-weight: 700; }
+  </style>
+</head>
+<body style="background: #F8FAFC;">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand-logo">
+        <img src="/images/logo.png" alt="রুকইয়াহ সাপোর্ট সেন্টার" style="height: 52px; width: auto; object-fit: contain;">
+      </a>
+      <nav class="desktop-nav">
+        <a href="/">হোম</a>
+        <a href="/lifestyle">সুন্নাহ লাইফস্টাইল</a>
+        <a href="/lifestyle/tracker">আমার আমল ট্র্যাকার</a>
+        <a href="/lifestyle/leaderboard" class="active">লিডারবোর্ড</a>
+        <a href="/shop">সুন্নাহ শপ</a>
+        <a href="/book" class="btn btn-primary" style="color: #FFF; padding: 0.5rem 1rem;">বুকিং</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 3rem 0; max-width: 860px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h1 style="color: #0F172A; font-size: 2rem; margin-bottom: 0.5rem;">🏆 ৪০ দিনের আমল প্রতিযোগিতা লিডারবোর্ড</h1>
+      <p style="color: #64748B; font-size: 1rem;" id="compMetaSubtitle">সক্রিয় ব্যাচ • সর্বমোট পয়েন্ট ও নিয়মিত আমলের ভিত্তিতে রিয়েল-টাইম ক্রমতালিকা</p>
+    </div>
+
+    <!-- Privacy Note -->
+    <div style="background: #ECFDF5; border: 1px solid #A7F3D0; padding: 0.75rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #065F46; text-align: center;">
+      🔒 <strong>গোপনীয়তা রক্ষা:</strong> অংশগ্রহণকারীদের সুরক্ষার স্বার্থে মোবাইল নম্বরের মধ্যবর্তী অংশ সম্পূর্ণ গোপন (Masked) রাখা হয়েছে।
+    </div>
+
+    <table class="rank-table">
+      <thead>
+        <tr>
+          <th>র‍্যাংক</th>
+          <th>অংশগ্রহণকারী</th>
+          <th>মোবাইল নম্বর</th>
+          <th>সম্পন্ন দিন</th>
+          <th>অর্জিত স্তর</th>
+          <th style="text-align: right;">মোট পয়েন্ট</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardTbody">
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 2rem;">লিডারবোর্ড তথ্য লোড হচ্ছে...</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <footer class="site-footer" style="background: #0F172A; color: #CBD5E1; padding: 3rem 0; margin-top: 3rem;">
+    <div class="container" style="text-align: center;">
+      <p>© 2026 রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার – ফেনী শাখা</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch('/api/lifestyle/leaderboard');
+        const data = await res.json();
+        if (data.success && data.leaderboard) {
+          if (data.competition) {
+            document.getElementById('compMetaSubtitle').innerText = `${data.competition.title} (মেয়াদ: ${data.competition.duration_days} দিন)`;
+          }
+
+          const tbody = document.getElementById('leaderboardTbody');
+          if (!data.leaderboard.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">এখনো কোনো অংশগ্রহণকারীর তথ্য পাওয়া যায়নি।</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = data.leaderboard.map(p => {
+            let rankBadge = `#${p.rank}`;
+            if (p.rank === 1) rankBadge = '🥇 ১ম';
+            else if (p.rank === 2) rankBadge = '🥈 ২য়';
+            else if (p.rank === 3) rankBadge = '🥉 ৩য়';
+
+            return `
+              <tr>
+                <td><strong>${rankBadge}</strong></td>
+                <td><strong>${p.full_name}</strong></td>
+                <td style="color: #64748B;">${p.masked_phone}</td>
+                <td>${p.completed_days} দিন</td>
+                <td><span class="badge-silver">${p.current_level}</span></td>
+                <td style="text-align: right; font-weight: 700; color: #065F46; font-size: 1.05rem;">${p.total_points}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLeaderboard);
+  </script>
+</body>
+</html>

@@ -18,6 +18,11 @@ const adminReports = require('./routes/adminReports');
 const adminSettings = require('./routes/adminSettings');
 const adminDiagnosis = require('./routes/adminDiagnosis');
 const adminArticles = require('./routes/adminArticles');
+const lifestyleApi = require('./routes/lifestyleApi');
+const shopApi = require('./routes/shopApi');
+const coursesApi = require('./routes/coursesApi');
+const resourcesApi = require('./routes/resourcesApi');
+const adminCommerce = require('./routes/adminCommerce');
 
 const app = express();
 
@@ -33,6 +38,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Public APIs
 app.use('/api/public', publicApi);
 app.use('/api/auth', authApi);
+app.use('/api/lifestyle', lifestyleApi);
+app.use('/api/shop', shopApi);
+app.use('/api/courses', coursesApi);
+app.use('/api/resources', resourcesApi);
 
 // Admin Protected APIs
 app.use('/api/admin/appointments', adminAppointments);
@@ -45,9 +54,20 @@ app.use('/api/admin/reports', adminReports);
 app.use('/api/admin/settings', adminSettings);
 app.use('/api/admin/diagnosis', adminDiagnosis);
 app.use('/api/admin/articles', adminArticles);
+app.use('/api/admin/commerce', adminCommerce);
 
 // Public View Pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
+app.get('/ruqyah', (req, res) => res.sendFile(path.join(__dirname, 'views', 'ruqyah.html')));
+app.get('/hijama', (req, res) => res.sendFile(path.join(__dirname, 'views', 'hijama.html')));
+app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'views', 'shop.html')));
+app.get('/orders/track', (req, res) => res.sendFile(path.join(__dirname, 'views', 'order-track.html')));
+app.get('/shop/orders/track', (req, res) => res.sendFile(path.join(__dirname, 'views', 'order-track.html')));
+app.get('/courses', (req, res) => res.sendFile(path.join(__dirname, 'views', 'courses.html')));
+app.get('/courses/:slug', (req, res) => res.sendFile(path.join(__dirname, 'views', 'course-detail.html')));
+app.get('/lifestyle', (req, res) => res.sendFile(path.join(__dirname, 'views', 'lifestyle.html')));
+app.get('/lifestyle/tracker', (req, res) => res.sendFile(path.join(__dirname, 'views', 'lifestyle-tracker.html')));
+app.get('/lifestyle/leaderboard', (req, res) => res.sendFile(path.join(__dirname, 'views', 'leaderboard.html')));
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'views', 'about.html')));
 app.get('/services', (req, res) => res.sendFile(path.join(__dirname, 'views', 'services.html')));
 app.get('/articles', (req, res) => res.sendFile(path.join(__dirname, 'views', 'articles.html')));
@@ -57,6 +77,7 @@ app.get('/policies', (req, res) => res.sendFile(path.join(__dirname, 'views', 'p
 app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'views', 'contact.html')));
 app.get('/book', (req, res) => res.sendFile(path.join(__dirname, 'views', 'book.html')));
 app.get('/lookup', (req, res) => res.sendFile(path.join(__dirname, 'views', 'lookup.html')));
+app.get('/appointments/slip/:id', (req, res) => res.sendFile(path.join(__dirname, 'views', 'appointment-slip.html')));
 
 // Admin Portal Pages
 app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'admin-login.html')));

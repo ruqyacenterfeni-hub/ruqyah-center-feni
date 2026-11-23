@@ -535,4 +535,153 @@ router.post('/patient/:patient_id', (req, res) => {
   }
 });
 
+// ==================== WEIGHTED SYMPTOM ASSESSMENT SYSTEM ====================
+
+/**
+ * GET /api/admin/diagnosis/assessment-questions
+ * Retrieves dynamic assessment questions with weights
+ */
+router.get('/assessment-questions', (req, res) => {
+  try {
+    const questions = db.prepare(`
+      SELECT q.*, c.name_bn as category_name_bn, c.name_en as category_name_en, c.code as category_code
+      FROM assessment_questions q
+      JOIN diagnosis_categories c ON q.category_id = c.id
+      WHERE q.is_active = 1
+      ORDER BY q.category_id ASC, q.sort_order ASC
+    `).all();
+
+    res.json({ success: true, questions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/diagnosis/calculate-assessment
+ * Calculates category percentage scores based on answers
+ */
+router.post('/calculate-assessment', (req, res) => {
+  try {
+    const { answers } = req.body; // e.g. { "1": "yes", "2": "sometimes", "3": "no" }
+    if (!answers || typeof answers !== 'object') {
+      return res.status(400).json({ success: false, error: 'Answers object is required' });
+    }
+
+    const questions = db.prepare(`
+      SELECT q.id, q.category_id, q.weight_yes, q.weight_sometimes, q.weight_no, c.name_bn, c.name_en
+      FROM assessment_questions q
+      JOIN diagnosis_categories c ON q.category_id = c.id
+      WHERE q.is_active = 1
+    `).all();
+
+    const categoryStats = {};
+    for (const q of questions) {
+      if (!categoryStats[q.category_id]) {
+        categoryStats[q.category_id] = {
+          category_id: q.category_id,
+          name_bn: q.name_bn,
+          name_en: q.name_en,
+          earned_score: 0,
+          max_score: 0
+        };
+      }
+
+      categoryStats[q.category_id].max_score += (q.weight_yes || 10);
+      const ans = (answers[q.id] || 'no').toLowerCase();
+      if (ans === 'yes') {
+        categoryStats[q.category_id].earned_score += (q.weight_yes || 10);
+      } else if (ans === 'sometimes') {
+        categoryStats[q.category_id].earned_score += (q.weight_sometimes || 5);
+      } else {
+        categoryStats[q.category_id].earned_score += (q.weight_no || 0);
+      }
+    }
+
+    const results = Object.values(categoryStats).map(cat => {
+      const percentage = cat.max_score > 0 ? Math.round((cat.earned_score / cat.max_score) * 100) : 0;
+      let riskLevel = 'স্বাভাবিক / কোনো লক্ষণ নেই';
+      if (percentage >= 70) riskLevel = 'তীব্র আক্রান্তের লক্ষণ (High Probability)';
+      else if (percentage >= 40) riskLevel = 'মাঝারি লক্ষণ (Moderate Symptoms)';
+      else if (percentage >= 20) riskLevel = 'মৃদু লক্ষণ (Mild Symptoms)';
+
+      return {
+        ...cat,
+        percentage,
+        risk_level: riskLevel
+      };
+    });
+
+    res.json({
+      success: true,
+      disclaimer: 'এই অ্যাসেসমেন্ট শুধুমাত্র রুকইয়াহ থেরাপিস্টের প্রাথমিক পর্যালোচনার সহায়ক এবং পূর্ণাঙ্গ শরয়ী ডায়াগনোসিসের বিকল্প নয়।',
+      results
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/diagnosis/save-assessment
+ * Persists calculated assessment scores to patient record
+ */
+router.post('/save-assessment', (req, res) => {
+  try {
+    const { patient_id, appointment_id, answers, results, raqi_notes } = req.body;
+    if (!patient_id) return res.status(400).json({ success: false, error: 'Patient ID is required' });
+
+    const today = new Date().toISOString().split('T')[0];
+    const stmt = db.prepare(`
+      INSERT INTO patient_assessment_scores (
+        patient_id, appointment_id, assessment_date, scores_json, category_percentages_json, disclaimer_acknowledged, raqi_notes, conducted_by
+      ) VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+    `);
+
+    const r = stmt.run(
+      patient_id,
+      appointment_id || null,
+      today,
+      JSON.stringify(answers || {}),
+      JSON.stringify(results || []),
+      raqi_notes || '',
+      req.admin.name || req.admin.username
+    );
+
+    logAudit(req.admin.username, 'SAVE_ASSESSMENT_SCORES', 'PATIENT', patient_id, `Saved weighted symptom assessment for ${patient_id}`, req);
+
+    res.status(201).json({
+      success: true,
+      id: r.lastInsertRowid,
+      message: 'রোগীর ওয়েটেড অ্যাসেসমেন্ট ফলাফল সংরক্ষিত হয়েছে।'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/diagnosis/assessment-history/:patientId
+ * Retrieves past assessment records for patient timeline
+ */
+router.get('/assessment-history/:patientId', (req, res) => {
+  try {
+    const history = db.prepare(`
+      SELECT * FROM patient_assessment_scores 
+      WHERE patient_id = ? 
+      ORDER BY id DESC
+    `).all(req.params.patientId);
+
+    const parsed = history.map(h => ({
+      ...h,
+      scores: JSON.parse(h.scores_json || '{}'),
+      percentages: JSON.parse(h.category_percentages_json || '[]')
+    }));
+
+    res.json({ success: true, history: parsed });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

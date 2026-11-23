@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>অ্যাপয়েন্টমেন্ট বুকিং স্লিপ | রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার – ফেনী শাখা</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <style>
+    @media print {
+      body { background: #FFF !important; padding: 0 !important; }
+      .no-print { display: none !important; }
+      .slip-card { box-shadow: none !important; border: 1px solid #000 !important; }
+    }
+    .slip-card {
+      background: #FFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 2.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body style="background: #F8FAFC;">
+
+  <div class="no-print" style="text-align: center; padding: 1.5rem 0 0 0;">
+    <button onclick="window.print()" class="btn btn-primary" style="padding: 0.65rem 1.5rem; font-size: 1rem;">
+      🖨 স্লিপটি প্রিন্ট / PDF সংরক্ষণ করুন
+    </button>
+    <a href="/" class="btn btn-secondary" style="margin-left: 0.5rem; text-decoration: none; padding: 0.65rem 1.25rem;">
+      হোমপেজ
+    </a>
+  </div>
+
+  <main class="slip-card" id="slipContent">
+    <div style="text-align: center; border-bottom: 2px solid #065F46; padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+      <img src="/images/logo.png" alt="লোগো" style="height: 55px; margin-bottom: 0.5rem;">
+      <h2 style="color: #065F46; margin: 0; font-size: 1.5rem;">রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</h2>
+      <p style="color: #64748B; font-size: 0.9rem; margin: 0.25rem 0 0 0;">ভুঁইয়া ম্যানশন, আদর্শ হাউজিং সোসাইটি, মহিপাল, ফেনী | হটলাইন: ০১৭৫৮-৩৫৪৯২০</p>
+      <div style="background: #ECFDF5; color: #065F46; display: inline-block; padding: 3px 14px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
+        অফিশিয়াল অ্যাপয়েন্টমেন্ট স্লিপ
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.95rem;">
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">বুকিং রেফারেন্স আইডি</span>
+        <strong style="color: #065F46; font-size: 1.15rem;" id="slipAptId">---</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">বুকিং স্ট্যাটাস</span>
+        <strong id="slipStatus" style="color: #10B981;">নিশ্চিত (Confirmed)</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">রোগীর নাম</span>
+        <strong id="slipPatientName">---</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">মোবাইল নম্বর</span>
+        <strong id="slipPatientPhone">---</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">নির্ধারিত তারিখ</span>
+        <strong id="slipDate">---</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">নির্ধারিত সময় (স্লট)</span>
+        <strong id="slipSlot">---</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">সেবার নাম</span>
+        <strong id="slipService">---</strong>
+      </div>
+      <div>
+        <span style="color: #64748B; font-size: 0.8rem; display: block;">নির্ধারিত ফি</span>
+        <strong id="slipPrice" style="color: #065F46;">---</strong>
+      </div>
+    </div>
+
+    <div style="background: #FFFBEB; border-left: 3px solid #F59E0B; padding: 1rem; border-radius: 6px; font-size: 0.85rem; color: #78350F; line-height: 1.5;">
+      <strong>রোগীর জন্য জরুরি নির্দেশনা:</strong><br>
+      • নির্ধারিত সময়ের অন্তত ১০ মিনিট পূর্বে সেন্টারে উপস্থিত থাকার জন্য অনুরোধ করা হচ্ছে।<br>
+      • নারী রোগীর ক্ষেত্রে সার্বক্ষণিক প্রাপ্তবয়স্ক মাহরাম সঙ্গে থাকা আবশ্যক।<br>
+      • সাক্ষাতে আসার পূর্বে ওজু করে পবিত্র অবস্থায় আসুন।
+    </div>
+  </main>
+
+  <script>
+    async function loadSlip() {
+      const parts = window.location.pathname.split('/');
+      const aptId = parts[parts.length - 1];
+      if (!aptId) return;
+
+      try {
+        const res = await fetch('/api/public/appointments/lookup?q=' + encodeURIComponent(aptId));
+        const data = await res.json();
+        if (data.success && data.data && data.data.length > 0) {
+          const apt = data.data[0];
+          document.getElementById('slipAptId').innerText = apt.appointment_id;
+          document.getElementById('slipPatientName').innerText = apt.patient_name;
+          document.getElementById('slipPatientPhone').innerText = apt.patient_phone;
+          document.getElementById('slipDate').innerText = apt.appointment_date;
+          document.getElementById('slipSlot').innerText = apt.time_slot;
+          document.getElementById('slipService').innerText = apt.service_name || apt.service_type;
+          document.getElementById('slipPrice').innerText = apt.service_price ? '৳' + apt.service_price : 'পরামর্শ সাপেক্ষে';
+          document.getElementById('slipStatus').innerText = apt.status || 'Pending';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', loadSlip);
+  </script>
+</body>
+</html>

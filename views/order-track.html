@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>অর্ডার ট্র্যাকিং | রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <style>
+    .tracking-card {
+      background: #FFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 650px;
+      margin: 0 auto;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 2.5rem 0 2rem 0;
+    }
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 10%;
+      right: 10%;
+      height: 3px;
+      background: #E2E8F0;
+      z-index: 1;
+    }
+    .step-node {
+      position: relative;
+      z-index: 2;
+      background: #FFF;
+      text-align: center;
+      width: 25%;
+    }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem auto;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .step-node.completed .step-circle {
+      background: #10B981;
+      color: #FFF;
+    }
+    .step-node.active .step-circle {
+      background: #065F46;
+      color: #FFF;
+      box-shadow: 0 0 0 4px rgba(6, 95, 70, 0.2);
+    }
+    .step-label {
+      font-size: 0.8rem;
+      color: #64748B;
+    }
+    .step-node.active .step-label {
+      color: #065F46;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand-logo">
+        <img src="/images/logo.png" alt="রুকইয়াহ সাপোর্ট সেন্টার" style="height: 52px; width: auto; object-fit: contain;">
+      </a>
+      <nav class="desktop-nav">
+        <a href="/">হোম</a>
+        <a href="/ruqyah">রুকইয়াহ লাইব্রেরি</a>
+        <a href="/hijama">হিজামা গাইড</a>
+        <a href="/shop">সুন্নাহ শপ</a>
+        <a href="/orders/track" class="active">অর্ডার ট্র্যাকিং</a>
+        <a href="/lifestyle">আমল ট্র্যাকার</a>
+        <a href="/book" class="btn btn-primary" style="color: #FFF; padding: 0.5rem 1rem;">বুকিং</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 3rem 0;">
+    <div class="tracking-card">
+      <h2 style="text-align: center; color: #0F172A; margin-bottom: 0.5rem;">📦 অর্ডার ট্র্যাকিং</h2>
+      <p style="text-align: center; color: #64748B; margin-bottom: 2rem;">আপনার অর্ডার নম্বর ও ফোন নম্বর প্রদান করে বর্তমান ডেলিভারি স্ট্যাটাস দেখুন।</p>
+
+      <form id="trackForm" onsubmit="handleTrack(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label style="font-weight: 600; display: block; margin-bottom: 0.35rem;">অর্ডার নম্বর *</label>
+          <input type="text" id="trackOrderNum" required class="form-control" placeholder="যেমন: ORD-2611-ABCD">
+        </div>
+        <div>
+          <label style="font-weight: 600; display: block; margin-bottom: 0.35rem;">মোবাইল নম্বর *</label>
+          <input type="tel" id="trackPhone" required class="form-control" placeholder="০১৮XXXXXXXX">
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem; font-size: 1rem;">
+          🔍 স্ট্যাটাস অনুসন্ধান করুন
+        </button>
+      </form>
+
+      <div id="trackResultContainer" style="margin-top: 2rem; display: none;">
+        <hr style="border: 0; border-top: 1px solid #E2E8F0; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; color: #065F46;" id="resOrderNum">ORD-XXXX</h3>
+          <span style="background: #ECFDF5; color: #065F46; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;" id="resStatusBadge">গৃহীত হয়েছে</span>
+        </div>
+
+        <div class="stepper" id="stepperContainer"></div>
+
+        <div style="background: #F8FAFC; padding: 1.25rem; border-radius: 8px; margin-top: 1.5rem;">
+          <h4 style="margin-top: 0; margin-bottom: 0.75rem; color: #1E293B;">অর্ডারের বিস্তারিত:</h4>
+          <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong>গ্রাহক:</strong> <span id="resCustName"></span></p>
+          <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong>ঠিকানা:</strong> <span id="resAddress"></span></p>
+          <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong>পদ্ধতি:</strong> ক্যাশ অন ডেলিভারি</p>
+          
+          <div style="margin-top: 1rem; border-top: 1px solid #E2E8F0; padding-top: 0.75rem;">
+            <table style="width: 100%; font-size: 0.9rem;">
+              <tbody id="resItemsBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td style="padding-top: 0.5rem; font-weight: 700;">সর্বমোট মূল্য:</td>
+                  <td style="padding-top: 0.5rem; font-weight: 700; text-align: right; color: #065F46;" id="resTotal"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer" style="background: #0F172A; color: #CBD5E1; padding: 3rem 0; margin-top: 3rem;">
+    <div class="container" style="text-align: center;">
+      <p>© 2026 রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার – ফেনী শাখা</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    async function handleTrack(e) {
+      if (e) e.preventDefault();
+      const num = document.getElementById('trackOrderNum').value.trim();
+      const phone = document.getElementById('trackPhone').value.trim();
+      if (!num || !phone) return;
+
+      try {
+        const res = await fetch(`/api/shop/orders/track?order_number=${encodeURIComponent(num)}&phone=${encodeURIComponent(phone)}`);
+        const data = await res.json();
+        if (data.success && data.order) {
+          const ord = data.order;
+          document.getElementById('trackResultContainer').style.display = 'block';
+          document.getElementById('resOrderNum').innerText = ord.order_number;
+          document.getElementById('resStatusBadge').innerText = ord.status;
+          document.getElementById('resCustName').innerText = ord.customer_name;
+          document.getElementById('resAddress').innerText = ord.shipping_address;
+          document.getElementById('resTotal').innerText = '৳' + ord.total_amount;
+
+          const stepper = document.getElementById('stepperContainer');
+          stepper.innerHTML = (ord.timeline || []).map((step, idx) => {
+            const cls = step.is_current ? 'active' : (step.completed ? 'completed' : '');
+            return `
+              <div class="step-node ${cls}">
+                <div class="step-circle">${idx + 1}</div>
+                <div class="step-label">${step.status}</div>
+              </div>
+            `;
+          }).join('');
+
+          const tbody = document.getElementById('resItemsBody');
+          tbody.innerHTML = (ord.items || []).map(i => `
+            <tr>
+              <td>${i.product_name} × ${i.quantity}</td>
+              <td style="text-align: right;">৳${i.total_price}</td>
+            </tr>
+          `).join('');
+        } else {
+          alert('কোনো অর্ডার পাওয়া যায়নি। তথ্য সঠিকভাবে দিন।');
+        }
+      } catch (err) {
+        alert('যোগাযোগে সমস্যা হয়েছে।');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const num = urlParams.get('order_number');
+      const phone = urlParams.get('phone');
+      if (num && phone) {
+        document.getElementById('trackOrderNum').value = num;
+        document.getElementById('trackPhone').value = phone;
+        handleTrack();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -19,6 +19,7 @@ scripts/*.svg
 database/ruqyah.db-shm
 database/ruqyah.db-wal
 database/*.bak*
+database/*backup*.db
 
 # OS metadata
 .DS_Store

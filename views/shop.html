@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সুন্নাহ সাপ্লিমেন্টস ও রুকইয়াহ সামগ্রী | রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <style>
+    .shop-header {
+      background: linear-gradient(135deg, #065F46, #047857);
+      color: #FFF;
+      padding: 3rem 0;
+      text-align: center;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .product-card {
+      background: #FFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+    .product-img {
+      height: 180px;
+      background: #F8FAFC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .product-info {
+      padding: 1.25rem;
+      flex-grow: 1;
+    }
+    .cart-drawer {
+      position: fixed;
+      right: -400px;
+      top: 0;
+      width: 380px;
+      height: 100%;
+      background: #FFF;
+      box-shadow: -4px 0 15px rgba(0,0,0,0.15);
+      z-index: 1050;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-drawer.open {
+      right: 0;
+    }
+    .cart-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+    .cart-backdrop.open {
+      display: block;
+    }
+    .floating-cart-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #065F46;
+      color: #FFF;
+      padding: 0.85rem 1.25rem;
+      border-radius: 9999px;
+      box-shadow: 0 10px 20px rgba(6, 95, 70, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 999;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Cart Button -->
+  <button class="floating-cart-btn" onclick="toggleCart()">
+    🛒 <span id="cartCountBadge">০</span> টি পণ্য
+  </button>
+
+  <!-- Cart Backdrop & Drawer -->
+  <div class="cart-backdrop" id="cartBackdrop" onclick="toggleCart()"></div>
+  <aside class="cart-drawer" id="cartDrawer">
+    <div style="padding: 1.25rem; background: #065F46; color: #FFF; display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.2rem;">🛍️ আপনার শপিং কার্ট</h3>
+      <button onclick="toggleCart()" style="background: transparent; border: none; color: #FFF; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    </div>
+    <div style="flex-grow: 1; overflow-y: auto; padding: 1.25rem;" id="cartItemsList">
+      <div style="text-align: center; color: #64748B; padding-top: 3rem;">আপনার কার্ট খালি রয়েছে।</div>
+    </div>
+    <div style="padding: 1.25rem; border-top: 1px solid #E2E8F0; background: #F8FAFC;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: 600;">
+        <span>সাবটোটাল:</span>
+        <span id="cartSubtotalText">৳০</span>
+      </div>
+      <button onclick="openCheckoutModal()" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;">
+        অর্ডার সম্পন্ন করুন (ক্যাশ অন ডেলিভারি)
+      </button>
+    </div>
+  </aside>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand-logo">
+        <img src="/images/logo.png" alt="রুকইয়াহ সাপোর্ট সেন্টার" style="height: 52px; width: auto; object-fit: contain;">
+      </a>
+      <nav class="desktop-nav">
+        <a href="/">হোম</a>
+        <a href="/ruqyah">রুকইয়াহ লাইব্রেরি</a>
+        <a href="/hijama">হিজামা গাইড</a>
+        <a href="/shop" class="active">সুন্নাহ শপ</a>
+        <a href="/orders/track">অর্ডার ট্র্যাকিং</a>
+        <a href="/lifestyle">আমল ট্র্যাকার</a>
+        <a href="/services">সেবাসমূহ</a>
+        <a href="/book" class="btn btn-primary" style="color: #FFF; padding: 0.5rem 1rem;">বুকিং</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Shop Hero -->
+  <section class="shop-header">
+    <div class="container">
+      <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem; font-weight: 700;">বিশুদ্ধ সুন্নাহ সাপ্লিমেন্টস ও রুকইয়াহ সামগ্রী</h1>
+      <p style="font-size: 1.1rem; opacity: 0.95;">১০০% খাঁটি সুন্দরবনের মধু, জয়তুনের তেল, সিদর পাতা ও সুরক্ষামূলক সামগ্রী।</p>
+    </div>
+  </section>
+
+  <!-- Main Shop Content -->
+  <main class="container" style="padding: 2.5rem 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;" id="shopCategoryPills">
+        <button class="category-pill active" onclick="filterShopCategory('all', this)">সকল সামগ্রী</button>
+      </div>
+      <div>
+        <a href="/orders/track" style="color: #065F46; font-weight: 600; text-decoration: none;">📦 পূর্বে করা অর্ডার ট্র্যাক করুন →</a>
+      </div>
+    </div>
+
+    <div class="product-grid" id="productGridContainer">
+      <div style="text-align: center; padding: 2rem;">পণ্যসমূহ লোড হচ্ছে...</div>
+    </div>
+  </main>
+
+  <!-- Checkout Modal -->
+  <div id="checkoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: #FFF; width: 90%; max-width: 520px; border-radius: 12px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="margin: 0; color: #0F172A;">📦 ক্যাশ অন ডেলিভারি অর্ডার ফর্ম</h3>
+        <button onclick="closeCheckoutModal()" style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form id="checkoutForm" onsubmit="handleCheckout(event)">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-weight: 600; margin-bottom: 0.35rem;">আপনার নাম *</label>
+          <input type="text" id="custName" required class="form-control" placeholder="যেমন: আব্দুল্লাহ">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-weight: 600; margin-bottom: 0.35rem;">মোবাইল নম্বর (১১ ডিজিট) *</label>
+          <input type="tel" id="custPhone" required class="form-control" placeholder="০১৮XXXXXXXX">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-weight: 600; margin-bottom: 0.35rem;">জেলা / শহর *</label>
+          <select id="custDistrict" class="form-control" onchange="updateShipping()">
+            <option value="Feni">ফেনী জেলা (ডেলিভারি চার্জ: ৳৭০)</option>
+            <option value="Outside">ফেনীর বাইরে সমগ্র বাংলাদেশ (ডেলিভারি চার্জ: ৳১২০)</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-weight: 600; margin-bottom: 0.35rem;">পূর্ণাঙ্গ ঠিকানা (গ্রাম/রোড, থানা) *</label>
+          <textarea id="custAddress" required class="form-control" rows="2" placeholder="মহিপাল, ফেনী সদর"></textarea>
+        </div>
+        <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.95rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span>পণ্যের মূল্য:</span>
+            <span id="modalSubtotal">৳০</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span>ডেলিভারি চার্জ:</span>
+            <span id="modalShipping">৳৭০</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid #E2E8F0; padding-top: 0.5rem; color: #065F46; font-size: 1.1rem;">
+            <span>সর্বমোট প্রদেয়:</span>
+            <span id="modalTotal">৳৭০</span>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1.05rem;">
+          অর্ডার নিশ্চিত করুন
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer" style="background: #0F172A; color: #CBD5E1; padding: 3rem 0; margin-top: 3rem;">
+    <div class="container" style="text-align: center;">
+      <p>© 2026 রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার – ফেনী শাখা</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    let products = [];
+    let cart = [];
+
+    async function loadShop() {
+      try {
+        const [catRes, prodRes] = await Promise.all([
+          fetch('/api/shop/categories'),
+          fetch('/api/shop/products')
+        ]);
+        const catData = await catRes.json();
+        const prodData = await prodRes.json();
+
+        if (catData.success) {
+          const pills = document.getElementById('shopCategoryPills');
+          pills.innerHTML = '<button class="category-pill active" onclick="filterShopCategory(\'all\', this)">সকল সামগ্রী</button>' +
+            catData.categories.map(c => `
+              <button class="category-pill" onclick="filterShopCategory('${c.slug}', this)">${c.name_bn}</button>
+            `).join('');
+        }
+
+        if (prodData.success) {
+          products = prodData.products;
+          renderProducts(products);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderProducts(items) {
+      const container = document.getElementById('productGridContainer');
+      container.innerHTML = items.map(p => `
+        <div class="product-card">
+          <div class="product-img">🌿</div>
+          <div class="product-info">
+            <h3 style="color: #0F172A; font-size: 1.15rem; margin-bottom: 0.25rem;">${p.name_bn}</h3>
+            <p style="color: #64748B; font-size: 0.85rem; margin-bottom: 0.75rem;">${p.name_en || ''}</p>
+            <p style="color: #334155; font-size: 0.9rem; line-height: 1.4; margin-bottom: 0.75rem;">${p.description_bn || ''}</p>
+            <div style="font-size: 1.25rem; font-weight: 700; color: #065F46; margin-bottom: 1rem;">
+              ৳${p.discount_price || p.price}
+              ${p.discount_price ? `<span style="font-size: 0.85rem; color: #94A3B8; text-decoration: line-through; margin-left: 0.5rem;">৳${p.price}</span>` : ''}
+            </div>
+            <button onclick="addToCart(${p.id})" class="btn btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.9rem;">
+              🛒 কার্টে যোগ করুন
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterShopCategory(slug, btn) {
+      document.querySelectorAll('#shopCategoryPills .category-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (slug === 'all') renderProducts(products);
+      else renderProducts(products.filter(p => p.category_slug === slug));
+    }
+
+    function addToCart(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+      const existing = cart.find(c => c.product_id === prodId);
+      if (existing) existing.quantity++;
+      else cart.push({ product_id: prod.id, name: prod.name_bn, price: prod.discount_price || prod.price, quantity: 1 });
+      updateCartUI();
+      document.getElementById('cartDrawer').classList.add('open');
+      document.getElementById('cartBackdrop').classList.add('open');
+    }
+
+    function toggleCart() {
+      document.getElementById('cartDrawer').classList.toggle('open');
+      document.getElementById('cartBackdrop').classList.toggle('open');
+    }
+
+    function updateCartUI() {
+      const totalCount = cart.reduce((s, i) => s + i.quantity, 0);
+      const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+      document.getElementById('cartCountBadge').innerText = totalCount;
+      document.getElementById('cartSubtotalText').innerText = '৳' + subtotal;
+
+      const list = document.getElementById('cartItemsList');
+      if (!cart.length) {
+        list.innerHTML = '<div style="text-align: center; color: #64748B; padding-top: 3rem;">আপনার কার্ট খালি রয়েছে।</div>';
+        return;
+      }
+
+      list.innerHTML = cart.map((item, idx) => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #F1F5F9;">
+          <div>
+            <div style="font-weight: 600; color: #1E293B; font-size: 0.95rem;">${item.name}</div>
+            <div style="color: #64748B; font-size: 0.85rem;">৳${item.price} × ${item.quantity} = ৳${item.price * item.quantity}</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button onclick="changeQty(${idx}, -1)" style="padding: 2px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFF;">-</button>
+            <span>${item.quantity}</span>
+            <button onclick="changeQty(${idx}, 1)" style="padding: 2px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFF;">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function changeQty(idx, delta) {
+      cart[idx].quantity += delta;
+      if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+      updateCartUI();
+    }
+
+    function openCheckoutModal() {
+      if (!cart.length) return alert('আপনার কার্ট খালি!');
+      toggleCart();
+      updateShipping();
+      document.getElementById('checkoutModal').style.display = 'flex';
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').style.display = 'none';
+    }
+
+    function updateShipping() {
+      const dist = document.getElementById('custDistrict').value;
+      const shipping = dist === 'Feni' ? 70 : 120;
+      const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+      document.getElementById('modalSubtotal').innerText = '৳' + subtotal;
+      document.getElementById('modalShipping').innerText = '৳' + shipping;
+      document.getElementById('modalTotal').innerText = '৳' + (subtotal + shipping);
+    }
+
+    async function handleCheckout(e) {
+      e.preventDefault();
+      const payload = {
+        customer_name: document.getElementById('custName').value,
+        customer_phone: document.getElementById('custPhone').value,
+        district: document.getElementById('custDistrict').value,
+        shipping_address: document.getElementById('custAddress').value,
+        items: cart
+      };
+
+      try {
+        const res = await fetch('/api/shop/orders/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          cart = [];
+          updateCartUI();
+          closeCheckoutModal();
+          alert(`আলহামদুলিল্লাহ! আপনার অর্ডার সফল হয়েছে।\nঅর্ডার নম্বর: ${data.order.order_number}\n\nএই নম্বরটি সংরক্ষণ করুন অর্ডার ট্র্যাক করার জন্য।`);
+          window.location.href = `/orders/track?order_number=${data.order.order_number}&phone=${payload.customer_phone}`;
+        } else {
+          alert('ত্রুটি: ' + (data.error || 'অর্ডার প্রক্রিয়া করা যায়নি'));
+        }
+      } catch (err) {
+        alert('সার্ভার যোগাযোগে সমস্যা হয়েছে।');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadShop);
+  </script>
+</body>
+</html>

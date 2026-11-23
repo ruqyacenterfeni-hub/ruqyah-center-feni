@@ -1176,6 +1176,141 @@ async function runTests() {
     });
   });
 
+  await test('PHASE 5: Dynamic Weighted Symptom Assessment & Category Calculation', async () => {
+    const qRes = await request('GET', '/api/admin/diagnosis/assessment-questions');
+    assert.strictEqual(qRes.statusCode, 200);
+    assert.strictEqual(qRes.data.success, true);
+    assert.ok(qRes.data.questions.length > 0);
+
+    const calcRes = await request('POST', '/api/admin/diagnosis/calculate-assessment', {
+      answers: {
+        '1': 'yes',
+        '2': 'sometimes',
+        '3': 'no'
+      }
+    });
+    assert.strictEqual(calcRes.statusCode, 200);
+    assert.strictEqual(calcRes.data.success, true);
+    assert.ok(calcRes.data.disclaimer.includes('প্রাথমিক পর্যালোচনার'));
+    assert.ok(Array.isArray(calcRes.data.results));
+  });
+
+  await test('PHASE 6: Ruqyah Audio Library & Hijama Point Packages API', async () => {
+    const rRes = await request('GET', '/api/resources/ruqyah-audios');
+    assert.strictEqual(rRes.statusCode, 200);
+    assert.strictEqual(rRes.data.success, true);
+    assert.ok(rRes.data.items.length > 0);
+
+    const hRes = await request('GET', '/api/resources/hijama-packages');
+    assert.strictEqual(hRes.statusCode, 200);
+    assert.strictEqual(hRes.data.success, true);
+    assert.ok(hRes.data.packages.length > 0);
+    assert.ok(hRes.data.hadiths.length >= 2);
+  });
+
+  await test('PHASE 7: Sunnah Supplements Products & COD Checkout', async () => {
+    const pRes = await request('GET', '/api/shop/products');
+    assert.strictEqual(pRes.statusCode, 200);
+    assert.strictEqual(pRes.data.success, true);
+    assert.ok(pRes.data.products.length > 0);
+
+    const firstProd = pRes.data.products[0];
+    const orderRes = await request('POST', '/api/shop/orders/checkout', {
+      customer_name: 'আব্দুর রহমান',
+      customer_phone: '01812345678',
+      district: 'Feni',
+      shipping_address: 'মহিপাল, ফেনী সদর',
+      items: [
+        { product_id: firstProd.id, quantity: 1 }
+      ]
+    });
+    assert.strictEqual(orderRes.statusCode, 201);
+    assert.strictEqual(orderRes.data.success, true);
+    assert.ok(orderRes.data.order.order_number.startsWith('ORD-'));
+    assert.strictEqual(orderRes.data.order.shipping_charge, 70);
+
+    // Track this order
+    const trackRes = await request('GET', `/api/shop/orders/track?order_number=${orderRes.data.order.order_number}&phone=01812345678`);
+    assert.strictEqual(trackRes.statusCode, 200);
+    assert.strictEqual(trackRes.data.success, true);
+    assert.strictEqual(trackRes.data.order.order_number, orderRes.data.order.order_number);
+    assert.ok(trackRes.data.order.timeline.length >= 4);
+  });
+
+  await test('PHASE 6: Online Courses & Curriculum Syllabus API', async () => {
+    const cRes = await request('GET', '/api/courses');
+    assert.strictEqual(cRes.statusCode, 200);
+    assert.strictEqual(cRes.data.success, true);
+    assert.ok(cRes.data.courses.length > 0);
+
+    const detailRes = await request('GET', `/api/courses/${cRes.data.courses[0].slug}`);
+    assert.strictEqual(detailRes.statusCode, 200);
+    assert.strictEqual(detailRes.data.success, true);
+    assert.ok(Array.isArray(detailRes.data.curriculum));
+  });
+
+  await test('PHASE 8: Sunnah Lifestyle User Registration, 100-pt Max Score Ceiling & Leaderboard', async () => {
+    const regPhone = '018' + Math.floor(10000000 + Math.random() * 90000000);
+    const regRes = await request('POST', '/api/lifestyle/register', {
+      full_name: 'আহমাদুল্লাহ ফাহিম',
+      phone: regPhone,
+      password: 'password123'
+    });
+    assert.strictEqual(regRes.statusCode, 201);
+    assert.strictEqual(regRes.data.success, true);
+    const token = regRes.data.token;
+
+    // Daily submission without honesty confirmation fails
+    const failHonesty = await request('POST', '/api/lifestyle/submit-daily', {
+      submission_date: '2026-11-23',
+      answers: { fajr: 'congregation' },
+      honesty_confirmed: false
+    }, { 'Authorization': 'Bearer ' + token });
+    assert.strictEqual(failHonesty.statusCode, 400);
+
+    // Full daily submission with all items checked - must strictly never exceed 100 points
+    const fullSubmit = await request('POST', '/api/lifestyle/submit-daily', {
+      submission_date: '2026-11-23',
+      answers: {
+        fajr: 'congregation',
+        dhuhr: 'congregation',
+        asr: 'congregation',
+        maghrib: 'congregation',
+        isha: 'congregation',
+        tahajjud: true,
+        ishraq_duha: true,
+        rawatib: true,
+        witr: true,
+        morning_evening_adhkar: true,
+        quran_tilawat: true,
+        sadaqah: true,
+        parents_family_kindness: true,
+        sunnah_food_honey_kalojira: true,
+        early_sleep_sunnah_routine: true,
+        harmless_tongue_gossip_free: true
+      },
+      honesty_confirmed: true
+    }, { 'Authorization': 'Bearer ' + token });
+    assert.strictEqual(fullSubmit.statusCode, 200);
+    assert.strictEqual(fullSubmit.data.success, true);
+    assert.strictEqual(fullSubmit.data.points_breakdown.total_points, 100);
+
+    // Verify leaderboard returns masked phone for privacy
+    const lbRes = await request('GET', '/api/lifestyle/leaderboard');
+    assert.strictEqual(lbRes.statusCode, 200);
+    assert.strictEqual(lbRes.data.success, true);
+    assert.ok(lbRes.data.leaderboard.length > 0);
+    assert.ok(lbRes.data.leaderboard[0].masked_phone.includes('****'));
+  });
+
+  await test('PHASE 8: Public HTML Pages return HTTP 200', async () => {
+    const pages = ['/ruqyah', '/hijama', '/shop', '/orders/track', '/courses', '/lifestyle', '/lifestyle/leaderboard'];
+    for (const p of pages) {
+      const res = await request('GET', p);
+      assert.strictEqual(res.statusCode, 200, `Page ${p} did not return 200`);
+    }
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');

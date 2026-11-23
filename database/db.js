@@ -69,6 +69,13 @@ function initDb() {
   } catch (mErr) {
     console.warn('Migration V7 warning:', mErr.message);
   }
+
+  try {
+    const { runMigrationV8 } = require('./migrate_v8_master_platform');
+    runMigrationV8(db);
+  } catch (mErr8) {
+    console.warn('Migration V8 warning:', mErr8.message);
+  }
 }
 
 initDb();
