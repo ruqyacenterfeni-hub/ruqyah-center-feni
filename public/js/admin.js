@@ -128,6 +128,12 @@ function switchTab(tabName) {
   if (tabName === 'reports') loadReportsList();
   if (tabName === 'diagnosis') loadDiagnosisManagement();
   if (tabName === 'articles') loadArticlesList();
+  if (tabName === 'commerce') loadCommerceData();
+  if (tabName === 'hijama-mgr') loadHijamaMgrData();
+  if (tabName === 'ruqyah-mgr') loadRuqyahMgrData();
+  if (tabName === 'courses-mgr') loadCoursesMgrData();
+  if (tabName === 'lifestyle-mgr') loadLifestyleMgrData();
+  if (tabName === 'ads-mgr') loadAdsMgrData();
   if (tabName === 'settings') loadClinicSettings();
 }
 
@@ -3458,5 +3464,261 @@ async function uploadArticleImage(event) {
     }
   } catch (err) {
     showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+// ==========================================================================
+// 13. ENTERPRISE MODULES MANAGEMENT
+// ==========================================================================
+
+function switchCommerceSubtab(sub) {
+  const ordersBtn = document.getElementById('commSubtabOrdersBtn');
+  const prodsBtn = document.getElementById('commSubtabProductsBtn');
+  const ordersPane = document.getElementById('commOrdersPane');
+  const prodsPane = document.getElementById('commProductsPane');
+
+  if (sub === 'orders') {
+    ordersBtn.classList.add('active');
+    prodsBtn.classList.remove('active');
+    ordersPane.style.display = 'block';
+    prodsPane.style.display = 'none';
+  } else {
+    prodsBtn.classList.add('active');
+    ordersBtn.classList.remove('active');
+    prodsPane.style.display = 'block';
+    ordersPane.style.display = 'none';
+  }
+}
+
+async function loadCommerceData() {
+  // Load Orders
+  try {
+    const oRes = await fetch('/api/admin/commerce/orders');
+    const oData = await oRes.json();
+    const oTbody = document.getElementById('adminOrdersTbody');
+    if (oData.success && oData.orders) {
+      if (oData.orders.length === 0) {
+        oTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">কোনো অর্ডার পাওয়া যায়নি।</td></tr>';
+      } else {
+        oTbody.innerHTML = oData.orders.map(o => `
+          <tr>
+            <td><strong>${o.order_number}</strong></td>
+            <td>${o.created_at ? o.created_at.split('T')[0] : ''}</td>
+            <td><strong>${o.customer_name}</strong><br><small style="color:var(--text-muted);">${o.customer_phone}</small></td>
+            <td><small>${o.shipping_address}</small></td>
+            <td><strong>৳${o.total_amount}</strong></td>
+            <td>
+              <select onchange="updateOrderStatus(${o.id}, this.value)" class="form-control" style="padding: 2px 6px; font-size: 0.8rem;">
+                <option value="Order Received" ${o.status === 'Order Received' ? 'selected' : ''}>Order Received</option>
+                <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-xs btn-outline-primary" onclick="viewOrderDetails(${o.id})">বিবরণ</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  // Load Products
+  try {
+    const pRes = await fetch('/api/admin/commerce/products');
+    const pData = await pRes.json();
+    const pTbody = document.getElementById('adminProductsTbody');
+    if (pData.success && pData.products) {
+      if (pData.products.length === 0) {
+        pTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">কোনো পণ্য পাওয়া যায়নি।</td></tr>';
+      } else {
+        pTbody.innerHTML = pData.products.map(p => `
+          <tr>
+            <td><strong>${p.name_bn}</strong><br><small style="color:var(--text-muted);">${p.name_en || ''}</small></td>
+            <td>${p.category_name || 'সাধারণ'}</td>
+            <td><strong>৳${p.price}</strong></td>
+            <td>${p.discount_price ? '৳' + p.discount_price : '—'}</td>
+            <td>${p.stock_quantity} টি</td>
+            <td><span class="badge ${p.is_active ? 'badge-success' : 'badge-danger'}">${p.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
+            <td>
+              <button class="btn btn-xs btn-secondary" onclick="promptEditProductPrice(${p.id}, ${p.price})">মূল্য পরিবর্তন</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const res = await fetch(`/api/admin/commerce/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('অর্ডার স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে!', 'success');
+    } else {
+      showToast(data.error || 'স্ট্যাটাস আপডেট করা যায়নি', 'error');
+    }
+  } catch (e) {
+    showToast('ত্রুটি: ' + e.message, 'error');
+  }
+}
+
+async function promptEditProductPrice(prodId, currentPrice) {
+  const newPrice = prompt('নতুন বিক্রয় মূল্য নির্ধারণ করুন (BDT):', currentPrice);
+  if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+    try {
+      const res = await fetch(`/api/admin/commerce/products/${prodId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: parseFloat(newPrice) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('পণ্যের মূল্য আপডেট সম্পন্ন হয়েছে!', 'success');
+        loadCommerceData();
+      }
+    } catch (e) {
+      showToast('ত্রুটি: ' + e.message, 'error');
+    }
+  }
+}
+
+async function loadHijamaMgrData() {
+  try {
+    const res = await fetch('/api/admin/commerce/hijama-packages');
+    const data = await res.json();
+    const tbody = document.getElementById('adminHijamaPackagesTbody');
+    if (data.success && data.packages) {
+      tbody.innerHTML = data.packages.map(pkg => `
+        <tr>
+          <td><strong>${pkg.title_bn}</strong><br><small style="color:var(--text-muted);">${pkg.title_en || ''}</small></td>
+          <td><span class="badge badge-primary">${pkg.point_count} টি পয়েন্ট</span></td>
+          <td><strong style="color:var(--primary);">৳${pkg.price}</strong></td>
+          <td><small>${pkg.included_services || '—'}</small></td>
+          <td><span class="badge ${pkg.is_active ? 'badge-success' : 'badge-danger'}">${pkg.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
+          <td>
+            <button class="btn btn-xs btn-secondary" onclick="promptEditPackagePrice(${pkg.id}, ${pkg.price})">ফি পরিবর্তন</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function promptEditPackagePrice(pkgId, currentPrice) {
+  const newPrice = prompt('নতুন প্যাকেজ মূল্য নির্ধারণ করুন (BDT):', currentPrice);
+  if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+    try {
+      const res = await fetch(`/api/admin/commerce/hijama-packages/${pkgId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: parseFloat(newPrice) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('হিজামা প্যাকেজ ফি আপডেট সফল হয়েছে!', 'success');
+        loadHijamaMgrData();
+      }
+    } catch (e) {
+      showToast('ত্রুটি: ' + e.message, 'error');
+    }
+  }
+}
+
+async function loadRuqyahMgrData() {
+  try {
+    const res = await fetch('/api/resources/ruqyah-audios');
+    const data = await res.json();
+    const tbody = document.getElementById('adminRuqyahAudiosTbody');
+    if (data.success && data.items) {
+      tbody.innerHTML = data.items.map(i => `
+        <tr>
+          <td><strong>${i.title_bn}</strong><br><small style="direction:rtl; font-size:1.05rem; color:#065F46;">${i.title_ar || ''}</small></td>
+          <td><span class="badge badge-secondary">${i.category}</span></td>
+          <td>${i.duration || '২৫ মিনিট'}</td>
+          <td><a href="${i.audio_url}" target="_blank" style="font-size:0.8rem; color:var(--primary);">▶ শুনুন / লিংক</a></td>
+          <td>${i.pdf_url ? `<a href="${i.pdf_url}" target="_blank" style="font-size:0.8rem;">📄 ডাউনলোড PDF</a>` : '—'}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadCoursesMgrData() {
+  try {
+    const res = await fetch('/api/courses');
+    const data = await res.json();
+    const tbody = document.getElementById('adminCoursesTbody');
+    if (data.success && data.courses) {
+      tbody.innerHTML = data.courses.map(c => `
+        <tr>
+          <td><strong>${c.title_bn}</strong></td>
+          <td><strong>${c.fee === 0 ? 'ফ্রি' : '৳' + c.fee}</strong></td>
+          <td>${c.duration || '৪ সপ্তাহ'}</td>
+          <td>${c.module_count || 1} টি মডিউল (${c.lesson_count || 3} টি পাঠ)</td>
+          <td><span class="badge badge-success">সক্রিয়</span></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadLifestyleMgrData() {
+  try {
+    const res = await fetch('/api/lifestyle/leaderboard');
+    const data = await res.json();
+    const tbody = document.getElementById('adminLifestyleTbody');
+    if (data.success && data.leaderboard) {
+      tbody.innerHTML = data.leaderboard.map(p => `
+        <tr>
+          <td><strong>#${p.rank}</strong></td>
+          <td><strong>${p.full_name}</strong></td>
+          <td>${p.masked_phone}</td>
+          <td>${p.completed_days} / 40 দিন</td>
+          <td><span class="badge badge-primary">${p.current_level}</span></td>
+          <td><strong style="color:var(--primary);">${p.total_points}</strong></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadAdsMgrData() {
+  try {
+    const res = await fetch('/api/resources/advertisements');
+    const data = await res.json();
+    const tbody = document.getElementById('adminAdsTbody');
+    if (data.success && data.advertisements) {
+      tbody.innerHTML = data.advertisements.map(a => `
+        <tr>
+          <td><strong>${a.title}</strong></td>
+          <td><span class="badge badge-secondary">${a.placement}</span></td>
+          <td>${a.button_text || 'বিস্তারিত'}</td>
+          <td><a href="${a.target_url}" target="_blank" style="font-size:0.8rem;">${a.target_url || '#'}</a></td>
+          <td><span class="badge ${a.is_active ? 'badge-success' : 'badge-danger'}">${a.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
   }
 }

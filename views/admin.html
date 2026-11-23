@@ -82,6 +82,36 @@
             <span>📚</span> <span data-i18n="adminNavArticles">কেস হিস্ট্রি ও আর্টিকেল</span>
           </a>
         </li>
+        <li class="admin-nav-item" data-tab="commerce">
+          <a href="#commerce">
+            <span>🛍️</span> <span>সাপ্লিমেন্টস ও অর্ডার</span>
+          </a>
+        </li>
+        <li class="admin-nav-item" data-tab="hijama-mgr">
+          <a href="#hijama-mgr">
+            <span>🩸</span> <span>হিজামা প্যাকেজসমূহ</span>
+          </a>
+        </li>
+        <li class="admin-nav-item" data-tab="ruqyah-mgr">
+          <a href="#ruqyah-mgr">
+            <span>🎧</span> <span>রুকইয়াহ অডিও লাইব্রেরি</span>
+          </a>
+        </li>
+        <li class="admin-nav-item" data-tab="courses-mgr">
+          <a href="#courses-mgr">
+            <span>📖</span> <span>কোর্স ব্যবস্থাপনা</span>
+          </a>
+        </li>
+        <li class="admin-nav-item" data-tab="lifestyle-mgr">
+          <a href="#lifestyle-mgr">
+            <span>🌟</span> <span>আমল ও প্রতিযোগিতা</span>
+          </a>
+        </li>
+        <li class="admin-nav-item" data-tab="ads-mgr">
+          <a href="#ads-mgr">
+            <span>📢</span> <span>বিজ্ঞাপন ও ব্যানার</span>
+          </a>
+        </li>
         <li class="admin-nav-item" data-tab="settings">
           <a href="#settings">
             <span>⚙️</span> <span data-i18n="admin_nav_settings">ক্লিনিক সেটিংস</span>
@@ -991,6 +1021,223 @@
             <div id="auditLogsContainer" style="max-height: 250px; overflow-y: auto; background: var(--bg-page); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
               Loading audit records...
             </div>
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 13: SUPPLEMENTS & ORDERS MANAGEMENT -->
+        <!-- ============================================================== -->
+        <div id="tab-commerce" class="admin-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">সুন্নাহ সাপ্লিমেন্টস ও গ্রাহক অর্ডার (E-Commerce)</h1>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                পণ্য সামগ্রী যুক্ত, মূল্য পরিবর্তন, স্টক এবং ক্যাশ অন ডেলিভারি অর্ডার স্ট্যাটাস পরিচালনা করুন।
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddProductModal()">+ নতুন পণ্য যুক্ত করুন</button>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; border-bottom: 2px solid var(--border-light); margin-bottom: 1.5rem;">
+            <button class="btn btn-secondary active" id="commSubtabOrdersBtn" onclick="switchCommerceSubtab('orders')">📦 গ্রাহক অর্ডারসমূহ</button>
+            <button class="btn btn-secondary" id="commSubtabProductsBtn" onclick="switchCommerceSubtab('products')">🌿 পণ্য সামগ্রী ও স্টক</button>
+          </div>
+
+          <!-- Subtab: Orders -->
+          <div id="commOrdersPane">
+            <div class="card" style="padding: 1rem; overflow-x: auto;">
+              <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+                <thead>
+                  <tr>
+                    <th>অর্ডার #</th>
+                    <th>তারিখ</th>
+                    <th>গ্রাহক ও মোবাইল</th>
+                    <th>ঠিকানা</th>
+                    <th>মোট টাকা</th>
+                    <th>স্ট্যাটাস</th>
+                    <th>অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOrdersTbody">
+                  <tr><td colspan="7" style="text-align: center; padding: 2rem;">অর্ডার লোড হচ্ছে...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Subtab: Products -->
+          <div id="commProductsPane" style="display: none;">
+            <div class="card" style="padding: 1rem; overflow-x: auto;">
+              <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+                <thead>
+                  <tr>
+                    <th>পণ্য</th>
+                    <th>ক্যাটাগরি</th>
+                    <th>বিক্রয় মূল্য</th>
+                    <th>ডিসকাউন্ট</th>
+                    <th>মজুত (স্টক)</th>
+                    <th>অবস্থা</th>
+                    <th>অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody id="adminProductsTbody">
+                  <tr><td colspan="7" style="text-align: center; padding: 2rem;">পণ্য লোড হচ্ছে...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 14: HIJAMA POINT PACKAGES -->
+        <!-- ============================================================== -->
+        <div id="tab-hijama-mgr" class="admin-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">হিজামা পয়েন্ট প্যাকেজ ও ফি ব্যবস্থাপনা</h1>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                ওয়েবসাইটে প্রদর্শিত পয়েন্টভিত্তিক হিজামা প্যাকেজ, কাপ সংখ্যা ও মূল্য পরিবর্তন করুন।
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddHijamaPackageModal()">+ নতুন হিজামা প্যাকেজ</button>
+          </div>
+
+          <div class="card" style="padding: 1rem; overflow-x: auto;">
+            <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+              <thead>
+                <tr>
+                  <th>প্যাকেজের নাম</th>
+                  <th>পয়েন্ট সংখ্যা</th>
+                  <th>নির্ধারিত মূল্য</th>
+                  <th>সেবা অন্তর্ভুক্ত</th>
+                  <th>অবস্থা</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="adminHijamaPackagesTbody">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">প্যাকেজসমূহ লোড হচ্ছে...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 15: RUQYAH AUDIO LIBRARY -->
+        <!-- ============================================================== -->
+        <div id="tab-ruqyah-mgr" class="admin-tab-content">
+          <div style="margin-bottom: 1.5rem;">
+            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">রুকইয়াহ অডিও ও দোয়া লাইব্রেরি</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+              পাবলিক পেজে প্রদর্শিত কুরআন ও হাদিস ভিত্তিক রুকইয়াহ অডিও এবং পিডিএফ ফাইল পরিচালনা করুন।
+            </p>
+          </div>
+
+          <div class="card" style="padding: 1rem; overflow-x: auto;">
+            <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+              <thead>
+                <tr>
+                  <th>শিরোনাম (বাংলা/আরবি)</th>
+                  <th>ক্যাটাগরি</th>
+                  <th>সময়কাল</th>
+                  <th>অডিও ফাইল লিংক</th>
+                  <th>পিডিএফ শিট লিংক</th>
+                </tr>
+              </thead>
+              <tbody id="adminRuqyahAudiosTbody">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">রিসোর্সসমূহ লোড হচ্ছে...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 16: ONLINE COURSES CMS -->
+        <!-- ============================================================== -->
+        <div id="tab-courses-mgr" class="admin-tab-content">
+          <div style="margin-bottom: 1.5rem;">
+            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">অনলাইন ও অফলাইন কোর্স ব্যবস্থাপনা</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+              সেলফ রুকইয়াহ ও হিজামা বিষয়ক কোর্সসমূহ ও মডিউল সিলেবাস পরিচালনা করুন।
+            </p>
+          </div>
+
+          <div class="card" style="padding: 1rem; overflow-x: auto;">
+            <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+              <thead>
+                <tr>
+                  <th>কোর্সের নাম</th>
+                  <th>কোর্স ফি</th>
+                  <th>সময়কাল</th>
+                  <th>মডিউল / পাঠ সংখ্যা</th>
+                  <th>অবস্থা</th>
+                </tr>
+              </thead>
+              <tbody id="adminCoursesTbody">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">কোর্সসমূহ লোড হচ্ছে...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 17: SUNNAH LIFESTYLE & 40-DAY COMPETITION -->
+        <!-- ============================================================== -->
+        <div id="tab-lifestyle-mgr" class="admin-tab-content">
+          <div style="margin-bottom: 1.5rem;">
+            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">সুন্নাহ লাইফস্টাইল ও ৪০ দিনের আমল প্রতিযোগিতা</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+              অংশগ্রহণকারী, লাইভ লিডারবোর্ড র‍্যাংকিং এবং দৈনিক আমল সাবমিশন পর্যালোচনা করুন।
+            </p>
+          </div>
+
+          <div class="card" style="padding: 1rem; overflow-x: auto;">
+            <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+              <thead>
+                <tr>
+                  <th>র‍্যাংক</th>
+                  <th>অংশগ্রহণকারী</th>
+                  <th>মোবাইল নম্বর</th>
+                  <th>সম্পন্ন দিন</th>
+                  <th>বর্তমান স্তর</th>
+                  <th>মোট অর্জিত পয়েন্ট (সর্বোচ্চ ৪০০০)</th>
+                </tr>
+              </thead>
+              <tbody id="adminLifestyleTbody">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 18: ADVERTISEMENTS & BANNERS -->
+        <!-- ============================================================== -->
+        <div id="tab-ads-mgr" class="admin-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">বিজ্ঞাপন ও ব্যানার ব্যবস্থাপনা</h1>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                ওয়েবসাইটের হোমপেজ ও বিভিন্ন পেজের ব্যানার বিজ্ঞাপন যুক্ত ও নিয়ন্ত্রণ করুন।
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddAdModal()">+ নতুন ব্যানার বিজ্ঞাপন</button>
+          </div>
+
+          <div class="card" style="padding: 1rem; overflow-x: auto;">
+            <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+              <thead>
+                <tr>
+                  <th>শিরোনাম</th>
+                  <th>স্থান (Placement)</th>
+                  <th>বাটনের লেখা</th>
+                  <th>টার্গেট লিঙ্ক</th>
+                  <th>অবস্থা</th>
+                </tr>
+              </thead>
+              <tbody id="adminAdsTbody">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">বিজ্ঞাপনসমূহ লোড হচ্ছে...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
