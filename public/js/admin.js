@@ -3739,25 +3739,314 @@ async function toggleCourseStatus(id) {
   }
 }
 
+let adminParticipantsList = [];
+let adminAmalCategoriesList = [];
+
 async function loadLifestyleMgrData() {
+  await Promise.all([
+    loadAdminPinnedWinner(),
+    loadAdminAmalCategories(),
+    loadAdminParticipants()
+  ]);
+}
+
+async function loadAdminPinnedWinner() {
+  try {
+    const res = await fetch('/api/lifestyle/pinned-winner');
+    const data = await res.json();
+    const display = document.getElementById('adminPinnedWinnerDisplay');
+    const unpinBtn = document.getElementById('adminUnpinBtn');
+    
+    if (data.success && data.pinned_winner && data.pinned_winner.is_active) {
+      const pw = data.pinned_winner;
+      if (unpinBtn) unpinBtn.style.display = 'inline-block';
+      display.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <img src="${pw.profile_photo || '/images/default-avatar.svg'}" alt="${pw.full_name}" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid #F59E0B; object-fit: cover;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="badge badge-warning" style="background:#FEF3C7; color:#92400E; font-weight:700;">${pw.month_title || 'গত মাসের বিজয়ী!'}</span>
+                <span class="badge badge-success">সক্রিয়ভাবে পিন্ড</span>
+              </div>
+              <h4 style="margin: 0.25rem 0; font-size: 1.15rem; color: #1E293B;">${pw.full_name}</h4>
+              <div style="font-size: 0.85rem; color: #64748B;">
+                পয়েন্ট: <strong>${pw.total_points || 0}</strong> • স্তর: <strong>${pw.level || 'Diamond'}</strong>
+              </div>
+            </div>
+          </div>
+          <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 0.6rem 1rem; color: #065F46; font-size: 0.95rem; font-weight: 600;">
+            ${pw.blessing_message || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।'}
+          </div>
+        </div>
+      `;
+    } else {
+      if (unpinBtn) unpinBtn.style.display = 'none';
+      display.innerHTML = `
+        <div style="text-align: center; color: #94A3B8; padding: 0.75rem;">
+          বর্তমানে কোনো প্রতিযোগী 'গত মাসের বিজয়ী' হিসেবে পিন করা নেই। উপরের <strong>"👑 বিজয়ী পিন / পরিবর্তন করুন"</strong> বাটনে ক্লিক করে একজন প্রতিযোগীকে পিন করুন।
+        </div>
+      `;
+    }
+  } catch (err) {
+    console.error('Failed to load pinned winner in admin:', err);
+  }
+}
+
+async function loadAdminAmalCategories() {
+  try {
+    const res = await fetch('/api/lifestyle/admin/categories');
+    const data = await res.json();
+    const tbody = document.getElementById('adminAmalCategoriesTbody');
+    if (data.success && data.categories) {
+      adminAmalCategoriesList = data.categories;
+      if (!adminAmalCategoriesList.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 1.5rem;">কোনো ক্যাটাগরি তৈরি করা হয়নি।</td></tr>';
+        return;
+      }
+      tbody.innerHTML = adminAmalCategoriesList.map(cat => `
+        <tr>
+          <td><strong>#${cat.sort_order}</strong></td>
+          <td style="font-size: 1.25rem;">${cat.icon || '📌'}</td>
+          <td>
+            <div style="font-weight: 700; color: #0F172A;">${cat.title_bn}</div>
+            <div style="font-size: 0.78rem; color: #64748B;">${cat.title_en || ''}</div>
+          </td>
+          <td><code>${cat.slug}</code></td>
+          <td><span class="badge badge-primary">${cat.max_points} পয়েন্ট</span></td>
+          <td>${cat.activities ? cat.activities.length : 0} টি আমল</td>
+          <td>
+            <button class="badge ${cat.is_active ? 'badge-success' : 'badge-danger'}" onclick="toggleCategoryActive(${cat.id})" style="cursor: pointer; border: none;">
+              ${cat.is_active ? '✓ সক্রিয়' : '✕ নিষ্ক্রিয়'}
+            </button>
+          </td>
+          <td style="text-align: right;">
+            <button class="btn btn-sm btn-secondary" onclick="editCategory(${cat.id})" style="padding: 2px 8px; font-size: 0.75rem; margin-right: 4px;">✏️ সম্পাদনা</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCategory(${cat.id})" style="padding: 2px 8px; font-size: 0.75rem;">🗑️ মুছুন</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (err) {
+    console.error('Failed to load admin categories:', err);
+  }
+}
+
+async function loadAdminParticipants() {
   try {
     const res = await fetch('/api/lifestyle/leaderboard');
     const data = await res.json();
     const tbody = document.getElementById('adminLifestyleTbody');
     if (data.success && data.leaderboard) {
-      tbody.innerHTML = data.leaderboard.map(p => `
+      adminParticipantsList = data.leaderboard;
+      if (!adminParticipantsList.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">এখনো কোনো প্রতিযোগী নিবন্ধন করেনি।</td></tr>';
+        return;
+      }
+      tbody.innerHTML = adminParticipantsList.map(p => `
         <tr>
           <td><strong>#${p.rank}</strong></td>
-          <td><strong>${p.full_name}</strong></td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <img src="${p.profile_photo || '/images/default-avatar.svg'}" alt="${p.full_name}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid #CBD5E1;">
+              <div>
+                <strong>${p.full_name}</strong>
+                <div style="font-size: 0.75rem; color: #64748B;">আইডি: #${p.id}</div>
+              </div>
+            </div>
+          </td>
           <td>${p.masked_phone}</td>
           <td>${p.completed_days} / 40 দিন</td>
           <td><span class="badge badge-primary">${p.current_level}</span></td>
-          <td><strong style="color:var(--primary);">${p.total_points}</strong></td>
+          <td><strong style="color:var(--primary); font-size: 1rem;">${p.total_points}</strong></td>
+          <td style="text-align: right;">
+            <button class="btn btn-sm" onclick="openPinWinnerModal(${p.id})" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; padding: 3px 8px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; cursor: pointer;">
+              👑 বিজয়ী পিন করুন
+            </button>
+          </td>
         </tr>
       `).join('');
     }
   } catch (e) {
     console.error(e);
+  }
+}
+
+function openPinWinnerModal(preselectedUserId) {
+  const select = document.getElementById('pinWinnerUserIdSelect');
+  select.innerHTML = '<option value="">-- প্রতিযোগী নির্বাচন করুন --</option>' +
+    adminParticipantsList.map(p => `
+      <option value="${p.id}" ${preselectedUserId && preselectedUserId === p.id ? 'selected' : ''}>
+        #${p.rank} - ${p.full_name} (${p.phone || p.masked_phone}) - ${p.total_points} পয়েন্ট
+      </option>
+    `).join('');
+
+  if (preselectedUserId) {
+    const user = adminParticipantsList.find(p => p.id === preselectedUserId);
+    if (user) {
+      document.getElementById('pinWinnerPoints').value = user.total_points || 4000;
+      document.getElementById('pinWinnerLevel').value = user.current_level || 'Diamond';
+    }
+  }
+
+  document.getElementById('pinWinnerMonthTitle').value = 'গত মাসের বিজয়ী!';
+  document.getElementById('pinWinnerBlessing').value = 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+  document.getElementById('pinWinnerIsActive').checked = true;
+
+  openModal('pinWinnerModal');
+}
+
+function handlePinWinnerUserSelect(select) {
+  const userId = parseInt(select.value, 10);
+  const user = adminParticipantsList.find(p => p.id === userId);
+  if (user) {
+    document.getElementById('pinWinnerPoints').value = user.total_points || 4000;
+    document.getElementById('pinWinnerLevel').value = user.current_level || 'Diamond';
+  }
+}
+
+async function savePinnedWinner(e) {
+  e.preventDefault();
+  const userId = parseInt(document.getElementById('pinWinnerUserIdSelect').value, 10);
+  if (!userId) return alert('অনুগ্রহ করে একজন প্রতিযোগী নির্বাচন করুন');
+
+  const monthTitle = document.getElementById('pinWinnerMonthTitle').value.trim() || 'গত মাসের বিজয়ী!';
+  const totalPoints = parseInt(document.getElementById('pinWinnerPoints').value, 10) || 4000;
+  const level = document.getElementById('pinWinnerLevel').value.trim() || 'Diamond';
+  const blessingMessage = document.getElementById('pinWinnerBlessing').value.trim() || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+  const isActive = document.getElementById('pinWinnerIsActive').checked;
+
+  try {
+    const res = await fetch('/api/lifestyle/admin/pinned-winner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        month_title: monthTitle,
+        total_points: totalPoints,
+        level: level,
+        blessing_message: blessingMessage,
+        is_active: isActive
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message || 'গত মাসের বিজয়ী সফলভাবে পিন করা হয়েছে!');
+      closeModal('pinWinnerModal');
+      await loadAdminPinnedWinner();
+    } else {
+      alert('ত্রুটি: ' + (data.error || 'পিন করা যায়নি'));
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে সমস্যা হয়েছে');
+  }
+}
+
+async function unpinMonthlyWinner() {
+  if (!confirm('আপনি কি নিশ্চিত যে বর্তমান গত মাসের বিজয়ী পিন বাতিল করতে চান?')) return;
+  try {
+    const res = await fetch('/api/lifestyle/admin/pinned-winner', { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      alert('বিজয়ী পিন সফলভাবে বাতিল করা হয়েছে');
+      await loadAdminPinnedWinner();
+    } else {
+      alert(data.error || 'পিন বাতিল ব্যর্থ হয়েছে');
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে সমস্যা');
+  }
+}
+
+function openAddCategoryModal() {
+  document.getElementById('categoryForm').reset();
+  document.getElementById('catId').value = '';
+  document.getElementById('catIcon').value = '🌙';
+  document.getElementById('catMaxPoints').value = '10';
+  document.getElementById('catSortOrder').value = (adminAmalCategoriesList.length + 1);
+  document.getElementById('catIsActive').checked = true;
+  document.getElementById('categoryModalTitle').innerText = '+ নতুন আমল ক্যাটাগরি তৈরি';
+  document.getElementById('catSubmitBtn').innerText = 'ক্যাটাগরি তৈরি করুন';
+  openModal('categoryModal');
+}
+
+function editCategory(id) {
+  const cat = adminAmalCategoriesList.find(c => c.id === id);
+  if (!cat) return;
+  document.getElementById('catId').value = cat.id;
+  document.getElementById('catTitleBn').value = cat.title_bn;
+  document.getElementById('catTitleEn').value = cat.title_en || '';
+  document.getElementById('catSlug').value = cat.slug;
+  document.getElementById('catIcon').value = cat.icon || '📌';
+  document.getElementById('catMaxPoints').value = cat.max_points;
+  document.getElementById('catSortOrder').value = cat.sort_order;
+  document.getElementById('catIsActive').checked = !!cat.is_active;
+  document.getElementById('categoryModalTitle').innerText = 'ক্যাটাগরি সম্পাদনা করুন';
+  document.getElementById('catSubmitBtn').innerText = 'পরিবর্তন সংরক্ষণ করুন';
+  openModal('categoryModal');
+}
+
+async function saveCategory(e) {
+  e.preventDefault();
+  const id = document.getElementById('catId').value;
+  const payload = {
+    title_bn: document.getElementById('catTitleBn').value.trim(),
+    title_en: document.getElementById('catTitleEn').value.trim(),
+    slug: document.getElementById('catSlug').value.trim(),
+    icon: document.getElementById('catIcon').value.trim() || '📌',
+    max_points: parseInt(document.getElementById('catMaxPoints').value, 10) || 10,
+    sort_order: parseInt(document.getElementById('catSortOrder').value, 10) || 1,
+    is_active: document.getElementById('catIsActive').checked
+  };
+
+  try {
+    const url = id ? `/api/lifestyle/admin/categories/${id}` : '/api/lifestyle/admin/categories';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message || 'ক্যাটাগরি সংরক্ষিত হয়েছে');
+      closeModal('categoryModal');
+      await loadAdminAmalCategories();
+    } else {
+      alert('ত্রুটি: ' + (data.error || 'ক্যাটাগরি সংরক্ষণ ব্যর্থ'));
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে সমস্যা হয়েছে');
+  }
+}
+
+async function toggleCategoryActive(id) {
+  try {
+    const res = await fetch(`/api/lifestyle/admin/categories/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      await loadAdminAmalCategories();
+    } else {
+      alert(data.error || 'টগল ব্যর্থ হয়েছে');
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে সমস্যা');
+  }
+}
+
+async function deleteCategory(id) {
+  if (!confirm('আপনি কি এই আমল ক্যাটাগরি মুছে ফেলতে চান?')) return;
+  try {
+    const res = await fetch(`/api/lifestyle/admin/categories/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      alert('ক্যাটাগরি মুছে ফেলা হয়েছে');
+      await loadAdminAmalCategories();
+    } else {
+      alert(data.error || 'ডিলিট ব্যর্থ হয়েছে');
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে সমস্যা');
   }
 }
 

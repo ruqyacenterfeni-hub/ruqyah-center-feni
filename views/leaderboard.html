@@ -23,10 +23,11 @@
       font-size: 0.95rem;
     }
     .rank-table td {
-      padding: 1rem;
+      padding: 0.9rem 1rem;
       border-bottom: 1px solid #F1F5F9;
       color: #334155;
       font-size: 0.95rem;
+      vertical-align: middle;
     }
     .rank-table tr:hover {
       background: #F8FAFC;
@@ -34,6 +35,29 @@
     .badge-gold { background: #FEF3C7; color: #92400E; padding: 3px 10px; border-radius: 9999px; font-weight: 700; }
     .badge-silver { background: #F1F5F9; color: #475569; padding: 3px 10px; border-radius: 9999px; font-weight: 700; }
     .badge-bronze { background: #FFEDD5; color: #9A3412; padding: 3px 10px; border-radius: 9999px; font-weight: 700; }
+    
+    .pinned-winner-card {
+      background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%);
+      border: 2px solid #F59E0B;
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .pinned-winner-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      border: 4px solid #F59E0B;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin: 0 auto 0.75rem auto;
+      display: block;
+      background: #FFF;
+    }
   </style>
 </head>
 <body style="background: #F8FAFC;">
@@ -55,27 +79,67 @@
     </div>
   </header>
 
-  <main class="container" style="padding: 3rem 0; max-width: 860px;">
+  <main class="container" style="padding: 3rem 0; max-width: 880px;">
     <div style="text-align: center; margin-bottom: 2rem;">
       <h1 style="color: #0F172A; font-size: 2rem; margin-bottom: 0.5rem;">🏆 ৪০ দিনের আমল প্রতিযোগিতা লিডারবোর্ড</h1>
       <p style="color: #64748B; font-size: 1rem;" id="compMetaSubtitle">সক্রিয় ব্যাচ • সর্বমোট পয়েন্ট ও নিয়মিত আমলের ভিত্তিতে রিয়েল-টাইম ক্রমতালিকা</p>
     </div>
 
     <!-- Privacy Note -->
-    <div style="background: #ECFDF5; border: 1px solid #A7F3D0; padding: 0.75rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #065F46; text-align: center;">
+    <div style="background: #ECFDF5; border: 1px solid #A7F3D0; padding: 0.75rem 1.25rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.85rem; color: #065F46; text-align: center;">
       🔒 <strong>গোপনীয়তা রক্ষা:</strong> অংশগ্রহণকারীদের সুরক্ষার স্বার্থে মোবাইল নম্বরের মধ্যবর্তী অংশ সম্পূর্ণ গোপন (Masked) রাখা হয়েছে।
     </div>
 
-    <!-- Official Winners Gallery & Podium (Shows when published) -->
+    <!-- Pinned Previous Month Winner Section (Requirement 7) -->
+    <div id="pinnedWinnerSection" style="display: none;">
+      <div class="pinned-winner-card">
+        <div style="display: inline-block; background: #D97706; color: #FFF; font-weight: 700; font-size: 0.82rem; padding: 4px 14px; border-radius: 9999px; margin-bottom: 0.85rem; letter-spacing: 0.5px;">
+          👑 অ্যাডমিন বিশেষ সম্মাননা
+        </div>
+        
+        <!-- Exact Heading Required: গত মাসের বিজয়ী! -->
+        <h2 style="font-size: 1.85rem; color: #92400E; margin: 0 0 0.85rem 0; font-weight: 800;" id="pinnedWinnerHeading">
+          গত মাসের বিজয়ী!
+        </h2>
+
+        <img id="pinnedWinnerAvatar" src="/images/default-avatar.svg" alt="বিজয়ীর ছবি" class="pinned-winner-avatar">
+
+        <h3 style="font-size: 1.45rem; color: #1E293B; margin: 0 0 0.35rem 0; font-weight: 700;" id="pinnedWinnerName">
+          লোড হচ্ছে...
+        </h3>
+
+        <div style="margin-bottom: 1rem;">
+          <span style="background: #FFF; color: #92400E; border: 1px solid #FCD34D; padding: 3px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.88rem;" id="pinnedWinnerPoints">
+            মোট পয়েন্ট: ৪০০০
+          </span>
+          <span style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; padding: 3px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.88rem; margin-left: 0.35rem;" id="pinnedWinnerLevel">
+            স্তর: Diamond
+          </span>
+        </div>
+
+        <!-- Exact Required Text: আল্লাহ উনার আমলগুলো কবুল করুন। আমিন। -->
+        <div style="background: #FFF; border: 2px solid #10B981; color: #065F46; font-size: 1.15rem; font-weight: 700; padding: 0.85rem 1.5rem; border-radius: 10px; display: inline-block; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);" id="pinnedWinnerBlessing">
+          আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Winners Gallery & Podium (Shows when competition batches conclude) -->
     <div id="winnersGallerySection" style="display: none; margin-bottom: 2.5rem;">
-      <h2 style="font-size: 1.35rem; color: #065F46; text-align: center; margin-bottom: 1rem;">🏆 অফিসিয়াল বিজয়ী ও কৃতি অংশগ্রহণকারী</h2>
+      <h2 style="font-size: 1.35rem; color: #065F46; text-align: center; margin-bottom: 1rem;">🏅 অফিসিয়াল সমাপ্ত ব্যাচ বিজয়ী ও কৃতি প্রতিযোগী</h2>
       <div id="winnersCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;"></div>
+    </div>
+
+    <!-- Live Leaderboard Table with Profile Photos (Requirement 5 & 6) -->
+    <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 1.25rem; color: #0F172A; margin: 0;">📊 বর্তমান সক্রিয় প্রতিযোগীদের লাইভ র‍্যাংক</h2>
+      <span style="font-size: 0.85rem; color: #64748B;" id="leaderboardCountText">লোড হচ্ছে...</span>
     </div>
 
     <table class="rank-table">
       <thead>
         <tr>
-          <th>র‍্যাংক</th>
+          <th style="width: 90px;">র‍্যাংক</th>
           <th>অংশগ্রহণকারী</th>
           <th>মোবাইল নম্বর</th>
           <th>সম্পন্ন দিন</th>
@@ -99,6 +163,28 @@
 
   <script src="/js/main.js"></script>
   <script>
+    // Load Admin-Pinned Previous Month Winner (Requirement 7)
+    async function loadPinnedWinner() {
+      try {
+        const res = await fetch('/api/lifestyle/pinned-winner');
+        const data = await res.json();
+        if (data.success && data.pinned_winner && data.pinned_winner.is_active) {
+          const pw = data.pinned_winner;
+          const section = document.getElementById('pinnedWinnerSection');
+          section.style.display = 'block';
+
+          document.getElementById('pinnedWinnerHeading').innerText = pw.month_title || 'গত মাসের বিজয়ী!';
+          document.getElementById('pinnedWinnerName').innerText = pw.full_name;
+          document.getElementById('pinnedWinnerAvatar').src = pw.profile_photo || '/images/default-avatar.svg';
+          document.getElementById('pinnedWinnerPoints').innerText = `মোট পয়েন্ট: ${pw.total_points || 0}`;
+          document.getElementById('pinnedWinnerLevel').innerText = `স্তর: ${pw.level || 'Diamond'}`;
+          document.getElementById('pinnedWinnerBlessing').innerText = pw.blessing_message || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+        }
+      } catch (err) {
+        console.error('Failed to load pinned winner:', err);
+      }
+    }
+
     async function loadWinners() {
       try {
         const res = await fetch('/api/lifestyle/winners');
@@ -138,6 +224,7 @@
 
     async function loadLeaderboard() {
       try {
+        await loadPinnedWinner();
         await loadWinners();
         const res = await fetch('/api/lifestyle/leaderboard');
         const data = await res.json();
@@ -145,6 +232,8 @@
           if (data.competition) {
             document.getElementById('compMetaSubtitle').innerText = `${data.competition.title} (মেয়াদ: ${data.competition.duration_days} দিন)`;
           }
+
+          document.getElementById('leaderboardCountText').innerText = `মোট প্রতিযোগী: ${data.leaderboard.length} জন`;
 
           const tbody = document.getElementById('leaderboardTbody');
           if (!data.leaderboard.length) {
@@ -158,10 +247,20 @@
             else if (p.rank === 2) rankBadge = '🥈 ২য়';
             else if (p.rank === 3) rankBadge = '🥉 ৩য়';
 
+            const photoSrc = p.profile_photo || '/images/default-avatar.svg';
+
             return `
               <tr>
                 <td><strong>${rankBadge}</strong></td>
-                <td><strong>${p.full_name}</strong></td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <img src="${photoSrc}" alt="${p.full_name}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #CBD5E1; background: #E2E8F0;">
+                    <div>
+                      <strong style="color: #0F172A; display: block;">${p.full_name}</strong>
+                      <span style="font-size: 0.75rem; color: #64748B;">আইডি: #${p.id}</span>
+                    </div>
+                  </div>
+                </td>
                 <td style="color: #64748B;">${p.masked_phone}</td>
                 <td>${p.completed_days} দিন</td>
                 <td><span class="badge-silver">${p.current_level}</span></td>

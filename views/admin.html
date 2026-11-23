@@ -1191,28 +1191,106 @@
         <!-- ============================================================== -->
         <div id="tab-lifestyle-mgr" class="admin-tab-content">
           <div style="margin-bottom: 1.5rem;">
-            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">সুন্নাহ লাইফস্টাইল ও ৪০ দিনের আমল প্রতিযোগিতা</h1>
+            <h1 style="font-size: 1.5rem; color: var(--text-main); margin: 0;">সুন্নাহ লাইফস্টাইল, একীভূত আমল ও প্রতিযোগিতা ব্যবস্থাপনা</h1>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-              অংশগ্রহণকারী, লাইভ লিডারবোর্ড র‍্যাংকিং এবং দৈনিক আমল সাবমিশন পর্যালোচনা করুন।
+              আমল ক্যাটাগরি নিয়ন্ত্রণ, গত মাসের বিজয়ী পিন এবং লাইভ লিডারবোর্ড র‍্যাংকিং পর্যালোচনা করুন।
             </p>
           </div>
 
-          <div class="card" style="padding: 1rem; overflow-x: auto;">
-            <table class="data-table" style="width: 100%; font-size: 0.9rem;">
-              <thead>
-                <tr>
-                  <th>র‍্যাংক</th>
-                  <th>অংশগ্রহণকারী</th>
-                  <th>মোবাইল নম্বর</th>
-                  <th>সম্পন্ন দিন</th>
-                  <th>বর্তমান স্তর</th>
-                  <th>মোট অর্জিত পয়েন্ট (সর্বোচ্চ ৪০০০)</th>
-                </tr>
-              </thead>
-              <tbody id="adminLifestyleTbody">
-                <tr><td colspan="6" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
-              </tbody>
-            </table>
+          <!-- Section 1: Previous Month Winner Pin (Requirement 7) -->
+          <div class="card" style="padding: 1.5rem; margin-bottom: 2rem; border-left: 4px solid #F59E0B; background: #FFFDF5;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <h3 style="margin: 0; color: #92400E; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>👑</span> <span>গত মাসের বিজয়ী পিন ব্যবস্থাপনা (Requirement 7)</span>
+                </h3>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #78350F;">
+                  এই ফিচারের মাধ্যমে নির্বাচিত বিজয়ীকে হোমপেজ ও লিডারবোর্ডের শীর্ষে নির্দিষ্ট সম্মাননা সহ পিন করা যায়।
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" onclick="openPinWinnerModal()" style="background: #D97706; border-color: #D97706;">
+                  👑 বিজয়ী পিন / পরিবর্তন করুন
+                </button>
+                <button class="btn btn-secondary" onclick="unpinMonthlyWinner()" id="adminUnpinBtn" style="display: none;">
+                  ✕ পিন বাতিল করুন
+                </button>
+              </div>
+            </div>
+
+            <div id="adminPinnedWinnerDisplay" style="background: #FFF; border: 1px solid #FDE68A; border-radius: 10px; padding: 1.25rem;">
+              <div style="color: #64748B; font-size: 0.9rem; text-align: center;">
+                লোড হচ্ছে...
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Admin-Controlled Amal Categories (Requirement 4) -->
+          <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <h3 style="margin: 0; color: var(--primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📂</span> <span>আমল ক্যাটাগরি ব্যবস্থাপনা (Requirement 4: Unified Tracker Categories)</span>
+                </h3>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                  এখানে ক্যাটাগরি তৈরি, সম্পাদনা, সক্রিয়/নিষ্ক্রিয় বা ডিলিট করলে তা ব্যবহারকারীর আমল ট্র্যাকারে সরাসরি প্রতিফলিত হবে।
+                </p>
+              </div>
+              <button class="btn btn-primary" onclick="openAddCategoryModal()">
+                + নতুন আমল ক্যাটাগরি তৈরি করুন
+              </button>
+            </div>
+
+            <div style="overflow-x: auto;">
+              <table class="data-table" style="width: 100%; font-size: 0.88rem;">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">ক্রম</th>
+                    <th style="width: 50px;">আইকন</th>
+                    <th>ক্যাটাগরির নাম (বাংলা ও ইংরেজি)</th>
+                    <th>স্ল্যাগ (Slug)</th>
+                    <th>সর্বোচ্চ পয়েন্ট</th>
+                    <th>আমল সংখ্যা</th>
+                    <th>অবস্থা</th>
+                    <th style="text-align: right;">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAmalCategoriesTbody">
+                  <tr><td colspan="8" style="text-align: center; padding: 1.5rem;">ক্যাটাগরি তথ্য লোড হচ্ছে...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 3: Live Participants & Rankings (Requirement 5 & 6) -->
+          <div class="card" style="padding: 1.5rem;">
+            <div style="margin-bottom: 1rem;">
+              <h3 style="margin: 0; color: #0F172A; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📊</span> <span>অংশগ্রহণকারী ও লাইভ লিডারবোর্ড র‍্যাংকিং</span>
+              </h3>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                সর্বমোট অর্জিত পয়েন্ট ও ধারাবাহিকতার ভিত্তিতে স্বয়ংক্রিয় ক্রমতালিকা। যেকোনো প্রতিযোগী প্রোফাইল এক ক্লিকে পিন করা যাবে।
+              </p>
+            </div>
+
+            <div style="overflow-x: auto;">
+              <table class="data-table" style="width: 100%; font-size: 0.9rem;">
+                <thead>
+                  <tr>
+                    <th>র‍্যাংক</th>
+                    <th>ছবি ও অংশগ্রহণকারী</th>
+                    <th>মোবাইল নম্বর</th>
+                    <th>সম্পন্ন দিন</th>
+                    <th>বর্তমান স্তর</th>
+                    <th>মোট পয়েন্ট</th>
+                    <th style="text-align: right;">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody id="adminLifestyleTbody">
+                  <tr><td colspan="7" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -2022,6 +2100,123 @@
           <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
             <button type="button" class="btn btn-secondary" onclick="closeModal('addCourseModal')">বাতিল</button>
             <button type="submit" class="btn btn-primary">+ কোর্স সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PIN MONTHLY WINNER (Requirement 7) -->
+  <!-- ============================================================== -->
+  <div id="pinWinnerModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: #D97706;">👑 গত মাসের বিজয়ী পিন করুন</h3>
+        <button class="modal-close" onclick="closeModal('pinWinnerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="pinWinnerForm" onsubmit="savePinnedWinner(event)">
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label class="form-label">বিজয়ী প্রতিযোগী নির্বাচন করুন *</label>
+            <select id="pinWinnerUserIdSelect" class="form-control" required onchange="handlePinWinnerUserSelect(this)">
+              <option value="">-- প্রতিযোগী নির্বাচন করুন --</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label class="form-label">শিরোনাম (Title) *</label>
+            <input type="text" id="pinWinnerMonthTitle" class="form-control" required value="গত মাসের বিজয়ী!">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label">মোট পয়েন্ট</label>
+              <input type="number" id="pinWinnerPoints" class="form-control" value="4000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">অর্জিত স্তর (Level)</label>
+              <input type="text" id="pinWinnerLevel" class="form-control" value="Diamond (মুকাররাবুন)">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label class="form-label">দোয়া ও শুভেচ্ছা বাণী * (অপরিবর্তনীয় আবশ্যক টেক্সট)</label>
+            <textarea id="pinWinnerBlessing" class="form-control" rows="2" required>আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।</textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #065F46;">
+              <input type="checkbox" id="pinWinnerIsActive" checked>
+              <span>ওয়েবসাইটে সক্রিয়ভাবে প্রদর্শন করুন</span>
+            </label>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('pinWinnerModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary" style="background: #D97706; border-color: #D97706;">👑 বিজয়ী হিসেবে পিন করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: ADD/EDIT AMAL CATEGORY (Requirement 4) -->
+  <!-- ============================================================== -->
+  <div id="categoryModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);" id="categoryModalTitle">+ নতুন আমল ক্যাটাগরি তৈরি</h3>
+        <button class="modal-close" onclick="closeModal('categoryModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="categoryForm" onsubmit="saveCategory(event)">
+          <input type="hidden" id="catId" value="">
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label">ক্যাটাগরি নাম (বাংলা) *</label>
+              <input type="text" id="catTitleBn" class="form-control" required placeholder="যেমন: নফল ইবাদত">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ক্যাটাগরি নাম (English)</label>
+              <input type="text" id="catTitleEn" class="form-control" placeholder="e.g. Nafl Worship">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label">স্ল্যাগ (Slug) *</label>
+              <input type="text" id="catSlug" class="form-control" required placeholder="যেমন: nafl_extra">
+            </div>
+            <div class="form-group">
+              <label class="form-label">আইকন (ইমোজি)</label>
+              <input type="text" id="catIcon" class="form-control" value="🌙">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label">সর্বোচ্চ পয়েন্ট ক্যাপ *</label>
+              <input type="number" id="catMaxPoints" class="form-control" required min="1" max="100" value="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ক্রম (Sort Order)</label>
+              <input type="number" id="catSortOrder" class="form-control" value="1">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #065F46;">
+              <input type="checkbox" id="catIsActive" checked>
+              <span>সক্রিয় ক্যাটাগরি (আমল ট্র্যাকারে প্রদর্শিত হবে)</span>
+            </label>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('categoryModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary" id="catSubmitBtn">সংরক্ষণ করুন</button>
           </div>
         </form>
       </div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>দৈনিক আমল ট্র্যাকার (সর্বোচ্চ ১০০ পয়েন্ট) | রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</title>
+  <title>একীভূত আমল ট্র্যাকার (সর্বোচ্চ ১০০ পয়েন্ট) | রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
   <style>
@@ -46,6 +46,22 @@
       font-size: 0.95rem;
       color: #334155;
     }
+    .profile-photo-container {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 3px solid #10B981;
+      overflow: hidden;
+      background: #E2E8F0;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .profile-photo-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body style="background: #F8FAFC;">
@@ -68,19 +84,48 @@
     </div>
   </header>
 
-  <main class="container" style="padding: 2rem 0; max-width: 780px;">
-    <!-- Profile & Competition Overview Banner -->
+  <main class="container" style="padding: 2rem 0; max-width: 800px;">
+    
+    <!-- User Profile & 40-Day Progress Header (Requirement 1, 5, 6) -->
     <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-        <div>
-          <h2 style="margin: 0; color: #0F172A; font-size: 1.35rem;" id="userProfileName">আসসালামু আলাইকুম</h2>
-          <div style="font-size: 0.88rem; color: #64748B; margin-top: 0.25rem;" id="userProfileRank">প্রতিযোগিতা র‍্যাংক: লোড হচ্ছে...</div>
-          <div style="font-size: 0.82rem; color: #065F46; font-weight: 600; margin-top: 0.25rem;" id="compDateRange">মেয়াদ: লোড হচ্ছে...</div>
+      <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem;">
+        
+        <!-- Profile Photo (Upload/Change/Remove) -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem;">
+          <div class="profile-photo-container">
+            <img id="userAvatarImg" src="/images/default-avatar.svg" alt="প্রোফাইল ছবি">
+          </div>
+          <div style="display: flex; gap: 0.35rem;">
+            <label for="avatarFileInput" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; cursor: pointer; border-radius: 4px;">
+              📷 পরিবর্তন
+            </label>
+            <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(this)">
+            <button id="removeAvatarBtn" onclick="handleAvatarRemove()" class="btn btn-danger" style="display: none; padding: 2px 8px; font-size: 0.72rem; border-radius: 4px;">
+              🗑️
+            </button>
+          </div>
         </div>
-        <div style="text-align: right;">
-          <span style="background: #FEF3C7; color: #92400E; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;" id="userLevelBadge">Improvement Level</span>
-          <div style="font-size: 1.25rem; font-weight: 800; color: #065F46; margin-top: 0.35rem;">
-            মোট পয়েন্ট: <span id="userTotalPoints">০</span> <span style="font-size: 0.8rem; color: #64748B; font-weight: normal;">/ ৪০০০</span>
+
+        <!-- User Information & Rank -->
+        <div style="flex: 1; min-width: 240px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <h2 style="margin: 0; color: #0F172A; font-size: 1.35rem;" id="userProfileName">আসসালামু আলাইকুম</h2>
+              <div style="font-size: 0.95rem; color: #065F46; font-weight: 700; margin-top: 0.35rem;" id="userProfileRank">
+                🏆 আপনার বর্তমান র‍্যাংক: লোড হচ্ছে...
+              </div>
+              <div style="font-size: 0.82rem; color: #64748B; margin-top: 0.25rem;" id="compDateRange">
+                ৪০ দিনের আত্মশুদ্ধি প্রতিযোগিতা ব্যাচ
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span style="background: #FEF3C7; color: #92400E; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;" id="userLevelBadge">
+                অর্জিত স্তর
+              </span>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #065F46; margin-top: 0.35rem;">
+                <span id="userTotalPoints">০</span> <span style="font-size: 0.8rem; color: #64748B; font-weight: normal;">/ ৪০০০ পয়েন্ট</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -97,76 +142,35 @@
       </div>
     </div>
 
-    <!-- Live Score Sticky Bar (Strict Max 100) -->
-    <div class="score-sticky-bar">
-      <div>
-        <span style="font-size: 0.9rem; opacity: 0.9;">আজকের আমল স্কোর:</span>
-        <strong style="font-size: 1.4rem; margin-left: 0.5rem;" id="liveScoreText">০</strong>
-        <span style="font-size: 0.9rem; opacity: 0.8;">/ ১০০ পয়েন্ট</span>
-      </div>
-      <div>
-        <input type="date" id="amalDateInput" class="form-control" style="padding: 0.35rem 0.65rem; font-size: 0.9rem; color: #1E293B; background: #FFF; border: none;" onchange="loadTodaySubmission()">
+    <!-- Daily Submission Status & 9:00 PM BST Rule Banner (Requirement 2) -->
+    <div id="submissionRuleBanner" style="display: block; border-radius: 10px; padding: 1.15rem 1.25rem; margin-bottom: 1.5rem;">
+      <!-- Dynamically filled by loadTodayStatus() -->
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.4rem;">⏳</span>
+        <div style="font-size: 0.92rem; color: #334155;">দৈনিক আমল সাবমিশন স্ট্যাটাস যাচাই করা হচ্ছে...</div>
       </div>
     </div>
 
+    <!-- Live Score Sticky Bar (Strict Max 100) -->
+    <div class="score-sticky-bar">
+      <div>
+        <span style="font-size: 0.9rem; opacity: 0.9;">আজকের একীভূত আমল স্কোর:</span>
+        <strong style="font-size: 1.45rem; margin-left: 0.5rem;" id="liveScoreText">০</strong>
+        <span style="font-size: 0.9rem; opacity: 0.8;">/ ১০০ পয়েন্ট (সর্বোচ্চ)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 6px;" id="currentDateDisplay">
+          তারিখ: লোড হচ্ছে...
+        </span>
+      </div>
+    </div>
+
+    <!-- Unified Single Amal Form (Requirement 3 & 4: Admin Controlled Categories) -->
     <form id="amalForm" onsubmit="submitAmal(event)">
-      <!-- 1. Obligatory Prayers (Max 50) -->
-      <div class="amal-category-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
-          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🕌 ১. পাঁচ ওয়াক্ত ফরজ সালাত</h3>
-          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ৫০ পয়েন্ট</span>
-        </div>
-        <div id="prayersContainer"></div>
-      </div>
-
-      <!-- 2. Sunnah & Nafl (Max 20) -->
-      <div class="amal-category-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
-          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🌙 ২. সুন্নাত ও নফল ইবাদত</h3>
-          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ২০ পয়েন্ট</span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-          <label class="check-label"><input type="checkbox" name="tahajjud" onchange="calculateScore()"> তাহাজ্জুদ সালাত (+৫)</label>
-          <label class="check-label"><input type="checkbox" name="ishraq_duha" onchange="calculateScore()"> ইশরাক / চাশত সালাত (+৫)</label>
-          <label class="check-label"><input type="checkbox" name="rawatib" onchange="calculateScore()"> ১২ রাকাত সুন্নাতে মুয়াক্কাদা (+৫)</label>
-          <label class="check-label"><input type="checkbox" name="witr" onchange="calculateScore()"> বিতর সালাত গুরুত্বসহ আদায় (+৫)</label>
-        </div>
-      </div>
-
-      <!-- 3. Quran & Adhkar (Max 10) -->
-      <div class="amal-category-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
-          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">📖 ৩. কুরআন তিলাওয়াত ও মাসনুন জিকির</h3>
-          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ১০ পয়েন্ট</span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-          <label class="check-label"><input type="checkbox" name="morning_evening_adhkar" onchange="calculateScore()"> সকাল ও সন্ধ্যার মাসনুন হেফাজতের দোয়া (+৫)</label>
-          <label class="check-label"><input type="checkbox" name="quran_tilawat" onchange="calculateScore()"> কমপক্ষে ১ রুকু কুরআন তিলাওয়াত / তাফসির (+৫)</label>
-        </div>
-      </div>
-
-      <!-- 4. Charity & Good Deeds (Max 10) -->
-      <div class="amal-category-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
-          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🤝 ৪. দান-সদকা ও উত্তম চরিত্র</h3>
-          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ১০ পয়েন্ট</span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-          <label class="check-label"><input type="checkbox" name="sadaqah" onchange="calculateScore()"> সাধ্য অনুযায়ী সদকা / দান (+৫)</label>
-          <label class="check-label"><input type="checkbox" name="parents_family_kindness" onchange="calculateScore()"> পিতামাতা ও পরিবারের সাথে সুন্দর ব্যবহার (+৫)</label>
-        </div>
-      </div>
-
-      <!-- 5. Sunnah Habits (Max 10) -->
-      <div class="amal-category-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
-          <h3 style="margin: 0; color: #065F46; font-size: 1.15rem;">🌿 ৫. সুন্নাহ অভ্যাস ও সুস্থতা</h3>
-          <span style="font-size: 0.85rem; color: #64748B;">সর্বোচ্চ ১০ পয়েন্ট</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <label class="check-label"><input type="checkbox" name="sunnah_food_honey_kalojira" onchange="calculateScore()"> সুন্নাহ খাদ্য গ্রহণ (মধু / কালোজিরা / জয়তুন / খেজুর) (+৪)</label>
-          <label class="check-label"><input type="checkbox" name="early_sleep_sunnah_routine" onchange="calculateScore()"> এশার পর দ্রুত ঘুমানো ও অযুর সাথে নিদ্রা (+৩)</label>
-          <label class="check-label"><input type="checkbox" name="harmless_tongue_gossip_free" onchange="calculateScore()"> পরনিন্দা (গিবত), মিথ্যা ও অনর্থক কথাবার্তা পরিহার (+৩)</label>
+      <!-- Dynamic Categories Container -->
+      <div id="dynamicCategoriesContainer">
+        <div style="background: #FFF; border-radius: 10px; padding: 2rem; text-align: center; color: #64748B;">
+          আমল ক্যাটাগরিসমূহ লোড হচ্ছে...
         </div>
       </div>
 
@@ -178,9 +182,12 @@
         </label>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.95rem; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(6, 95, 70, 0.3);">
-        ✅ আজকের আমল জমা দিন
-      </button>
+      <!-- Submission Button (Disabled before 9 PM or if already submitted) -->
+      <div id="submitBtnWrapper">
+        <button type="submit" id="submitAmalBtn" class="btn btn-primary" style="width: 100%; padding: 0.95rem; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(6, 95, 70, 0.3);">
+          ✅ আজকের আমল জমা দিন
+        </button>
+      </div>
     </form>
 
     <!-- Submission History Card -->
@@ -214,6 +221,11 @@
       window.location.href = '/lifestyle';
     }
 
+    let todayDateBST = '';
+    let isWindowOpen = false;
+    let isAlreadySubmitted = false;
+    let loadedCategories = [];
+
     const PRAYERS = [
       { id: 'fajr', name: 'ফজর' },
       { id: 'dhuhr', name: 'যোহর' },
@@ -222,64 +234,219 @@
       { id: 'isha', name: 'এশা' }
     ];
 
-    function renderPrayers() {
-      const container = document.getElementById('prayersContainer');
-      container.innerHTML = PRAYERS.map(p => `
-        <div class="prayer-row">
-          <strong style="color: #1E293B; width: 80px;">${p.name}</strong>
-          <div style="display: flex; gap: 1rem; align-items: center;">
-            <label class="check-label">
-              <input type="radio" name="${p.id}" value="congregation" onchange="calculateScore()"> জামাতে (+১০)
-            </label>
-            <label class="check-label">
-              <input type="radio" name="${p.id}" value="individual" onchange="calculateScore()"> একা (+৬)
-            </label>
-            <label class="check-label">
-              <input type="radio" name="${p.id}" value="missed" checked onchange="calculateScore()"> অপূর্ণ (০)
-            </label>
+    // Load submission status for today in Bangladesh Time (BST)
+    async function loadTodayStatus() {
+      try {
+        const res = await fetch('/api/lifestyle/today-status', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (!data.success) return;
+
+        todayDateBST = data.today_bst;
+        isWindowOpen = data.submission_window_open;
+        isAlreadySubmitted = data.already_submitted;
+
+        document.getElementById('currentDateDisplay').innerText = `তারিখ: ${todayDateBST} (BST)`;
+
+        const banner = document.getElementById('submissionRuleBanner');
+        const submitBtn = document.getElementById('submitAmalBtn');
+
+        if (isAlreadySubmitted) {
+          // Rule 2: Already submitted today
+          banner.style.background = '#ECFDF5';
+          banner.style.border = '1px solid #A7F3D0';
+          banner.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+              <span style="font-size: 1.6rem; color: #059669;">✅</span>
+              <div>
+                <strong style="color: #065F46; font-size: 1.05rem; display: block; margin-bottom: 0.25rem;">
+                  আজকের (${todayDateBST}) আমল ইতিমধ্যে সফলভাবে জমা দেওয়া হয়েছে!
+                </strong>
+                <p style="margin: 0; color: #047857; font-size: 0.9rem; line-height: 1.5;">
+                  নিয়ম অনুযায়ী প্রতিদিন মাত্র <strong>১ বার</strong> আমল জমা দেওয়া সম্ভব। আপনি আজকের আমল সম্পূর্ণ করেছেন। আগামীকাল রাত ৯:০০ টার পর পরবর্তী আমল সাবমিশন উইন্ডো পুনরায় উন্মুক্ত হবে।
+                </p>
+              </div>
+            </div>
+          `;
+          submitBtn.disabled = true;
+          submitBtn.style.background = '#94A3B8';
+          submitBtn.style.cursor = 'not-allowed';
+          submitBtn.style.boxShadow = 'none';
+          submitBtn.innerText = '✅ আজকের আমল ইতিমধ্যে জমা দেওয়া হয়েছে (১ বার সম্পন্ন)';
+          document.getElementById('honestyCheckbox').disabled = true;
+          disableFormInputs(true);
+        } else if (!data.is_after_9pm) {
+          // Rule 2: Before 9:00 PM BST
+          banner.style.background = '#FFFBEB';
+          banner.style.border = '1px solid #FCD34D';
+          banner.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+              <span style="font-size: 1.6rem; color: #D97706;">⏰</span>
+              <div>
+                <strong style="color: #92400E; font-size: 1.05rem; display: block; margin-bottom: 0.25rem;">
+                  দৈনিক আমল সাবমিশন রাত ৯:০০ টার (বাংলাদেশ সময়) পর উন্মুক্ত হবে
+                </strong>
+                <p style="margin: 0; color: #B45309; font-size: 0.9rem; line-height: 1.5;">
+                  বর্তমান সময়: <strong>${data.current_hour_bst.toString().padStart(2, '0')}:${data.current_minute_bst.toString().padStart(2, '0')} BST</strong>। দিনের সমস্ত সালাত ও আমল শেষ করার জন্য রাত ৯:০০ টার পূর্বে আমল সাবমিট করার সুযোগ নেই। রাত ৯:০০ টার পর অনুগ্রহ করে আপনার সারাদিনের আমল সততার সাথে জমা দিন।
+                </p>
+              </div>
+            </div>
+          `;
+          submitBtn.disabled = true;
+          submitBtn.style.background = '#CBD5E1';
+          submitBtn.style.color = '#64748B';
+          submitBtn.style.cursor = 'not-allowed';
+          submitBtn.style.boxShadow = 'none';
+          submitBtn.innerText = '⏰ রাত ৯:০০ টার পর সাবমিশন সক্রিয় হবে';
+          disableFormInputs(false);
+        } else {
+          // Submission window is open!
+          banner.style.background = '#F0FDF4';
+          banner.style.border = '1px solid #BBF7D0';
+          banner.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+              <span style="font-size: 1.6rem; color: #16A34A;">🟢</span>
+              <div>
+                <strong style="color: #166534; font-size: 1.05rem; display: block; margin-bottom: 0.25rem;">
+                  আজকের (${todayDateBST}) আমল সাবমিশন উইন্ডো উন্মুক্ত রয়েছে
+                </strong>
+                <p style="margin: 0; color: #15803D; font-size: 0.9rem; line-height: 1.5;">
+                  রাত ৯:০০ টার পর উইন্ডো সক্রিয় হয়েছে। মনে রাখবেন, দিনে মাত্র <strong>১ বার</strong> আমল জমা দেওয়া যাবে। সম্পূর্ণ সততার সাথে তথ্য পূরণ করে নিচে জমা দিন।
+                </p>
+              </div>
+            </div>
+          `;
+          submitBtn.disabled = false;
+          submitBtn.style.background = '';
+          submitBtn.style.color = '';
+          submitBtn.style.cursor = 'pointer';
+          submitBtn.innerText = '✅ আজকের আমল জমা দিন';
+          disableFormInputs(false);
+        }
+      } catch (err) {
+        console.error('Error loading today status:', err);
+      }
+    }
+
+    function disableFormInputs(disabled) {
+      const inputs = document.querySelectorAll('#amalForm input[type="radio"], #amalForm input[type="checkbox"]:not(#honestyCheckbox)');
+      inputs.forEach(inp => { inp.disabled = disabled; });
+    }
+
+    // Load Categories from Admin-Controlled API (Requirement 4)
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/lifestyle/categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          loadedCategories = data.categories;
+          renderUnifiedTracker();
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    }
+
+    // Render Unified Single Tracker (Requirement 3)
+    function renderUnifiedTracker() {
+      const container = document.getElementById('dynamicCategoriesContainer');
+      if (!loadedCategories || loadedCategories.length === 0) {
+        container.innerHTML = '<div style="background:#FFF; padding:1.5rem; text-align:center;">কোনো সক্রিয় ক্যাটাগরি পাওয়া যায়নি।</div>';
+        return;
+      }
+
+      container.innerHTML = loadedCategories.map((cat, idx) => {
+        let itemsHtml = '';
+        if (cat.slug === 'prayers') {
+          itemsHtml = PRAYERS.map(p => `
+            <div class="prayer-row">
+              <strong style="color: #1E293B; width: 80px;">${p.name}</strong>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <label class="check-label">
+                  <input type="radio" name="${p.id}" value="congregation" onchange="calculateScore()"> জামাতে (+১০)
+                </label>
+                <label class="check-label">
+                  <input type="radio" name="${p.id}" value="individual" onchange="calculateScore()"> একা (+৬)
+                </label>
+                <label class="check-label">
+                  <input type="radio" name="${p.id}" value="missed" checked onchange="calculateScore()"> অপূর্ণ (০)
+                </label>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          const acts = cat.activities || [];
+          if (acts.length > 0) {
+            itemsHtml = `
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem;">
+                ${acts.map(act => `
+                  <label class="check-label" style="background: #F8FAFC; padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid #F1F5F9;">
+                    <input type="checkbox" name="${act.key_name}" data-points="${act.points}" onchange="calculateScore()">
+                    <span>${act.title_bn} <strong style="color:#065F46;">(+${act.points})</strong></span>
+                  </label>
+                `).join('')}
+              </div>
+            `;
+          } else {
+            itemsHtml = '<p style="color:#94A3B8; font-size:0.85rem; margin:0;">এই ক্যাটাগরিতে এখনো কোনো আইটেম যোগ করা হয়নি।</p>';
+          }
+        }
+
+        return `
+          <div class="amal-category-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem;">
+              <h3 style="margin: 0; color: #065F46; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>${cat.icon || '📌'}</span>
+                <span>${cat.title_bn}</span>
+              </h3>
+              <span style="font-size: 0.85rem; color: #64748B; background: #F1F5F9; padding: 2px 10px; border-radius: 9999px;">
+                সর্বোচ্চ ${cat.max_points} পয়েন্ট
+              </span>
+            </div>
+            ${itemsHtml}
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      calculateScore();
+      if (isAlreadySubmitted) {
+        disableFormInputs(true);
+      }
     }
 
     function calculateScore() {
-      let pScore = 0;
-      PRAYERS.forEach(p => {
-        const val = document.querySelector(`input[name="${p.id}"]:checked`)?.value;
-        if (val === 'congregation') pScore += 10;
-        else if (val === 'individual') pScore += 6;
+      let total = 0;
+
+      loadedCategories.forEach(cat => {
+        let catScore = 0;
+        if (cat.slug === 'prayers') {
+          PRAYERS.forEach(p => {
+            const val = document.querySelector(`input[name="${p.id}"]:checked`)?.value;
+            if (val === 'congregation') catScore += 10;
+            else if (val === 'individual') catScore += 6;
+          });
+        } else {
+          (cat.activities || []).forEach(act => {
+            const checked = document.querySelector(`input[name="${act.key_name}"]`)?.checked;
+            if (checked) {
+              catScore += act.points;
+            }
+          });
+        }
+
+        if (catScore > cat.max_points) {
+          catScore = cat.max_points;
+        }
+        total += catScore;
       });
-      if (pScore > 50) pScore = 50;
 
-      let nScore = 0;
-      if (document.querySelector('input[name="tahajjud"]')?.checked) nScore += 5;
-      if (document.querySelector('input[name="ishraq_duha"]')?.checked) nScore += 5;
-      if (document.querySelector('input[name="rawatib"]')?.checked) nScore += 5;
-      if (document.querySelector('input[name="witr"]')?.checked) nScore += 5;
-      if (nScore > 20) nScore = 20;
-
-      let qScore = 0;
-      if (document.querySelector('input[name="morning_evening_adhkar"]')?.checked) qScore += 5;
-      if (document.querySelector('input[name="quran_tilawat"]')?.checked) qScore += 5;
-      if (qScore > 10) qScore = 10;
-
-      let cScore = 0;
-      if (document.querySelector('input[name="sadaqah"]')?.checked) cScore += 5;
-      if (document.querySelector('input[name="parents_family_kindness"]')?.checked) cScore += 5;
-      if (cScore > 10) cScore = 10;
-
-      let hScore = 0;
-      if (document.querySelector('input[name="sunnah_food_honey_kalojira"]')?.checked) hScore += 4;
-      if (document.querySelector('input[name="early_sleep_sunnah_routine"]')?.checked) hScore += 3;
-      if (document.querySelector('input[name="harmless_tongue_gossip_free"]')?.checked) hScore += 3;
-      if (hScore > 10) hScore = 10;
-
-      let total = pScore + nScore + qScore + cScore + hScore;
       if (total > 100) total = 100;
       document.getElementById('liveScoreText').innerText = total;
       return total;
     }
 
+    // Load User Progress & Ranking (Requirement 1, 5, 6)
     async function loadProfile() {
       try {
         const res = await fetch('/api/lifestyle/progress', {
@@ -295,9 +462,24 @@
           document.getElementById('remainingDaysText').innerText = data.user.remaining_days != null ? data.user.remaining_days : 40;
           document.getElementById('progressBarFill').style.width = (data.user.completion_percentage || 0) + '%';
 
+          // Ranking display (Requirement 6)
+          const rank = data.user.current_rank || 1;
+          const totalP = data.user.total_participants || 1;
+          document.getElementById('userProfileRank').innerText = `🏆 আপনার বর্তমান র‍্যাংক: #${rank} (মোট ${totalP} জনের মধ্যে)`;
+
+          // Profile Photo display (Requirement 5)
+          const avatarImg = document.getElementById('userAvatarImg');
+          const removeBtn = document.getElementById('removeAvatarBtn');
+          if (data.user.profile_photo) {
+            avatarImg.src = data.user.profile_photo;
+            removeBtn.style.display = 'inline-block';
+          } else {
+            avatarImg.src = '/images/default-avatar.svg';
+            removeBtn.style.display = 'none';
+          }
+
           if (data.competition) {
-            document.getElementById('userProfileRank').innerText = `${data.competition.title} • আপনার বর্তমান র‍্যাংক: #${data.user.current_rank || '১'}`;
-            document.getElementById('compDateRange').innerText = `মেয়াদ: ${data.competition.start_date || '২০২৬-১১-০১'} হতে ${data.competition.end_date || '২০২৬-১২-১০'} (${data.competition.duration_days} দিন)`;
+            document.getElementById('compDateRange').innerText = `${data.competition.title} (মেয়াদ: ${data.competition.start_date || '২০২৬-১১-০১'} হতে ${data.competition.end_date || '২০২৬-১২-১০'})`;
           }
 
           // Render submissions history
@@ -324,33 +506,75 @@
       }
     }
 
+    // Avatar Upload (Requirement 5)
+    async function handleAvatarUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      try {
+        const res = await fetch('/api/lifestyle/profile-photo', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('প্রোফাইল ছবি সফলভাবে আপডেট হয়েছে!');
+          loadProfile();
+        } else {
+          alert(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে');
+        }
+      } catch (err) {
+        alert('ছবি আপলোডে নেটওয়ার্ক সমস্যা হয়েছে');
+      }
+    }
+
+    // Avatar Remove (Requirement 5)
+    async function handleAvatarRemove() {
+      if (!confirm('আপনি কি আপনার প্রোফাইল ছবি মুছে ফেলতে চান?')) return;
+      try {
+        const res = await fetch('/api/lifestyle/profile-photo', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('প্রোফাইল ছবি মুছে ফেলা হয়েছে');
+          loadProfile();
+        } else {
+          alert(data.error || 'ছবি মুছতে ব্যর্থ হয়েছে');
+        }
+      } catch (err) {
+        alert('সার্ভার যোগাযোগে ত্রুটি');
+      }
+    }
+
+    // Daily Amal Submit (Requirement 2: Once per day, current day only, 9 PM BST rule)
     async function submitAmal(e) {
       e.preventDefault();
+      if (isAlreadySubmitted) {
+        return alert('আজকের আমল ইতিমধ্যে জমা দেওয়া হয়েছে। প্রতিদিন একবারই জমা দেওয়া সম্ভব।');
+      }
+
       const honesty = document.getElementById('honestyCheckbox').checked;
       if (!honesty) {
         return alert('অনুগ্রহ করে সততার সাক্ষ্য বক্সে টিক চিহ্ন দিন।');
       }
 
-      const answers = {
-        fajr: document.querySelector('input[name="fajr"]:checked')?.value,
-        dhuhr: document.querySelector('input[name="dhuhr"]:checked')?.value,
-        asr: document.querySelector('input[name="asr"]:checked')?.value,
-        maghrib: document.querySelector('input[name="maghrib"]:checked')?.value,
-        isha: document.querySelector('input[name="isha"]:checked')?.value,
-        tahajjud: document.querySelector('input[name="tahajjud"]')?.checked,
-        ishraq_duha: document.querySelector('input[name="ishraq_duha"]')?.checked,
-        rawatib: document.querySelector('input[name="rawatib"]')?.checked,
-        witr: document.querySelector('input[name="witr"]')?.checked,
-        morning_evening_adhkar: document.querySelector('input[name="morning_evening_adhkar"]')?.checked,
-        quran_tilawat: document.querySelector('input[name="quran_tilawat"]')?.checked,
-        sadaqah: document.querySelector('input[name="sadaqah"]')?.checked,
-        parents_family_kindness: document.querySelector('input[name="parents_family_kindness"]')?.checked,
-        sunnah_food_honey_kalojira: document.querySelector('input[name="sunnah_food_honey_kalojira"]')?.checked,
-        early_sleep_sunnah_routine: document.querySelector('input[name="early_sleep_sunnah_routine"]')?.checked,
-        harmless_tongue_gossip_free: document.querySelector('input[name="harmless_tongue_gossip_free"]')?.checked
-      };
+      const answers = {};
+      PRAYERS.forEach(p => {
+        answers[p.id] = document.querySelector(`input[name="${p.id}"]:checked`)?.value || 'missed';
+      });
 
-      const submissionDate = document.getElementById('amalDateInput').value;
+      loadedCategories.forEach(cat => {
+        if (cat.slug !== 'prayers') {
+          (cat.activities || []).forEach(act => {
+            answers[act.key_name] = !!document.querySelector(`input[name="${act.key_name}"]`)?.checked;
+          });
+        }
+      });
 
       try {
         const res = await fetch('/api/lifestyle/submit-daily', {
@@ -360,15 +584,16 @@
             'Authorization': 'Bearer ' + token
           },
           body: JSON.stringify({
-            submission_date: submissionDate,
+            submission_date: todayDateBST,
             answers,
             honesty_confirmed: true
           })
         });
         const data = await res.json();
         if (data.success) {
-          alert(data.message);
-          loadProfile();
+          alert(data.message || 'আজকের আমল সফলভাবে সংরক্ষিত হয়েছে!');
+          await loadTodayStatus();
+          await loadProfile();
         } else {
           alert('ত্রুটি: ' + (data.error || 'আমল জমা দেওয়া যায়নি'));
         }
@@ -383,10 +608,10 @@
       window.location.href = '/lifestyle';
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('amalDateInput').value = new Date().toISOString().split('T')[0];
-      renderPrayers();
-      loadProfile();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadProfile();
+      await loadCategories();
+      await loadTodayStatus();
     });
   </script>
 </body>

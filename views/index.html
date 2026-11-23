@@ -399,7 +399,7 @@
   <!-- ============================================================== -->
   <section class="section" id="amalCompetitionSection" style="background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%); border-top: 1px solid #D1FAE5; border-bottom: 1px solid #E2E8F0; padding: 4.5rem 0;">
     <div class="container">
-      <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+      <div class="section-header" style="text-align: center; margin-bottom: 2.5rem;">
         <span class="section-tag" style="background: #D1FAE5; color: #065F46; font-weight: 700; padding: 6px 18px; border-radius: 9999px; font-size: 0.95rem;">
           ✨ আত্মশুদ্ধি, সুন্নাহ জীবনধারা ও পুরস্কার
         </span>
@@ -407,42 +407,79 @@
           আমল ও প্রতিযোগিতা
         </h2>
         <p style="color: #475569; max-width: 740px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
-          দৈনিক আমল ট্র্যাকিং, সহীহ সুন্নাহ জীবনধারা এবং ৪০ দিনের আত্মশুদ্ধি প্রতিযোগিতায় অংশগ্রহণ করুন। নিয়মিত আমলের মাধ্যমে অর্জন করুন পয়েন্ট, সম্মাননা স্তর ও বরকতময় পুরস্কার।
+          একীভূত আমল ট্র্যাকিং, সহীহ সুন্নাহ জীবনধারা এবং ৪০ দিনের আত্মশুদ্ধি প্রতিযোগিতায় অংশগ্রহণ করুন। নিয়মিত আমলের মাধ্যমে অর্জন করুন পয়েন্ট, সম্মাননা স্তর ও বরকতময় পুরস্কার।
         </p>
       </div>
 
-      <!-- 4 Core Modules Grid -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.75rem; margin-bottom: 3.5rem;">
+      <!-- Pinned Previous Month Winner Banner (Requirement 7) -->
+      <div id="homepagePinnedWinnerContainer" style="display: none; margin-bottom: 3rem;">
+        <div style="background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border: 2px solid #F59E0B; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="position: relative;">
+              <img id="hpPinnedWinnerPhoto" src="/images/default-avatar.svg" alt="বিজয়ীর ছবি" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #F59E0B; object-fit: cover; background: #FFF;">
+              <span style="position: absolute; bottom: -5px; right: -5px; background: #D97706; color: #FFF; font-size: 1rem; border-radius: 50%; padding: 2px 6px;">👑</span>
+            </div>
+            <div>
+              <div style="display: inline-block; background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 0.8rem; font-weight: 700; padding: 2px 10px; border-radius: 9999px; margin-bottom: 0.35rem;">
+                অ্যাডমিন মনোনীত বিশেষ সম্মাননা
+              </div>
+              <h3 style="font-size: 1.65rem; color: #92400E; font-weight: 800; margin: 0 0 0.25rem 0;" id="hpPinnedWinnerTitle">
+                গত মাসের বিজয়ী!
+              </h3>
+              <div style="font-size: 1.15rem; color: #1E293B; font-weight: 700;" id="hpPinnedWinnerName">
+                লোড হচ্ছে...
+              </div>
+              <div style="font-size: 0.88rem; color: #64748B; margin-top: 0.25rem;">
+                <span id="hpPinnedWinnerPoints" style="font-weight: 700; color: #065F46;">মোট পয়েন্ট: ৪০০০</span> • <span id="hpPinnedWinnerLevel" style="color: #92400E; font-weight: 600;">স্তর: Diamond</span>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: right; min-width: 280px;">
+            <div style="background: #FFFFFF; border: 2px solid #10B981; color: #065F46; font-size: 1.1rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);" id="hpPinnedWinnerBlessing">
+              আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।
+            </div>
+            <a href="/lifestyle/leaderboard" style="color: #D97706; font-size: 0.88rem; font-weight: 700; text-decoration: none;">
+              সম্পূর্ণ লিডারবোর্ড দেখুন →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Core Modules Grid (Single Unified Amal Tracker Architecture - Requirement 3) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.75rem; margin-bottom: 3.5rem;">
         
-        <!-- Module A: Daily Amal Tracker -->
-        <div class="card" style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 14px; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.05);">
+        <!-- Module 1: Unified Single Amal Tracker & 40-Day Challenge -->
+        <div class="card" style="background: #FFFFFF; border: 2px solid #10B981; border-radius: 14px; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 12px rgba(6, 95, 70, 0.08); position: relative;">
+          <div style="position: absolute; top: -12px; right: 20px; background: #065F46; color: #FFF; font-size: 0.75rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px;">
+            মূল ফিচার
+          </div>
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <span style="font-size: 2.25rem;">📋</span>
               <span style="background: #ECFDF5; color: #065F46; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 9999px; border: 1px solid #A7F3D0;">
-                দৈনিক ১০০ পয়েন্ট
+                দৈনিক ১০০ পয়েন্ট • ৪০ দিনের আমল প্রতিযোগিতা
               </span>
             </div>
-            <h3 style="font-size: 1.25rem; color: #0F172A; margin-bottom: 0.75rem; font-weight: 700;">
-              দৈনিক আমল ট্র্যাকার
+            <h3 style="font-size: 1.3rem; color: #0F172A; margin-bottom: 0.75rem; font-weight: 700;">
+              একীভূত দৈনিক আমল ট্র্যাকার
             </h3>
             <p style="color: #64748B; font-size: 0.92rem; line-height: 1.6; margin-bottom: 1rem;">
-              ৫ ওয়াক্ত নামাজ (জামাত/একাকী), তাহাজ্জুদ, ইশরাক, সকাল-সন্ধ্যার মাসনুন জিকির, কুরআন তিলাওয়াত ও সদকা প্রতিদিনের তালিকায় অন্তর্ভুক্ত।
+              সকল আমল এখন একটি মাত্র একীভূত ট্র্যাকারে: ৫ ওয়াক্ত ফরজ সালাত (জামাত/একাকী), তাহাজ্জুদ, ইশরাক, সকাল-সন্ধ্যার জিকির, কুরআন তিলাওয়াত, দান-সদকা ও সুন্নাহ অভ্যাস।
             </p>
             <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 0.45rem;">
-              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> তারিখভিত্তিক সংরক্ষিত আমল রেকর্ড</li>
-              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> ডুপ্লিকেট সাবমিশন প্রতিরোধ ও স্বচ্ছতা</li>
-              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> স্বয়ংক্রিয় রিয়েল-টাইম পয়েন্ট গণনা</li>
+              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> <strong>দৈনিক ১ বার সাবমিশন:</strong> রাত ৯:০০ টার পর উন্মুক্ত</li>
+              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> <strong>অ্যাডমিন নিয়ন্ত্রিত ক্যাটাগরি:</strong> গতিশীল ও স্বচ্ছ</li>
+              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> <strong>প্রোফাইল ছবি ও স্বয়ংক্রিয় র‍্যাংক:</strong> রিয়েল-টাইম অবস্থান</li>
             </ul>
           </div>
           <div>
-            <a href="/lifestyle/tracker" class="btn btn-primary" style="width: 100%; text-align: center; text-decoration: none; padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600;">
+            <a href="/lifestyle/tracker" class="btn btn-primary" style="width: 100%; text-align: center; text-decoration: none; padding: 0.85rem 1rem; border-radius: 8px; font-weight: 700; font-size: 1rem;">
               আমল ট্র্যাকার শুরু করুন →
             </a>
           </div>
         </div>
 
-        <!-- Module B: Sunnah Lifestyle -->
+        <!-- Module 2: Sunnah Lifestyle & Authentic Reminders -->
         <div class="card" style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 14px; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.05);">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -455,7 +492,7 @@
               সুন্নাহ লাইফস্টাইল ও নসিহত
             </h3>
             <p style="color: #64748B; font-size: 0.92rem; line-height: 1.6; margin-bottom: 1rem;">
-              কুরআন ও সহীহ হাদিস অনুযায়ী প্রতিদিনের জীবনধারা গড়ে তুলুন। খাদ্যভ্যাস, সুন্নাহ ঘুম, জিহ্বা সংরক্ষণ ও পরিবারের সাথে সদাচরণ।
+              কুরআন ও সহীহ হাদিস অনুযায়ী প্রতিদিনের জীবনধারা গড়ে তুলুন। খাদ্যভ্যাস, সুন্নাহ ঘুম, জিহ্বা সংরক্ষণ ও পরিবারের সাথে সদাচরণের নির্দেশনা।
             </p>
             <div style="background: #F8FAFC; border-left: 3px solid #065F46; padding: 0.75rem 0.9rem; border-radius: 4px; margin-bottom: 1.25rem; font-size: 0.85rem; color: #1E293B;">
               <div style="font-style: italic; margin-bottom: 0.35rem;">"আল্লাহর নিকট সর্বাধিক প্রিয় আমল হলো যা নিয়মিত করা হয়, তা অল্প হলেও।"</div>
@@ -463,41 +500,13 @@
             </div>
           </div>
           <div>
-            <a href="/lifestyle" class="btn btn-outline-primary" style="width: 100%; text-align: center; text-decoration: none; padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600;">
+            <a href="/lifestyle" class="btn btn-outline-primary" style="width: 100%; text-align: center; text-decoration: none; padding: 0.85rem 1rem; border-radius: 8px; font-weight: 600;">
               সুন্নাহ নির্দেশিকা পড়ুন →
             </a>
           </div>
         </div>
 
-        <!-- Module C: 40-Day Amal Challenge -->
-        <div class="card" style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 14px; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.05);">
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <span style="font-size: 2.25rem;">🎯</span>
-              <span style="background: #EDE9FE; color: #6D28D9; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 9999px; border: 1px solid #DDD6FE;">
-                ৪০ দিন মেয়াদ
-              </span>
-            </div>
-            <h3 style="font-size: 1.25rem; color: #0F172A; margin-bottom: 0.75rem; font-weight: 700;">
-              ৪০ দিনের আমল প্রতিযোগিতা
-            </h3>
-            <p style="color: #64748B; font-size: 0.92rem; line-height: 1.6; margin-bottom: 1rem;">
-              টানা ৪০ দিন সুন্নাহসম্মত ধারাবাহিক আমল অনুশীলনের বিশেষ আত্মশুদ্ধি চ্যালেঞ্জ। আপনার ধারাবাহিকতা আপনাকে পৌঁছে দেবে বিশেষ সম্মাননা স্তরে।
-            </p>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; margin-bottom: 1.25rem;">
-              <div style="background: #F0FDF4; padding: 0.4rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: #065F46;">💎 ডায়মন্ড<br><span style="font-weight: 400; font-size: 0.7rem;">৩৬০০+</span></div>
-              <div style="background: #F8FAFC; padding: 0.4rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: #475569;">🪙 প্লাটিনাম<br><span style="font-weight: 400; font-size: 0.7rem;">৩২০০+</span></div>
-              <div style="background: #FEF3C7; padding: 0.4rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: #92400E;">🥇 গোল্ড<br><span style="font-weight: 400; font-size: 0.7rem;">২৮০০+</span></div>
-            </div>
-          </div>
-          <div>
-            <a href="/lifestyle/tracker" class="btn btn-primary" style="width: 100%; text-align: center; text-decoration: none; padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600;">
-              চ্যালেঞ্জে অংশগ্রহণ করুন →
-            </a>
-          </div>
-        </div>
-
-        <!-- Module D: Points & Live Leaderboard -->
+        <!-- Module 3: Live Leaderboard & Rankings -->
         <div class="card" style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 14px; padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.05);">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -513,13 +522,13 @@
               সর্বমোট অর্জিত পয়েন্ট ও সক্রিয় আমলের ভিত্তিতে স্বয়ংক্রিয় লিডারবোর্ড। শীর্ষস্থান অধিকারীদের জন্য বিশেষ উপহার ও ভেরিফাইড সনদপত্র।
             </p>
             <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 0.45rem;">
-              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> পূর্ণাঙ্গ গোপনীয়তা (মাস্কড ফোন নম্বর)</li>
-              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> শেয়ারযোগ্য ভেরিফাইড বিজয়ী পোস্টার</li>
-              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> পরিচালকের অফিসিয়াল স্বীকৃতি ও সিল</li>
+              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> <strong>প্রতিযোগীর র‍্যাংক ও ছবি:</strong> স্বয়ংক্রিয় গণনা</li>
+              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> <strong>পূর্ণাঙ্গ গোপনীয়তা:</strong> মাস্কড মোবাইল নম্বর</li>
+              <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10B981; font-weight: 700;">✓</span> <strong>গত মাসের বিজয়ী পিন:</strong> বিশেষ সম্মাননা</li>
             </ul>
           </div>
           <div>
-            <a href="/lifestyle/leaderboard" class="btn btn-accent" style="width: 100%; text-align: center; text-decoration: none; padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600;">
+            <a href="/lifestyle/leaderboard" class="btn btn-accent" style="width: 100%; text-align: center; text-decoration: none; padding: 0.85rem 1rem; border-radius: 8px; font-weight: 600;">
               🏆 লাইভ লিডারবোর্ড দেখুন →
             </a>
           </div>
@@ -1242,6 +1251,29 @@
       }
     }
 
+    // Load Admin-Pinned Previous Month Winner (Requirement 7)
+    async function loadHomepagePinnedWinner() {
+      try {
+        const res = await fetch('/api/lifestyle/pinned-winner');
+        const data = await res.json();
+        if (data.success && data.pinned_winner && data.pinned_winner.is_active) {
+          const pw = data.pinned_winner;
+          const container = document.getElementById('homepagePinnedWinnerContainer');
+          if (container) {
+            container.style.display = 'block';
+            document.getElementById('hpPinnedWinnerTitle').innerText = pw.month_title || 'গত মাসের বিজয়ী!';
+            document.getElementById('hpPinnedWinnerName').innerText = pw.full_name;
+            document.getElementById('hpPinnedWinnerPhoto').src = pw.profile_photo || '/images/default-avatar.svg';
+            document.getElementById('hpPinnedWinnerPoints').innerText = `মোট পয়েন্ট: ${pw.total_points || 0}`;
+            document.getElementById('hpPinnedWinnerLevel').innerText = `স্তর: ${pw.level || 'Diamond'}`;
+            document.getElementById('hpPinnedWinnerBlessing').innerText = pw.blessing_message || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load pinned winner on homepage:', err);
+      }
+    }
+
     // Auto-load all modules on DOM ready
     document.addEventListener('DOMContentLoaded', function() {
       loadHomepageHijamaPackages();
@@ -1249,6 +1281,7 @@
       loadHomepageSupplements();
       loadHomepageCourses();
       loadHomepageArticles();
+      loadHomepagePinnedWinner();
     });
   </script>
 

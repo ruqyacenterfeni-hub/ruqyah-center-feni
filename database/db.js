@@ -76,6 +76,13 @@ function initDb() {
   } catch (mErr8) {
     console.warn('Migration V8 warning:', mErr8.message);
   }
+
+  try {
+    const { runMigrationV9 } = require('./migrate_v9_unified_amal');
+    runMigrationV9(db);
+  } catch (mErr9) {
+    console.warn('Migration V9 warning:', mErr9.message);
+  }
 }
 
 initDb();

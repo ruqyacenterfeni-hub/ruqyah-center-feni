@@ -1460,6 +1460,232 @@ async function runTests() {
     assert.strictEqual(placedOrder.customer_phone, '01811223344');
   });
 
+  // ==============================================================
+  // AMAL & COMPETITIONS UPGRADE: 7 CRITICAL REQUIREMENTS AUDIT
+  // ==============================================================
+
+  const uniquePhone = '018' + Math.floor(10000000 + Math.random() * 90000000);
+  const uniqueEmail = `user_${Date.now()}@example.com`;
+
+  await test('AMAL REQ 1: One User = One Profile strictly prevents duplicate accounts with same phone or email', async () => {
+    const userPayload = {
+      full_name: 'আব্দুল কাদের',
+      phone: uniquePhone,
+      email: uniqueEmail,
+      password: 'StrongPassword123!',
+      district: 'Feni'
+    };
+
+    // 1. First registration succeeds
+    const reg1 = await request('POST', '/api/lifestyle/register', userPayload);
+    assert.strictEqual(reg1.statusCode, 201);
+    assert.strictEqual(reg1.data.success, true);
+    assert.ok(reg1.data.token);
+
+    // 2. Duplicate registration with same phone is rejected
+    const dupPhone = await request('POST', '/api/lifestyle/register', {
+      full_name: 'অন্য নাম',
+      phone: uniquePhone,
+      email: 'other_' + uniqueEmail,
+      password: 'Pass123456!'
+    });
+    assert.strictEqual(dupPhone.statusCode, 400);
+    assert.strictEqual(dupPhone.data.success, false);
+    assert.ok(dupPhone.data.error.includes('ইতিমধ্যে একটি প্রোফাইল রয়েছে'));
+
+    // 3. Duplicate registration with same email is rejected
+    const dupEmail = await request('POST', '/api/lifestyle/register', {
+      full_name: 'আরেক নাম',
+      phone: '017' + Math.floor(10000000 + Math.random() * 90000000),
+      email: uniqueEmail,
+      password: 'Pass123456!'
+    });
+    assert.strictEqual(dupEmail.statusCode, 400);
+    assert.strictEqual(dupEmail.data.success, false);
+  });
+
+  await test('AMAL REQ 2: Daily Amal Submission Rule - 9 PM BST rule, current-day only, and strictly once per day', async () => {
+    // Login with unique user
+    const loginRes = await request('POST', '/api/lifestyle/login', {
+      login_identifier: uniquePhone,
+      password: 'StrongPassword123!'
+    });
+    assert.strictEqual(loginRes.statusCode, 200);
+    const userToken = loginRes.data.token;
+    const authHeaders = { 'Authorization': 'Bearer ' + userToken };
+
+    // 1. Check /today-status endpoint
+    const statusRes = await request('GET', '/api/lifestyle/today-status', null, authHeaders);
+    assert.strictEqual(statusRes.statusCode, 200);
+    assert.strictEqual(statusRes.data.success, true);
+    assert.ok(statusRes.data.today_bst);
+    assert.strictEqual(typeof statusRes.data.is_after_9pm, 'boolean');
+    assert.strictEqual(statusRes.data.already_submitted, false);
+
+    const todayDate = statusRes.data.today_bst;
+
+    // 2. Attempt future date submission -> strictly rejected
+    const futureDate = '2099-12-31';
+    const futureRes = await request('POST', '/api/lifestyle/submit-daily', {
+      submission_date: futureDate,
+      answers: { fajr: 'congregation' },
+      honesty_confirmed: true
+    }, authHeaders);
+    assert.strictEqual(futureRes.statusCode, 400);
+    assert.ok(futureRes.data.error.includes('ভবিষ্যৎ') || futureRes.data.error_code === 'INVALID_SUBMISSION_DATE');
+
+    // 3. Attempt submission with x-test-simulate-before-9pm header -> rejected before 9 PM BST
+    const before9pmRes = await request('POST', '/api/lifestyle/submit-daily', {
+      submission_date: todayDate,
+      answers: { fajr: 'congregation' },
+      honesty_confirmed: true
+    }, { ...authHeaders, 'x-test-simulate-before-9pm': '1' });
+    assert.strictEqual(before9pmRes.statusCode, 400);
+    assert.ok(before9pmRes.data.error.includes('রাত ৯:০০'));
+
+    // 4. Submit today's amal (with valid time / bypass) -> succeeds
+    const submit1 = await request('POST', '/api/lifestyle/submit-daily', {
+      submission_date: todayDate,
+      answers: {
+        fajr: 'congregation',
+        dhuhr: 'congregation',
+        asr: 'congregation',
+        maghrib: 'congregation',
+        isha: 'congregation',
+        tahajjud: true,
+        morning_evening_adhkar: true,
+        sadaqah: true
+      },
+      honesty_confirmed: true
+    }, { ...authHeaders, 'x-test-bypass-time': '1' });
+    assert.strictEqual(submit1.statusCode, 200);
+    assert.strictEqual(submit1.data.success, true);
+    assert.ok(submit1.data.points_breakdown.total_points > 0);
+
+    // 5. Attempt second submission on same day -> strictly rejected (Rule 2: once per day)
+    const submit2 = await request('POST', '/api/lifestyle/submit-daily', {
+      submission_date: todayDate,
+      answers: { fajr: 'congregation' },
+      honesty_confirmed: true
+    }, { ...authHeaders, 'x-test-bypass-time': '1' });
+    assert.strictEqual(submit2.statusCode, 400);
+    assert.ok(submit2.data.error.includes('ইতিমধ্যে') || submit2.data.error_code === 'ALREADY_SUBMITTED_TODAY');
+
+    // 6. Verify /today-status now reflects already_submitted: true
+    const statusAfter = await request('GET', '/api/lifestyle/today-status', null, authHeaders);
+    assert.strictEqual(statusAfter.statusCode, 200);
+    assert.strictEqual(statusAfter.data.already_submitted, true);
+  });
+
+  await test('AMAL REQ 3 & 4: Single Amal Tracker & Admin-Controlled Amal Categories CRUD', async () => {
+    // 1. Public dynamic categories API
+    const catsRes = await request('GET', '/api/lifestyle/categories');
+    assert.strictEqual(catsRes.statusCode, 200);
+    assert.strictEqual(catsRes.data.success, true);
+    assert.ok(catsRes.data.categories.length >= 5);
+    const prayerCat = catsRes.data.categories.find(c => c.slug === 'prayers');
+    assert.ok(prayerCat, 'Prayers category must exist');
+    assert.strictEqual(prayerCat.max_points, 50);
+
+    // 2. Admin adds a new custom Amal Category
+    const newCatPayload = {
+      slug: 'community_khidmah',
+      title_bn: 'সমাজসেবা ও মানবকল্যাণ',
+      title_en: 'Community Service',
+      icon: '🤝',
+      max_points: 10,
+      sort_order: 6,
+      is_active: 1
+    };
+    const addCatRes = await request('POST', '/api/lifestyle/admin/categories', newCatPayload, adminCookie);
+    assert.strictEqual(addCatRes.statusCode, 201);
+    assert.strictEqual(addCatRes.data.success, true);
+    const createdCatId = addCatRes.data.category.id;
+
+    // 3. Admin edits the category
+    const editCatRes = await request('PUT', `/api/lifestyle/admin/categories/${createdCatId}`, {
+      ...newCatPayload,
+      max_points: 15,
+      title_bn: 'সমাজসেবা, রক্তদান ও মানবকল্যাণ'
+    }, adminCookie);
+    assert.strictEqual(editCatRes.statusCode, 200);
+    assert.strictEqual(editCatRes.data.category.max_points, 15);
+
+    // 4. Admin toggles active/inactive
+    const toggleRes = await request('POST', `/api/lifestyle/admin/categories/${createdCatId}/toggle`, {}, adminCookie);
+    assert.strictEqual(toggleRes.statusCode, 200);
+    assert.strictEqual(toggleRes.data.is_active, 0);
+
+    // 5. Admin deletes the custom category
+    const delRes = await request('DELETE', `/api/lifestyle/admin/categories/${createdCatId}`, null, adminCookie);
+    assert.strictEqual(delRes.statusCode, 200);
+    assert.strictEqual(delRes.data.success, true);
+  });
+
+  await test('AMAL REQ 5 & 6: Profile Photo and Real-time Visible Ranking System', async () => {
+    // 1. Leaderboard includes explicit rank and profile_photo
+    const lbRes = await request('GET', '/api/lifestyle/leaderboard');
+    assert.strictEqual(lbRes.statusCode, 200);
+    assert.strictEqual(lbRes.data.success, true);
+    assert.ok(lbRes.data.leaderboard.length > 0);
+
+    // Verify ordering by total_points DESC and explicit rank numbers
+    for (let i = 0; i < lbRes.data.leaderboard.length; i++) {
+      const item = lbRes.data.leaderboard[i];
+      assert.strictEqual(item.rank, i + 1, `Rank should match position ${i + 1}`);
+      assert.ok('profile_photo' in item);
+      if (i > 0) {
+        assert.ok(lbRes.data.leaderboard[i - 1].total_points >= item.total_points, 'Leaderboard must be sorted DESC');
+      }
+    }
+
+    // 2. User progress API includes current_rank and total_participants
+    const loginRes = await request('POST', '/api/lifestyle/login', {
+      login_identifier: uniquePhone,
+      password: 'StrongPassword123!'
+    });
+    const userToken = loginRes.data.token;
+    const progRes = await request('GET', '/api/lifestyle/progress', null, { 'Authorization': 'Bearer ' + userToken });
+    assert.strictEqual(progRes.statusCode, 200);
+    assert.strictEqual(progRes.data.success, true);
+    assert.ok(progRes.data.user.current_rank >= 1);
+    assert.ok(progRes.data.user.total_participants >= 1);
+    assert.ok('profile_photo' in progRes.data.user);
+  });
+
+  await test('AMAL REQ 7: Previous Month Winner Admin Pin Feature with required exact blessing message', async () => {
+    // 1. Get current pinned winner
+    const pinGet = await request('GET', '/api/lifestyle/pinned-winner');
+    assert.strictEqual(pinGet.statusCode, 200);
+    assert.strictEqual(pinGet.data.success, true);
+    assert.ok(pinGet.data.pinned_winner);
+    assert.strictEqual(pinGet.data.pinned_winner.month_title, 'গত মাসের বিজয়ী!');
+    assert.strictEqual(pinGet.data.pinned_winner.blessing_message, 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।');
+
+    // 2. Admin pins a new winner
+    const pinPayload = {
+      user_id: 1,
+      month_title: 'গত মাসের বিজয়ী!',
+      blessing_message: 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।',
+      total_points: 3950,
+      level: 'Diamond (মুকাররাবুন)',
+      is_active: 1
+    };
+    const pinSet = await request('POST', '/api/lifestyle/admin/pinned-winner', pinPayload, adminCookie);
+    assert.strictEqual(pinSet.statusCode, 200);
+    assert.strictEqual(pinSet.data.success, true);
+    assert.strictEqual(pinSet.data.pinned_winner.total_points, 3950);
+    assert.strictEqual(pinSet.data.pinned_winner.blessing_message, 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।');
+
+    // 3. Admin unpins winner
+    const unpinRes = await request('DELETE', '/api/lifestyle/admin/pinned-winner', null, adminCookie);
+    assert.strictEqual(unpinRes.statusCode, 200);
+    assert.strictEqual(unpinRes.data.success, true);
+
+    // 4. Re-pin for public display
+    await request('POST', '/api/lifestyle/admin/pinned-winner', pinPayload, adminCookie);
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');
