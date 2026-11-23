@@ -70,15 +70,29 @@
 
   <main class="container" style="padding: 2rem 0; max-width: 780px;">
     <!-- Profile & Competition Overview Banner -->
-    <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <h2 style="margin: 0; color: #0F172A; font-size: 1.35rem;" id="userProfileName">স্বাগতম!</h2>
-        <div style="font-size: 0.85rem; color: #64748B; margin-top: 0.25rem;" id="userProfileRank">প্রতিযোগিতা র‍্যাংক: লোড হচ্ছে...</div>
+    <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <h2 style="margin: 0; color: #0F172A; font-size: 1.35rem;" id="userProfileName">আসসালামু আলাইকুম</h2>
+          <div style="font-size: 0.88rem; color: #64748B; margin-top: 0.25rem;" id="userProfileRank">প্রতিযোগিতা র‍্যাংক: লোড হচ্ছে...</div>
+          <div style="font-size: 0.82rem; color: #065F46; font-weight: 600; margin-top: 0.25rem;" id="compDateRange">মেয়াদ: লোড হচ্ছে...</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="background: #FEF3C7; color: #92400E; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;" id="userLevelBadge">Improvement Level</span>
+          <div style="font-size: 1.25rem; font-weight: 800; color: #065F46; margin-top: 0.35rem;">
+            মোট পয়েন্ট: <span id="userTotalPoints">০</span> <span style="font-size: 0.8rem; color: #64748B; font-weight: normal;">/ ৪০০০</span>
+          </div>
+        </div>
       </div>
-      <div style="text-align: right;">
-        <span style="background: #FEF3C7; color: #92400E; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;" id="userLevelBadge">Improvement Level</span>
-        <div style="font-size: 1.1rem; font-weight: 700; color: #065F46; margin-top: 0.25rem;">
-          মোট পয়েন্ট: <span id="userTotalPoints">০</span>
+
+      <!-- 40-Day Progress Bar -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: #475569; font-weight: 600; margin-bottom: 0.4rem;">
+          <span>৪০ দিনের অগ্রগতি: <span id="progressPctText">০%</span></span>
+          <span>সম্পন্ন: <span id="completedDaysText">০</span>/৪০ দিন (<span id="remainingDaysText">৪০</span> দিন বাকি)</span>
+        </div>
+        <div style="width: 100%; height: 10px; background: #E2E8F0; border-radius: 9999px; overflow: hidden;">
+          <div id="progressBarFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #059669); transition: width 0.4s ease;"></div>
         </div>
       </div>
     </div>
@@ -168,6 +182,29 @@
         ✅ আজকের আমল জমা দিন
       </button>
     </form>
+
+    <!-- Submission History Card -->
+    <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-top: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+      <h3 style="font-size: 1.15rem; color: #0F172A; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+        <span>📅 পূর্ববর্তী সংরক্ষিত আমলের ইতিহাস</span>
+        <span style="font-size: 0.85rem; color: #065F46; font-weight: normal;" id="historyCountBadge">০ টি রেকর্ড</span>
+      </h3>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid #E2E8F0; color: #64748B;">
+              <th style="padding: 0.6rem 0.5rem;">তারিখ</th>
+              <th style="padding: 0.6rem 0.5rem;">অর্জিত পয়েন্ট</th>
+              <th style="padding: 0.6rem 0.5rem;">সততার স্বীকৃতি</th>
+              <th style="padding: 0.6rem 0.5rem; text-align: right;">স্ট্যাটাস</th>
+            </tr>
+          </thead>
+          <tbody id="submissionHistoryTbody">
+            <tr><td colspan="4" style="text-align: center; padding: 1rem; color: #94A3B8;">তথ্য লোড হচ্ছে...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </main>
 
   <script src="/js/main.js"></script>
@@ -245,7 +282,7 @@
 
     async function loadProfile() {
       try {
-        const res = await fetch('/api/lifestyle/profile', {
+        const res = await fetch('/api/lifestyle/progress', {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
@@ -253,8 +290,31 @@
           document.getElementById('userProfileName').innerText = 'আসসালামু আলাইকুম, ' + data.user.full_name;
           document.getElementById('userTotalPoints').innerText = data.user.total_points;
           document.getElementById('userLevelBadge').innerText = data.user.current_level;
+          document.getElementById('progressPctText').innerText = (data.user.completion_percentage || 0) + '%';
+          document.getElementById('completedDaysText').innerText = data.user.completed_days || 0;
+          document.getElementById('remainingDaysText').innerText = data.user.remaining_days != null ? data.user.remaining_days : 40;
+          document.getElementById('progressBarFill').style.width = (data.user.completion_percentage || 0) + '%';
+
           if (data.competition) {
-            document.getElementById('userProfileRank').innerText = `${data.competition.competition_title} • আপনার বর্তমান র‍্যাংক: #${data.competition.current_rank} (${data.competition.completed_days}/${data.competition.duration_days} দিন পূর্ণ)`;
+            document.getElementById('userProfileRank').innerText = `${data.competition.title} • আপনার বর্তমান র‍্যাংক: #${data.user.current_rank || '১'}`;
+            document.getElementById('compDateRange').innerText = `মেয়াদ: ${data.competition.start_date || '২০২৬-১১-০১'} হতে ${data.competition.end_date || '২০২৬-১২-১০'} (${data.competition.duration_days} দিন)`;
+          }
+
+          // Render submissions history
+          const historyTbody = document.getElementById('submissionHistoryTbody');
+          if (data.submissions && data.submissions.length > 0) {
+            document.getElementById('historyCountBadge').innerText = data.submissions.length + ' দিন সম্পন্ন';
+            historyTbody.innerHTML = data.submissions.map(s => `
+              <tr style="border-bottom: 1px solid #F1F5F9;">
+                <td style="padding: 0.6rem 0.5rem; font-weight: 600; color: #1E293B;">${s.submission_date}</td>
+                <td style="padding: 0.6rem 0.5rem; font-weight: 700; color: #065F46;">${s.total_points_awarded} / ১০০</td>
+                <td style="padding: 0.6rem 0.5rem; color: #059669;">✓ আমানতদারিতা স্বীকৃত</td>
+                <td style="padding: 0.6rem 0.5rem; text-align: right;"><span style="background: #ECFDF5; color: #065F46; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">সংরক্ষিত</span></td>
+              </tr>
+            `).join('');
+          } else {
+            document.getElementById('historyCountBadge').innerText = '০ দিন';
+            historyTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: #94A3B8;">এখনো কোনো আমল জমা দেওয়া হয়নি। আজই প্রথম আমল জমা দিন!</td></tr>';
           }
         } else {
           handleLogout();

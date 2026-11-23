@@ -1311,6 +1311,17 @@ async function runTests() {
     }
   });
 
+  await test('HOMEPAGE INTEGRATION: Dedicated section "আমল ও প্রতিযোগিতা" exists with 4 core modules', async () => {
+    const homeRes = await request('GET', '/');
+    assert.strictEqual(homeRes.statusCode, 200);
+    assert.ok(homeRes.data.includes('id="amalCompetitionSection"'));
+    assert.ok(homeRes.data.includes('আমল ও প্রতিযোগিতা'));
+    assert.ok(homeRes.data.includes('দৈনিক আমল ট্র্যাকার'));
+    assert.ok(homeRes.data.includes('সুন্নাহ লাইফস্টাইল ও নসিহত'));
+    assert.ok(homeRes.data.includes('৪০ দিনের আমল প্রতিযোগিতা'));
+    assert.ok(homeRes.data.includes('পয়েন্ট, লিডারবোর্ড ও বিজয়ী পুরস্কার'));
+  });
+
   await test('MODULE 21 & 08: Automatic Winner Calculation, Poster Generator & Shareable Dual Report', async () => {
     // 1. Calculate winners as admin
     const calcRes = await request('POST', '/api/lifestyle/admin/calculate-winners', {});
