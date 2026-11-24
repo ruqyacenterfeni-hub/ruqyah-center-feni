@@ -1,3 +1,5 @@
+// Initialize fontconfig and register Bengali TrueType fonts before Sharp loads
+require('./fontSetup');
 const fs = require('fs');
 const path = require('path');
 let sharp;
@@ -674,8 +676,11 @@ function buildPatientHistorySvg(patient, history, diagnosis, lang = 'bn', option
           font-family: 'Noto Sans Bengali';
           src: local('Noto Sans Bengali'), local('Nirmala UI'), local('Vrinda'), local('SolaimanLipi'), local('Arial Unicode MS');
         }
+        * {
+          font-family: 'Noto Sans Bengali', Noto Sans Bengali, 'Nirmala UI', Nirmala UI, sans-serif;
+        }
         .font-base {
-          font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', 'SolaimanLipi', 'Segoe UI', Arial, sans-serif;
+          font-family: 'Noto Sans Bengali', Noto Sans Bengali, 'Nirmala UI', Nirmala UI, 'Vrinda', 'SolaimanLipi', 'Segoe UI', Arial, sans-serif;
         }
       </style>
     </defs>
@@ -1031,8 +1036,11 @@ function buildRuqyahSessionSvg(session, patient, lang = 'bn', options = {}) {
           font-family: 'Noto Sans Bengali';
           src: local('Noto Sans Bengali'), local('Nirmala UI'), local('Vrinda'), local('SolaimanLipi'), local('Arial Unicode MS');
         }
+        * {
+          font-family: 'Noto Sans Bengali', Noto Sans Bengali, 'Nirmala UI', Nirmala UI, sans-serif;
+        }
         .font-base {
-          font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', 'SolaimanLipi', 'Segoe UI', Arial, sans-serif;
+          font-family: 'Noto Sans Bengali', Noto Sans Bengali, 'Nirmala UI', Nirmala UI, 'Vrinda', 'SolaimanLipi', 'Segoe UI', Arial, sans-serif;
         }
       </style>
     </defs>

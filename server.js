@@ -1,3 +1,6 @@
+// Initialize fontconfig & Bengali TrueType fonts before any native modules load
+require('./utils/fontSetup');
+
 const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');

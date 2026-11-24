@@ -2362,6 +2362,27 @@ async function runTests() {
     assert.ok(adminJs.includes('window.toggleAdminSidebar'), 'admin.js must provide window.toggleAdminSidebar');
   });
 
+  await test('BENGALI FONT DISCOVERY & FONTCONFIG: Linux / Hostinger server font rendering without tofu boxes', async () => {
+    const fontSetup = require('../utils/fontSetup');
+    assert.strictEqual(typeof fontSetup, 'function', 'fontSetup must be an exported function');
+
+    const result = fontSetup();
+    assert.ok(result.fontsConfFile, 'fontSetup must generate fonts.conf path');
+    assert.ok(fs.existsSync(result.fontsConfFile), 'fonts.conf file must exist on disk');
+
+    const fontsConfContent = fs.readFileSync(result.fontsConfFile, 'utf8');
+    assert.ok(fontsConfContent.includes('Noto Sans Bengali'), 'fonts.conf must configure Noto Sans Bengali font mapping');
+    assert.ok(fontsConfContent.includes('public/fonts'), 'fonts.conf must search public/fonts directory');
+
+    assert.ok(process.env.FONTCONFIG_PATH, 'FONTCONFIG_PATH environment variable must be set');
+    assert.ok(process.env.FONTCONFIG_FILE, 'FONTCONFIG_FILE environment variable must be set');
+
+    const ttfPath = path.join(__dirname, '..', 'public', 'fonts', 'NotoSansBengali.ttf');
+    assert.ok(fs.existsSync(ttfPath), 'NotoSansBengali.ttf must exist in public/fonts');
+    const stat = fs.statSync(ttfPath);
+    assert.ok(stat.size > 400000, 'NotoSansBengali.ttf must be full complete font file (>400KB)');
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');
