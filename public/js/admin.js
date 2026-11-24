@@ -60,6 +60,34 @@ async function checkAuth() {
 }
 
 /**
+ * Global Mobile Sidebar Helpers (available immediately)
+ */
+window.openAdminSidebar = function() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const sidebarBackdrop = document.getElementById('adminSidebarBackdrop');
+  if (sidebar) sidebar.classList.add('open');
+  if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeAdminSidebar = function() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const sidebarBackdrop = document.getElementById('adminSidebarBackdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+  document.body.style.overflow = '';
+};
+
+window.toggleAdminSidebar = function() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  if (sidebar && sidebar.classList.contains('open')) {
+    window.closeAdminSidebar();
+  } else {
+    window.openAdminSidebar();
+  }
+};
+
+/**
  * Navigation & Tab Switching
  */
 function setupNavigation() {
@@ -67,7 +95,16 @@ function setupNavigation() {
   navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
-      const tabName = item.getAttribute('data-tab');
+      const tabTarget = item.closest('[data-tab]');
+      const tabName = tabTarget ? tabTarget.getAttribute('data-tab') : item.getAttribute('data-tab');
+      if (tabName) switchTab(tabName);
+    });
+  });
+
+  // Mobile bottom bar tabs
+  document.querySelectorAll('.admin-mob-tab-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tabName = btn.getAttribute('data-tab');
       if (tabName) switchTab(tabName);
     });
   });
@@ -90,25 +127,6 @@ function setupNavigation() {
   const sidebarToggle = document.getElementById('adminSidebarToggle');
   const sidebarClose = document.getElementById('adminSidebarClose');
   const sidebarBackdrop = document.getElementById('adminSidebarBackdrop');
-  const sidebar = document.querySelector('.admin-sidebar');
-
-  window.openAdminSidebar = function() {
-    if (sidebar) sidebar.classList.add('open');
-    if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
-  };
-
-  window.closeAdminSidebar = function() {
-    if (sidebar) sidebar.classList.remove('open');
-    if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
-  };
-
-  window.toggleAdminSidebar = function() {
-    if (sidebar && sidebar.classList.contains('open')) {
-      window.closeAdminSidebar();
-    } else {
-      window.openAdminSidebar();
-    }
-  };
 
   if (sidebarToggle) {
     sidebarToggle.addEventListener('click', (e) => {
@@ -135,6 +153,10 @@ function switchTab(tabName) {
   currentTab = tabName;
   window.location.hash = tabName;
 
+  // Auto-dismiss any open modal dialogs so user can freely interact with the selected tab
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  document.body.style.overflow = '';
+
   document.querySelectorAll('.admin-nav-item').forEach(item => {
     item.classList.toggle('active', item.getAttribute('data-tab') === tabName);
   });
@@ -160,6 +182,11 @@ function switchTab(tabName) {
     document.querySelector('.admin-sidebar')?.classList.remove('open');
     document.getElementById('adminSidebarBackdrop')?.classList.remove('active');
   }
+
+  // Scroll to top of content
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const adminMain = document.querySelector('.admin-main');
+  if (adminMain) adminMain.scrollTop = 0;
 
   // Load specific tab data
   if (tabName === 'dashboard') loadDashboardData();
@@ -2674,24 +2701,56 @@ async function loadAuditLogs() {
 // MODAL CONTROLS
 // ==========================================================================
 function setupModals() {
-  document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
-    el.addEventListener('click', (e) => {
-      if (e.target === el) {
-        el.closest('.modal-overlay')?.classList.remove('open');
+  // Backdrop click closes modal
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
       }
     });
   });
+
+  // Modal close buttons (✕ and buttons with .modal-close / .modal-close-btn)
+  document.querySelectorAll('.modal-close, .modal-close-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const overlay = btn.closest('.modal-overlay');
+      if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    });
+  });
+
+  // Global Escape key dismisses modals and sidebar
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+      if (typeof window.closeAdminSidebar === 'function') window.closeAdminSidebar();
+      document.body.style.overflow = '';
+    }
+  });
 }
 
-function openModal(id) {
+window.openModal = function(id) {
   const m = document.getElementById(id);
-  if (m) m.classList.add('open');
-}
+  if (m) {
+    // If mobile sidebar was open, dismiss it
+    if (typeof window.closeAdminSidebar === 'function') window.closeAdminSidebar();
+    m.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+};
 
-function closeModal(id) {
+window.closeModal = function(id) {
   const m = document.getElementById(id);
-  if (m) m.classList.remove('open');
-}
+  if (m) {
+    m.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+};
 
 function getBadgeClassForStatus(status) {
   if (status === 'Confirmed') return 'badge-status-confirmed';
