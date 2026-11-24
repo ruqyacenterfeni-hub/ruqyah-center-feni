@@ -366,6 +366,12 @@ async function runTests() {
   });
 
   await test('Admin Login with valid credentials succeeds and issues cookie', async () => {
+    // Verify admin login page does not expose credentials
+    const loginPageRes = await request('GET', '/admin/login');
+    assert.strictEqual(loginPageRes.statusCode, 200);
+    assert.ok(!loginPageRes.data.includes('Admin@12345'), 'Admin login page must NOT expose default admin credentials');
+    assert.ok(!loginPageRes.data.includes('ডিফল্ট অ্যাডমিন তথ্য'), 'Admin login page must NOT show default admin info');
+
     const res = await request('POST', '/api/auth/login', {
       username: 'admin',
       password: 'Admin@12345'
