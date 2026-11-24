@@ -469,26 +469,7 @@
         </div>
       </div>
 
-      <!-- Previous Winners / Hall of Fame Section (Requirement 1) -->
-      <div id="homepageHallOfFameSection" style="display: none; margin-bottom: 3.5rem;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-          <span style="background: #ECFDF5; color: #065F46; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 9999px; border: 1px solid #A7F3D0;">
-            🌟 সম্মাননা গ্যালারি
-          </span>
-          <h3 style="font-size: 1.85rem; color: #0F172A; font-weight: 800; margin: 0.5rem 0 0.35rem 0;">
-            পূর্ববর্তী বিজয়ী ও কৃতি প্রতিযোগী (Hall of Fame)
-          </h3>
-          <p style="color: #64748B; font-size: 0.95rem; max-width: 600px; margin: 0 auto;">
-            ৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় সাফল্য অর্জনকারী কৃতি আমলকারীদের তালিকা। আল্লাহ সকলের আমল কবুল করুন।
-          </p>
-        </div>
-
-        <div id="homepageHallOfFameContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-          <!-- Dynamically populated from /api/lifestyle/hall-of-fame -->
-        </div>
-      </div>
-
-      <!-- TOP PROFILES DISPLAY (Requirement 1, 2, 3, 4: Top 3 by default, Admin Configurable) -->
+      <!-- TOP PROFILES DISPLAY (Top 3 by default, Remaining under See More option) -->
       <div id="homepageTopProfilesSection" style="display: none; margin-bottom: 3.5rem;">
         <div style="text-align: center; margin-bottom: 2rem;">
           <span style="background: #FEF3C7; color: #92400E; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 9999px; border: 1px solid #FCD34D;">
@@ -1409,10 +1390,9 @@
     }
 
     // ==============================================================
-    // WINNER PROFILE & HALL OF FAME MODAL LOGIC (Requirement 1)
+    // WINNER PROFILE MODAL LOGIC
     // ==============================================================
     let currentPinnedWinner = null;
-    let hallOfFameWinnersList = [];
 
     function openPinnedWinnerModal() {
       if (!currentPinnedWinner) return;
@@ -1463,13 +1443,6 @@
       document.body.style.overflow = 'auto';
     }
 
-    function viewHallOfFameWinner(winnerId) {
-      const w = hallOfFameWinnersList.find(item => item.id === winnerId);
-      if (w) {
-        openWinnerProfileModal(w);
-      }
-    }
-
     // Load Admin-Pinned Previous Month Winner (Requirement 1 & 7)
     async function loadHomepagePinnedWinner() {
       try {
@@ -1498,60 +1471,6 @@
         }
       } catch (err) {
         console.error('Failed to load pinned winner on homepage:', err);
-      }
-    }
-
-    // Load Hall of Fame (Previous Published Winners - Requirement 1)
-    async function loadHomepageHallOfFame() {
-      try {
-        const res = await fetch('/api/lifestyle/hall-of-fame');
-        const data = await res.json();
-        const section = document.getElementById('homepageHallOfFameSection');
-        const container = document.getElementById('homepageHallOfFameContainer');
-
-        if (data.success && data.hall_of_fame && data.hall_of_fame.length > 0) {
-          hallOfFameWinnersList = data.hall_of_fame;
-          section.style.display = 'block';
-          container.innerHTML = data.hall_of_fame.map((w, idx) => `
-            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
-              <div>
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                  <div style="position: relative; flex-shrink: 0;">
-                    <img src="${w.profile_photo || '/images/default-avatar.svg'}" alt="${w.full_name}" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid #10B981; object-fit: cover;">
-                    <span style="position: absolute; bottom: -2px; right: -2px; background: #065F46; color: #FFF; font-size: 0.85rem; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">🏆</span>
-                  </div>
-                  <div>
-                    <h4 style="margin: 0; font-size: 1.15rem; color: #0F172A; font-weight: 700;">${w.full_name}</h4>
-                    <div style="font-size: 0.82rem; color: #065F46; font-weight: 700; margin-top: 0.2rem;">
-                      ${w.trophy_title || (w.position === 1 ? '১ম স্থান (চ্যাম্পিয়ন)' : `#${w.position} স্থান অধিকারী`)}
-                    </div>
-                    <div style="font-size: 0.78rem; color: #64748B;">${w.competition_title}</div>
-                  </div>
-                </div>
-
-                <p style="font-size: 0.86rem; color: #475569; line-height: 1.5; margin: 0 0 1rem 0;">
-                  ${w.short_bio || w.achievement_details || '৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় অনন্য সাফল্য অর্জনকারী।'}
-                </p>
-              </div>
-
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 0.75rem; margin-bottom: 0.75rem; font-size: 0.85rem;">
-                  <span style="color: #64748B;">পয়েন্ট: <strong style="color: #065F46;">${w.final_score}</strong></span>
-                  <span style="background: #ECFDF5; color: #065F46; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem;">
-                    ${w.awarded_level}
-                  </span>
-                </div>
-                <button onclick="viewHallOfFameWinner(${w.id})" class="btn btn-secondary" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; border-radius: 6px;">
-                  🏅 বিস্তারিত প্রোফাইল দেখুন
-                </button>
-              </div>
-            </div>
-          `).join('');
-        } else {
-          section.style.display = 'none';
-        }
-      } catch (err) {
-        console.error('Failed to load hall of fame:', err);
       }
     }
 
@@ -1698,7 +1617,6 @@
       loadHomepageCourses();
       loadHomepageArticles();
       loadHomepagePinnedWinner();
-      loadHomepageHallOfFame();
       loadHomepageTopProfiles();
     });
   </script>

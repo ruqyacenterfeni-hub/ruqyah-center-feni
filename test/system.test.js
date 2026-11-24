@@ -2164,9 +2164,10 @@ async function runTests() {
   });
 
   await test('TOP PROFILES REQ 1-5: Homepage Top 3 Profiles, Admin Limit Control & Manual Include/Exclude Overrides', async () => {
-    // 1. Verify Homepage contains Top Profiles section and See More option
+    // 1. Verify Homepage contains Top Profiles section and See More option, with Hall of Fame removed
     const homeRes = await request('GET', '/');
     assert.strictEqual(homeRes.statusCode, 200);
+    assert.ok(!homeRes.data.includes('id="homepageHallOfFameSection"'), 'Homepage must completely remove the Hall of Fame section');
     assert.ok(homeRes.data.includes('id="homepageTopProfilesSection"'), 'Homepage must contain #homepageTopProfilesSection');
     assert.ok(homeRes.data.includes('id="homepageTopProfilesContainer"'), 'Homepage must contain #homepageTopProfilesContainer');
     assert.ok(homeRes.data.includes('id="homepageTopProfilesSeeMore"'), 'Homepage must contain #homepageTopProfilesSeeMore');
