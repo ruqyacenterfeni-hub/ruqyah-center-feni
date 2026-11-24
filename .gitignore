@@ -11,6 +11,8 @@ npm-debug.log*
 scripts/*.jpg
 scripts/*.pdf
 scripts/*.svg
+public/uploads/*
+!public/uploads/**/.gitkeep
 
 # Deployment archives
 *.zip

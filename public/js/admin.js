@@ -3490,6 +3490,8 @@ function switchCommerceSubtab(sub) {
   }
 }
 
+let currentActiveOrderId = null;
+
 async function loadCommerceData() {
   // Load Orders
   try {
@@ -3498,33 +3500,41 @@ async function loadCommerceData() {
     const oTbody = document.getElementById('adminOrdersTbody');
     if (oData.success && oData.orders) {
       if (oData.orders.length === 0) {
-        oTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">কোনো অর্ডার পাওয়া যায়নি।</td></tr>';
+        oTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem;">কোনো অর্ডার পাওয়া যায়নি।</td></tr>';
       } else {
-        oTbody.innerHTML = oData.orders.map(o => `
-          <tr>
-            <td><strong>${o.order_number}</strong></td>
-            <td>${o.created_at ? o.created_at.split('T')[0] : ''}</td>
-            <td><strong>${o.customer_name}</strong><br><small style="color:var(--text-muted);">${o.customer_phone}</small></td>
-            <td><small>${o.shipping_address}</small></td>
-            <td><strong>৳${o.total_amount}</strong></td>
-            <td>
-              <select onchange="updateOrderStatus(${o.id}, this.value)" class="form-control" style="padding: 2px 6px; font-size: 0.8rem;">
-                <option value="Order Received" ${o.status === 'Order Received' ? 'selected' : ''}>Order Received</option>
-                <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            </td>
-            <td>
-              <button class="btn btn-xs btn-outline-primary" onclick="viewOrderDetails(${o.id})">বিবরণ</button>
-            </td>
-          </tr>
-        `).join('');
+        oTbody.innerHTML = oData.orders.map(o => {
+          const itemsSummary = (o.items && o.items.length > 0)
+            ? o.items.map(it => `<span style="display:inline-block; background:#F1F5F9; color:#0F172A; border:1px solid #CBD5E1; padding:2px 6px; border-radius:4px; font-size:0.78rem; margin:1px 2px;">${it.product_name} <strong>× ${it.quantity}</strong></span>`).join(' ')
+            : '<span style="color:var(--text-muted); font-size:0.8rem;">কোনো পণ্য রেকর্ড নেই</span>';
+
+          const dateStr = o.created_at ? o.created_at.split(' ')[0].split('T')[0] : '';
+          return `
+            <tr>
+              <td><strong style="color:var(--primary);">${o.order_number}</strong></td>
+              <td><small>${dateStr}</small></td>
+              <td><strong>${o.customer_name}</strong><br><small style="color:var(--text-muted);"><a href="tel:${o.customer_phone}">${o.customer_phone}</a></small></td>
+              <td><small style="max-width:200px; display:inline-block; word-break:break-word;">${o.shipping_address}</small></td>
+              <td>${itemsSummary}</td>
+              <td><strong>৳${o.total_amount}</strong></td>
+              <td>
+                <select onchange="updateOrderStatus(${o.id}, this.value)" class="form-control" style="padding: 2px 6px; font-size: 0.8rem;">
+                  <option value="Order Received" ${o.status === 'Order Received' ? 'selected' : ''}>Order Received</option>
+                  <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                  <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                  <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              </td>
+              <td>
+                <button class="btn btn-xs btn-outline-primary" onclick="viewOrderDetails(${o.id})" title="সম্পূর্ণ অর্ডার ও পণ্য বিবরণ দেখুন">📦 বিবরণ</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
     }
   } catch (e) {
-    console.error(e);
+    console.error('Failed to load orders:', e);
   }
 
   // Load Products
@@ -3534,26 +3544,30 @@ async function loadCommerceData() {
     const pTbody = document.getElementById('adminProductsTbody');
     if (pData.success && pData.products) {
       if (pData.products.length === 0) {
-        pTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">কোনো পণ্য পাওয়া যায়নি।</td></tr>';
+        pTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem;">কোনো পণ্য পাওয়া যায়নি।</td></tr>';
       } else {
         pTbody.innerHTML = pData.products.map(p => `
           <tr>
+            <td>
+              <img src="${p.image_url || '/images/products/honey.jpg'}" alt="${p.name_bn}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; background:#F8FAFC;">
+            </td>
             <td><strong>${p.name_bn}</strong><br><small style="color:var(--text-muted);">${p.name_en || ''}</small></td>
-            <td>${p.category_name || 'সাধারণ'}</td>
+            <td><span class="badge badge-secondary">${p.category_name || 'সাধারণ'}</span></td>
             <td><strong>৳${p.price}</strong></td>
             <td>${p.discount_price ? '৳' + p.discount_price : '—'}</td>
-            <td>${p.stock_quantity} টি</td>
+            <td><span style="font-weight:600; color:${p.stock_quantity > 10 ? '#059669' : '#DC2626'}">${p.stock_quantity} টি</span></td>
             <td><span class="badge ${p.is_active ? 'badge-success' : 'badge-danger'}">${p.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
-            <td>
-              <button class="btn btn-xs btn-secondary" onclick="promptEditProductPrice(${p.id}, ${p.price})">মূল্য পরিবর্তন</button>
-              <button class="btn btn-xs ${p.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleProductStatus(${p.id})">${p.is_active ? 'হাইড করুন' : 'পাবলিশ করুন'}</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-xs btn-primary" onclick="openEditProductModal(${p.id})">✏️ সম্পাদনা</button>
+              <button class="btn btn-xs ${p.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleProductStatus(${p.id})">${p.is_active ? 'হাইড' : 'পাবলিশ'}</button>
+              <button class="btn btn-xs btn-secondary" onclick="deleteProduct(${p.id})">🗑️</button>
             </td>
           </tr>
         `).join('');
       }
     }
   } catch (e) {
-    console.error(e);
+    console.error('Failed to load products:', e);
   }
 }
 
@@ -3567,6 +3581,7 @@ async function updateOrderStatus(orderId, newStatus) {
     const data = await res.json();
     if (data.success) {
       showToast('অর্ডার স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে!', 'success');
+      loadCommerceData();
     } else {
       showToast(data.error || 'স্ট্যাটাস আপডেট করা যায়নি', 'error');
     }
@@ -3575,24 +3590,212 @@ async function updateOrderStatus(orderId, newStatus) {
   }
 }
 
-async function promptEditProductPrice(prodId, currentPrice) {
-  const newPrice = prompt('নতুন বিক্রয় মূল্য নির্ধারণ করুন (BDT):', currentPrice);
-  if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
-    try {
-      const res = await fetch(`/api/admin/commerce/products/${prodId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price: parseFloat(newPrice) })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('পণ্যের মূল্য আপডেট সম্পন্ন হয়েছে!', 'success');
-        loadCommerceData();
-      }
-    } catch (e) {
-      showToast('ত্রুটি: ' + e.message, 'error');
+async function viewOrderDetails(orderId) {
+  try {
+    const res = await fetch(`/api/admin/commerce/orders/${orderId}`);
+    const data = await res.json();
+    if (!data.success || !data.order) {
+      showToast(data.error || 'অর্ডার লোড করা যায়নি', 'error');
+      return;
     }
+
+    const order = data.order;
+    const items = data.items || [];
+    currentActiveOrderId = order.id;
+
+    document.getElementById('ordDetNumber').textContent = order.order_number;
+    document.getElementById('ordDetDate').textContent = order.created_at || '';
+    
+    // Status Badge
+    const badgeColors = {
+      'Order Received': '#0284C7',
+      'Processing': '#D97706',
+      'Shipped': '#7C3AED',
+      'Delivered': '#059669',
+      'Cancelled': '#DC2626'
+    };
+    const sBadge = document.getElementById('ordDetStatusBadge');
+    sBadge.textContent = order.status;
+    sBadge.style.background = badgeColors[order.status] || '#64748B';
+    sBadge.style.color = '#FFFFFF';
+    sBadge.style.padding = '2px 8px';
+    sBadge.style.borderRadius = '4px';
+    sBadge.style.fontSize = '0.8rem';
+    sBadge.style.fontWeight = '600';
+
+    // Customer details
+    document.getElementById('ordDetCustomerName').textContent = order.customer_name;
+    const phoneEl = document.getElementById('ordDetCustomerPhone');
+    phoneEl.textContent = order.customer_phone;
+    phoneEl.href = `tel:${order.customer_phone}`;
+    document.getElementById('ordDetCustomerAddress').textContent = order.shipping_address;
+
+    // Customer notes
+    const notesWrap = document.getElementById('ordDetNotesWrap');
+    if (order.customer_notes && order.customer_notes.trim()) {
+      document.getElementById('ordDetCustomerNotes').textContent = order.customer_notes;
+      notesWrap.style.display = 'block';
+    } else {
+      notesWrap.style.display = 'none';
+    }
+
+    // Status select and admin notes
+    document.getElementById('ordDetStatusSelect').value = order.status;
+    document.getElementById('ordDetAdminNotes').value = order.internal_admin_notes || '';
+
+    // Items table
+    const itemsTbody = document.getElementById('ordDetItemsTbody');
+    if (items.length === 0) {
+      itemsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:#64748B;">কোনো পণ্য আইটেম পাওয়া যায়নি।</td></tr>';
+    } else {
+      itemsTbody.innerHTML = items.map(it => `
+        <tr style="border-bottom: 1px solid #E2E8F0;">
+          <td style="padding: 8px 12px; vertical-align: middle;">
+            <img src="${it.image_url || '/images/products/honey.jpg'}" alt="${it.product_name}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;">
+          </td>
+          <td style="padding: 8px 12px; vertical-align: middle;">
+            <strong style="color: #1E293B;">${it.product_name}</strong>
+            ${it.name_en ? `<div style="font-size: 0.78rem; color: #64748B;">${it.name_en}</div>` : ''}
+          </td>
+          <td style="padding: 8px 12px; vertical-align: middle; text-align: right;">৳${it.unit_price}</td>
+          <td style="padding: 8px 12px; vertical-align: middle; text-align: center;"><strong>× ${it.quantity}</strong></td>
+          <td style="padding: 8px 12px; vertical-align: middle; text-align: right;"><strong style="color: #0F172A;">৳${it.total_price}</strong></td>
+        </tr>
+      `).join('');
+    }
+
+    // Financial totals
+    document.getElementById('ordDetSubtotal').textContent = order.subtotal_amount || 0;
+    document.getElementById('ordDetShipping').textContent = order.shipping_charge || 0;
+    document.getElementById('ordDetTotal').textContent = order.total_amount || 0;
+
+    openModal('orderDetailsModal');
+  } catch (err) {
+    showToast('অর্ডার বিবরণ লোড করা যায়নি: ' + err.message, 'error');
   }
+}
+
+async function saveOrderDetailsStatus() {
+  if (!currentActiveOrderId) return;
+  const newStatus = document.getElementById('ordDetStatusSelect').value;
+  try {
+    const res = await fetch(`/api/admin/commerce/orders/${currentActiveOrderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('অর্ডার স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে!', 'success');
+      viewOrderDetails(currentActiveOrderId);
+      loadCommerceData();
+    } else {
+      showToast(data.error || 'স্ট্যাটাস আপডেট করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function saveOrderDetailsNotes() {
+  if (!currentActiveOrderId) return;
+  const notes = document.getElementById('ordDetAdminNotes').value.trim();
+  try {
+    const res = await fetch(`/api/admin/commerce/orders/${currentActiveOrderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ internal_admin_notes: notes })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('অ্যাডমিন নোট সংরক্ষণ করা হয়েছে!', 'success');
+    } else {
+      showToast(data.error || 'নোট সংরক্ষণ করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+function printOrderPackingSlip() {
+  const ordNumber = document.getElementById('ordDetNumber').textContent;
+  const ordDate = document.getElementById('ordDetDate').textContent;
+  const custName = document.getElementById('ordDetCustomerName').textContent;
+  const custPhone = document.getElementById('ordDetCustomerPhone').textContent;
+  const custAddress = document.getElementById('ordDetCustomerAddress').textContent;
+  const subtotal = document.getElementById('ordDetSubtotal').textContent;
+  const shipping = document.getElementById('ordDetShipping').textContent;
+  const total = document.getElementById('ordDetTotal').textContent;
+  const itemsHtml = document.getElementById('ordDetItemsTbody').innerHTML;
+
+  const printWindow = window.open('', '_blank', 'width=800,height=900');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="bn">
+    <head>
+      <meta charset="UTF-8">
+      <title>Order Invoice - ${ordNumber}</title>
+      <style>
+        body { font-family: 'SolaimanLipi', Arial, sans-serif; padding: 2rem; color: #1E293B; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 2px solid #065F46; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+        .title { color: #065F46; font-size: 1.5rem; font-weight: bold; margin: 0; }
+        .sub { color: #64748B; font-size: 0.9rem; }
+        .meta-grid { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+        th, td { border: 1px solid #CBD5E1; padding: 8px 12px; }
+        th { background: #F1F5F9; font-weight: bold; }
+        .totals { float: right; width: 260px; margin-bottom: 2rem; }
+        .footer { clear: both; text-align: center; border-top: 1px solid #CBD5E1; padding-top: 1rem; font-size: 0.85rem; color: #64748B; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার (ফেনী শাখা)</div>
+        <div class="sub">সুন্নাহ সাপ্লিমেন্টস অর্ডার ডেলিভারি চালান / ইনভয়েস</div>
+      </div>
+      <div class="meta-grid">
+        <div>
+          <strong>গ্রাহকের তথ্য:</strong><br>
+          নাম: ${custName}<br>
+          মোবাইল: ${custPhone}<br>
+          ঠিকানা: ${custAddress}
+        </div>
+        <div style="text-align: right;">
+          <strong>অর্ডার নং:</strong> ${ordNumber}<br>
+          তারিখ: ${ordDate}<br>
+          পেমেন্ট: ক্যাশ অন ডেলিভারি (COD)
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ছবি</th>
+            <th>পণ্য</th>
+            <th style="text-align: right;">একক মূল্য</th>
+            <th style="text-align: center;">পরিমাণ</th>
+            <th style="text-align: right;">মোট</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+      </table>
+      <div class="totals">
+        <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span>সাবটোটাল:</span> <strong>৳${subtotal}</strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #CBD5E1;"><span>ডেলিভারি চার্জ:</span> <strong>৳${shipping}</strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 1.1rem; color: #065F46;"><span>সর্বমোট প্রদেয়:</span> <strong>৳${total}</strong></div>
+      </div>
+      <div class="footer">
+        রাসূলুল্লাহ ﷺ বলেছেন: "তোমরা অবশ্যই সুন্নাহ চিকিৎসায় নিজেকে আরোগ্য দান করো।"<br>
+        যোগাযোগ: ০১৮১১-২২৩৩৪৪ | ওয়েবসাইট: https://ruqyahhelpfeni.com
+      </div>
+      <script>
+        window.onload = function() { window.print(); }
+      </script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
 }
 
 async function toggleProductStatus(id) {
@@ -3605,6 +3808,22 @@ async function toggleProductStatus(id) {
     }
   } catch (e) {
     showToast('ত্রুটি: ' + e.message, 'error');
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('আপনি কি নিশ্চিতভাবে এই পণ্যটি মুছে ফেলতে চান?')) return;
+  try {
+    const res = await fetch(`/api/admin/commerce/products/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('পণ্য সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+      loadCommerceData();
+    } else {
+      showToast(data.error || 'পণ্য মোছা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
   }
 }
 
@@ -3672,21 +3891,37 @@ async function loadRuqyahMgrData() {
     const data = await res.json();
     const tbody = document.getElementById('adminRuqyahAudiosTbody');
     if (data.success && data.items) {
-      tbody.innerHTML = data.items.map(i => `
-        <tr>
-          <td><strong>${i.title_bn}</strong><br><small style="direction:rtl; font-size:1.05rem; color:#065F46;">${i.title_ar || ''}</small></td>
-          <td><span class="badge badge-secondary">${i.category}</span></td>
-          <td>${i.duration || '২৫ মিনিট'}</td>
-          <td><a href="${i.audio_url}" target="_blank" style="font-size:0.8rem; color:var(--primary);">▶ শুনুন / লিংক</a></td>
-          <td><span class="badge ${i.is_active ? 'badge-success' : 'badge-danger'}">${i.is_active ? 'প্রকাশিত' : 'লুকানো'}</span></td>
-          <td>
-            <button class="btn btn-xs ${i.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleRuqyahAudioStatus(${i.id})">${i.is_active ? 'হাইড করুন' : 'পাবলিশ করুন'}</button>
-          </td>
-        </tr>
-      `).join('');
+      if (data.items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">কোনো অডিও রিসোর্স পাওয়া যায়নি।</td></tr>';
+      } else {
+        tbody.innerHTML = data.items.map(i => {
+          const audioFileName = i.audio_url ? i.audio_url.split('/').pop() : 'Audio';
+          return `
+            <tr>
+              <td>
+                <strong>${i.title_bn}</strong>
+                ${i.title_ar ? `<br><small style="direction:rtl; font-size:1.05rem; color:#065F46;">${i.title_ar}</small>` : ''}
+              </td>
+              <td><span class="badge badge-secondary">${i.category}</span></td>
+              <td>${i.duration || '২৫ মিনিট'}</td>
+              <td>
+                <a href="${i.audio_url}" target="_blank" style="font-size:0.82rem; color:var(--primary); font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                  ▶ শুনুন (${audioFileName})
+                </a>
+              </td>
+              <td><span class="badge ${i.is_active ? 'badge-success' : 'badge-danger'}">${i.is_active ? 'প্রকাশিত' : 'লুকানো'}</span></td>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-xs btn-primary" onclick="openEditRuqyahAudioModal(${i.id})">✏️ সম্পাদনা</button>
+                <button class="btn btn-xs ${i.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleRuqyahAudioStatus(${i.id})">${i.is_active ? 'হাইড' : 'পাবলিশ'}</button>
+                <button class="btn btn-xs btn-secondary" onclick="deleteRuqyahAudio(${i.id})">🗑️</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
   } catch (e) {
-    console.error(e);
+    console.error('Failed to load audios in admin:', e);
   }
 }
 
@@ -3697,9 +3932,27 @@ async function toggleRuqyahAudioStatus(id) {
     if (data.success) {
       showToast('অডিও স্ট্যাটাস আপডেট সফল হয়েছে!', 'success');
       loadRuqyahMgrData();
+    } else {
+      showToast(data.error || 'স্ট্যাটাস আপডেট করা যায়নি', 'error');
     }
   } catch (e) {
     showToast('ত্রুটি: ' + e.message, 'error');
+  }
+}
+
+async function deleteRuqyahAudio(id) {
+  if (!confirm('আপনি কি নিশ্চিতভাবে এই রুকইয়াহ অডিওটি মুছে ফেলতে চান?')) return;
+  try {
+    const res = await fetch(`/api/admin/commerce/ruqyah-audios/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('অডিওটি সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+      loadRuqyahMgrData();
+    } else {
+      showToast(data.error || 'অডিও মোছা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
   }
 }
 
@@ -4488,30 +4741,248 @@ async function deleteCategory(id) {
   }
 }
 
-async function loadAdsMgrData() {
+// ==================== ADVERTISEMENTS & BANNERS MANAGEMENT ====================
+async function handleBannerUpload(input, targetUrlInputId, previewImgId) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('banner', file);
+
   try {
-    const res = await fetch('/api/resources/advertisements');
+    showToast('ব্যানার ছবি আপলোড হচ্ছে...', 'info');
+    const res = await fetch('/api/admin/commerce/upload-banner', {
+      method: 'POST',
+      body: formData
+    });
     const data = await res.json();
-    const tbody = document.getElementById('adminAdsTbody');
-    if (data.success && data.advertisements) {
-      tbody.innerHTML = data.advertisements.map(a => `
-        <tr>
-          <td><strong>${a.title}</strong></td>
-          <td><span class="badge badge-secondary">${a.placement}</span></td>
-          <td>${a.button_text || 'বিস্তারিত'}</td>
-          <td><a href="${a.target_url}" target="_blank" style="font-size:0.8rem;">${a.target_url || '#'}</a></td>
-          <td><span class="badge ${a.is_active ? 'badge-success' : 'badge-danger'}">${a.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
-        </tr>
-      `).join('');
+    if (data.success && data.image_url) {
+      if (document.getElementById(targetUrlInputId)) {
+        document.getElementById(targetUrlInputId).value = data.image_url;
+      }
+      if (document.getElementById(previewImgId)) {
+        document.getElementById(previewImgId).src = data.image_url;
+      }
+      showToast('ব্যানার ছবি সফলভাবে আপলোড হয়েছে!', 'success');
+    } else {
+      showToast(data.error || 'ব্যানার আপলোড ব্যর্থ হয়েছে', 'error');
     }
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    showToast('আপলোড ত্রুটি: ' + err.message, 'error');
   }
 }
 
-// ==================== MODALS: PRODUCT, HIJAMA, AUDIO, COURSE ====================
+async function loadAdsMgrData() {
+  try {
+    const res = await fetch('/api/admin/commerce/advertisements');
+    const data = await res.json();
+    const tbody = document.getElementById('adminAdsTbody');
+    if (data.success && data.advertisements) {
+      if (data.advertisements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;">কোনো বিজ্ঞাপন বা ব্যানার যুক্ত করা নেই।</td></tr>';
+      } else {
+        tbody.innerHTML = data.advertisements.map(a => `
+          <tr>
+            <td>
+              <img src="${a.image_url}" alt="${a.title}" style="width: 100px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1; background: #F1F5F9;">
+            </td>
+            <td>
+              <strong>${a.title}</strong>
+              ${a.description ? `<br><small style="color:var(--text-muted);">${a.description}</small>` : ''}
+            </td>
+            <td><span class="badge badge-secondary">${a.placement || 'homepage'}</span></td>
+            <td><small>${a.button_text || 'বিস্তারিত দেখুন'}</small></td>
+            <td><a href="${a.target_url}" target="_blank" style="font-size:0.8rem; color:var(--primary);">${a.target_url || '#'}</a></td>
+            <td><span class="badge ${a.is_active ? 'badge-success' : 'badge-danger'}">${a.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-xs btn-primary" onclick="openEditAdModal(${a.id})">✏️ সম্পাদনা</button>
+              <button class="btn btn-xs ${a.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleAdStatus(${a.id})">${a.is_active ? 'হাইড' : 'পাবলিশ'}</button>
+              <button class="btn btn-xs btn-secondary" onclick="deleteAd(${a.id})">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load ads in admin:', e);
+  }
+}
+
+function openAddAdModal() {
+  document.getElementById('addAdForm').reset();
+  if (document.getElementById('addAdImagePreview')) {
+    document.getElementById('addAdImagePreview').src = '/images/hero-banner.jpg';
+  }
+  openModal('addAdModal');
+}
+
+async function saveNewAd(e) {
+  e.preventDefault();
+  const title = document.getElementById('addAdTitle').value.trim();
+  const description = document.getElementById('addAdDesc').value.trim();
+  const imageUrl = document.getElementById('addAdImageUrl').value.trim();
+  const placement = document.getElementById('addAdPlacement').value;
+  const buttonText = document.getElementById('addAdButtonText').value.trim();
+  const targetUrl = document.getElementById('addAdTargetUrl').value.trim();
+  const isActive = document.getElementById('addAdActive').checked ? 1 : 0;
+
+  try {
+    const res = await fetch('/api/admin/commerce/advertisements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description,
+        image_url: imageUrl,
+        placement,
+        button_text: buttonText,
+        target_url: targetUrl,
+        is_active: isActive
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('নতুন ব্যানার বিজ্ঞাপন সফলভাবে যুক্ত করা হয়েছে!', 'success');
+      closeModal('addAdModal');
+      loadAdsMgrData();
+    } else {
+      showToast(data.error || 'বিজ্ঞাপন যুক্ত করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function openEditAdModal(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/advertisements/${id}`);
+    const data = await res.json();
+    if (!data.success || !data.advertisement) {
+      showToast(data.error || 'বিজ্ঞাপনের তথ্য পাওয়া যায়নি', 'error');
+      return;
+    }
+    const a = data.advertisement;
+    document.getElementById('editAdId').value = a.id;
+    document.getElementById('editAdTitle').value = a.title || '';
+    document.getElementById('editAdDesc').value = a.description || '';
+    document.getElementById('editAdImageUrl').value = a.image_url || '';
+    document.getElementById('editAdImagePreview').src = a.image_url || '';
+    document.getElementById('editAdPlacement').value = a.placement || 'homepage';
+    document.getElementById('editAdButtonText').value = a.button_text || 'বিস্তারিত দেখুন';
+    document.getElementById('editAdTargetUrl').value = a.target_url || '#';
+    document.getElementById('editAdActive').checked = a.is_active === 1;
+
+    openModal('editAdModal');
+  } catch (err) {
+    showToast('বিজ্ঞাপন লোড ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function saveEditAd(e) {
+  e.preventDefault();
+  const id = document.getElementById('editAdId').value;
+  const title = document.getElementById('editAdTitle').value.trim();
+  const description = document.getElementById('editAdDesc').value.trim();
+  const imageUrl = document.getElementById('editAdImageUrl').value.trim();
+  const placement = document.getElementById('editAdPlacement').value;
+  const buttonText = document.getElementById('editAdButtonText').value.trim();
+  const targetUrl = document.getElementById('editAdTargetUrl').value.trim();
+  const isActive = document.getElementById('editAdActive').checked ? 1 : 0;
+
+  try {
+    const res = await fetch(`/api/admin/commerce/advertisements/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description,
+        image_url: imageUrl,
+        placement,
+        button_text: buttonText,
+        target_url: targetUrl,
+        is_active: isActive
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('ব্যানার বিজ্ঞাপন সফলভাবে আপডেট করা হয়েছে!', 'success');
+      closeModal('editAdModal');
+      loadAdsMgrData();
+    } else {
+      showToast(data.error || 'বিজ্ঞাপন আপডেট করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function toggleAdStatus(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/advertisements/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('বিজ্ঞাপন স্ট্যাটাস পরিবর্তন সফল হয়েছে!', 'success');
+      loadAdsMgrData();
+    } else {
+      showToast(data.error || 'স্ট্যাটাস পরিবর্তন করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function deleteAd(id) {
+  if (!confirm('আপনি কি নিশ্চিতভাবে এই ব্যানার বিজ্ঞাপনটি মুছে ফেলতে চান?')) return;
+  try {
+    const res = await fetch(`/api/admin/commerce/advertisements/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('ব্যানার বিজ্ঞাপন সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+      loadAdsMgrData();
+    } else {
+      showToast(data.error || 'বিজ্ঞাপন মোছা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+// ==================== PRODUCT IMAGE & MODAL MANAGEMENT ====================
+async function handleProductImageUpload(input, targetUrlInputId, previewImgId) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    showToast('পণ্যের ছবি আপলোড হচ্ছে...', 'info');
+    const res = await fetch('/api/admin/commerce/upload-product-image', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success && data.image_url) {
+      if (document.getElementById(targetUrlInputId)) {
+        document.getElementById(targetUrlInputId).value = data.image_url;
+      }
+      if (document.getElementById(previewImgId)) {
+        document.getElementById(previewImgId).src = data.image_url;
+      }
+      showToast('পণ্যের ছবি সফলভাবে আপলোড হয়েছে!', 'success');
+    } else {
+      showToast(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
+    }
+  } catch (err) {
+    showToast('আপলোড ত্রুটি: ' + err.message, 'error');
+  }
+}
+
 function openAddProductModal() {
   document.getElementById('addProductForm').reset();
+  if (document.getElementById('addProdImagePreview')) {
+    document.getElementById('addProdImagePreview').src = '/images/products/honey.jpg';
+  }
   openModal('addProductModal');
 }
 
@@ -4519,6 +4990,7 @@ async function saveNewProduct(e) {
   e.preventDefault();
   const nameBn = document.getElementById('addProdNameBn').value.trim();
   const nameEn = document.getElementById('addProdNameEn').value.trim();
+  const categoryId = document.getElementById('addProdCategory')?.value || null;
   const price = parseFloat(document.getElementById('addProdPrice').value);
   const discountPrice = parseFloat(document.getElementById('addProdDiscount').value) || null;
   const stockQuantity = parseInt(document.getElementById('addProdStock').value, 10) || 50;
@@ -4530,6 +5002,7 @@ async function saveNewProduct(e) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        category_id: categoryId,
         name_bn: nameBn,
         name_en: nameEn,
         price,
@@ -4552,6 +5025,78 @@ async function saveNewProduct(e) {
   }
 }
 
+async function openEditProductModal(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/products/${id}`);
+    const data = await res.json();
+    if (!data.success || !data.product) {
+      showToast(data.error || 'পণ্য তথ্য পাওয়া যায়নি', 'error');
+      return;
+    }
+    const p = data.product;
+    document.getElementById('editProdId').value = p.id;
+    document.getElementById('editProdNameBn').value = p.name_bn || '';
+    document.getElementById('editProdNameEn').value = p.name_en || '';
+    if (document.getElementById('editProdCategory')) {
+      document.getElementById('editProdCategory').value = p.category_id || '1';
+    }
+    document.getElementById('editProdPrice').value = p.price;
+    document.getElementById('editProdDiscount').value = p.discount_price || '';
+    document.getElementById('editProdStock').value = p.stock_quantity;
+    document.getElementById('editProdImage').value = p.image_url || '';
+    document.getElementById('editProdImagePreview').src = p.image_url || '/images/products/honey.jpg';
+    document.getElementById('editProdDescBn').value = p.description_bn || '';
+    document.getElementById('editProdActive').checked = p.is_active === 1;
+
+    openModal('editProductModal');
+  } catch (err) {
+    showToast('পণ্য লোড ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function saveEditProduct(e) {
+  e.preventDefault();
+  const id = document.getElementById('editProdId').value;
+  const nameBn = document.getElementById('editProdNameBn').value.trim();
+  const nameEn = document.getElementById('editProdNameEn').value.trim();
+  const categoryId = document.getElementById('editProdCategory').value;
+  const price = parseFloat(document.getElementById('editProdPrice').value);
+  const discountPrice = parseFloat(document.getElementById('editProdDiscount').value) || null;
+  const stockQuantity = parseInt(document.getElementById('editProdStock').value, 10) || 0;
+  const imageUrl = document.getElementById('editProdImage').value.trim();
+  const descriptionBn = document.getElementById('editProdDescBn').value.trim();
+  const isActive = document.getElementById('editProdActive').checked ? 1 : 0;
+
+  try {
+    const res = await fetch(`/api/admin/commerce/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category_id: categoryId,
+        name_bn: nameBn,
+        name_en: nameEn,
+        price,
+        discount_price: discountPrice,
+        stock_quantity: stockQuantity,
+        image_url: imageUrl,
+        description_bn: descriptionBn,
+        is_active: isActive
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('পণ্য সফলভাবে আপডেট করা হয়েছে!', 'success');
+      closeModal('editProductModal');
+      loadCommerceData();
+    } else {
+      showToast(data.error || 'পণ্য আপডেট করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+// ==================== HIJAMA PACKAGES ====================
 function openAddHijamaPackageModal() {
   document.getElementById('addHijamaPackageForm').reset();
   openModal('addHijamaPackageModal');
@@ -4588,8 +5133,56 @@ async function saveNewHijamaPackage(e) {
   }
 }
 
+// ==================== RUQYAH AUDIOS & UPLOAD MANAGEMENT ====================
+async function handleAudioUpload(input, targetUrlInputId, statusDivId) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById(statusDivId);
+  if (statusEl) {
+    statusEl.textContent = 'অডিও ফাইল আপলোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন...';
+    statusEl.style.color = '#0284C7';
+  }
+
+  const formData = new FormData();
+  formData.append('audio', file);
+
+  try {
+    const res = await fetch('/api/admin/commerce/upload-audio', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success && data.audio_url) {
+      if (document.getElementById(targetUrlInputId)) {
+        document.getElementById(targetUrlInputId).value = data.audio_url;
+      }
+      if (statusEl) {
+        statusEl.textContent = `✓ ফাইল আপলোড সম্পন্ন (${(data.size / (1024 * 1024)).toFixed(1)} MB)`;
+        statusEl.style.color = '#059669';
+      }
+      showToast('রুকইয়াহ অডিও ফাইল সফলভাবে আপলোড হয়েছে!', 'success');
+    } else {
+      if (statusEl) {
+        statusEl.textContent = '✕ আপলোড ব্যর্থ: ' + (data.error || 'অননুমোদিত ফরম্যাট');
+        statusEl.style.color = '#DC2626';
+      }
+      showToast(data.error || 'অডিও ফাইল আপলোড ব্যর্থ হয়েছে', 'error');
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = '✕ ত্রুটি: ' + err.message;
+      statusEl.style.color = '#DC2626';
+    }
+    showToast('আপলোড ত্রুটি: ' + err.message, 'error');
+  }
+}
+
 function openAddRuqyahAudioModal() {
   document.getElementById('addRuqyahAudioForm').reset();
+  if (document.getElementById('addAudioUploadStatus')) {
+    document.getElementById('addAudioUploadStatus').textContent = '';
+  }
   openModal('addRuqyahAudioModal');
 }
 
@@ -4628,6 +5221,72 @@ async function saveNewRuqyahAudio(e) {
   }
 }
 
+async function openEditRuqyahAudioModal(id) {
+  try {
+    const res = await fetch(`/api/admin/commerce/ruqyah-audios/${id}`);
+    const data = await res.json();
+    if (!data.success || !data.audio) {
+      showToast(data.error || 'অডিও রিসোর্স পাওয়া যায়নি', 'error');
+      return;
+    }
+    const a = data.audio;
+    document.getElementById('editAudioId').value = a.id;
+    document.getElementById('editAudioTitleBn').value = a.title_bn || '';
+    document.getElementById('editAudioTitleAr').value = a.title_ar || '';
+    document.getElementById('editAudioCategory').value = a.category || 'general_ruqyah';
+    document.getElementById('editAudioDuration').value = a.duration || '২৫ মিনিট';
+    document.getElementById('editAudioUrl').value = a.audio_url || '';
+    document.getElementById('editAudioTextBn').value = a.text_bn || '';
+    document.getElementById('editAudioActive').checked = a.is_active === 1;
+    if (document.getElementById('editAudioUploadStatus')) {
+      document.getElementById('editAudioUploadStatus').textContent = '';
+    }
+
+    openModal('editRuqyahAudioModal');
+  } catch (err) {
+    showToast('অডিও লোড ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+async function saveEditRuqyahAudio(e) {
+  e.preventDefault();
+  const id = document.getElementById('editAudioId').value;
+  const titleBn = document.getElementById('editAudioTitleBn').value.trim();
+  const titleAr = document.getElementById('editAudioTitleAr').value.trim();
+  const category = document.getElementById('editAudioCategory').value;
+  const duration = document.getElementById('editAudioDuration').value.trim();
+  const audioUrl = document.getElementById('editAudioUrl').value.trim();
+  const textBn = document.getElementById('editAudioTextBn').value.trim();
+  const isActive = document.getElementById('editAudioActive').checked ? 1 : 0;
+
+  try {
+    const res = await fetch(`/api/admin/commerce/ruqyah-audios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title_bn: titleBn,
+        title_ar: titleAr,
+        category,
+        duration,
+        audio_url: audioUrl,
+        text_bn: textBn,
+        is_active: isActive
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('রুকইয়াহ অডিও সফলভাবে আপডেট করা হয়েছে!', 'success');
+      closeModal('editRuqyahAudioModal');
+      loadRuqyahMgrData();
+    } else {
+      showToast(data.error || 'অডিও আপডেট করা যায়নি', 'error');
+    }
+  } catch (err) {
+    showToast('ত্রুটি: ' + err.message, 'error');
+  }
+}
+
+// ==================== COURSES ====================
 function openAddCourseModal() {
   document.getElementById('addCourseForm').reset();
   openModal('addCourseModal');

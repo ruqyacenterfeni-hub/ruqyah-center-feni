@@ -81,6 +81,44 @@ function request(method, path, body = null, headers = {}) {
   });
 }
 
+function uploadMultipart(path, fieldName, filename, fileBuffer, mimeType = 'application/octet-stream') {
+  return new Promise((resolve, reject) => {
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+    const postDataStart = Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="${fieldName}"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+    );
+    const postDataEnd = Buffer.from(`\r\n--${boundary}--\r\n`);
+    const fullBody = Buffer.concat([postDataStart, fileBuffer, postDataEnd]);
+
+    const url = new URL(path, baseUrl);
+    const req = http.request({
+      method: 'POST',
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname,
+      headers: {
+        'Cookie': adminCookie,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': fullBody.length
+      }
+    }, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          resolve({ statusCode: res.statusCode, data: json });
+        } catch {
+          resolve({ statusCode: res.statusCode, raw: Buffer.concat(chunks).toString('utf8') });
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(fullBody);
+    req.end();
+  });
+}
+
 async function runTests() {
   console.log('================================================================');
   console.log(' STARTING RUQYAH CLINIC SYSTEM VERIFICATION & AUDIT TEST SUITE ');
@@ -1837,6 +1875,243 @@ async function runTests() {
       assert.ok(p.phone, 'Admin participant search must include unmasked phone number');
       assert.ok(!p.phone.includes('****'), 'Admin participant phone must not be masked');
     });
+  });
+
+  // ==============================================================
+  // ADMIN DASHBOARD FIXES 1 - 5 VERIFICATION TESTS
+  // ==============================================================
+
+  // FIX 1: Audio Library - Audio file uploading and management
+  await test('ADMIN FIX 1: Audio Library File Upload & Management (Upload, Create, Get, Edit, Delete)', async () => {
+    // 1. Upload sample audio binary (simulating MP3/WAV file)
+    const dummyAudioBuffer = Buffer.from('ID3DUMMYAUDIODATA' + '0'.repeat(1024));
+    const uploadRes = await uploadMultipart(
+      '/api/admin/commerce/upload-audio',
+      'audio',
+      'test-ruqyah.mp3',
+      dummyAudioBuffer,
+      'audio/mpeg'
+    );
+    assert.strictEqual(uploadRes.statusCode, 200);
+    assert.strictEqual(uploadRes.data.success, true);
+    assert.ok(uploadRes.data.audio_url.startsWith('/uploads/audio/'));
+    assert.ok(uploadRes.data.size > 0);
+
+    // 2. Create Ruqyah Audio resource using uploaded URL
+    const createRes = await request('POST', '/api/admin/commerce/ruqyah-audios', {
+      title_bn: 'টেস্ট রুকইয়াহ অডিও তিলাওয়াত',
+      title_ar: 'الرقية الشرعية',
+      category: 'general_ruqyah',
+      duration: '১৫ মিনিট',
+      audio_url: uploadRes.data.audio_url,
+      text_bn: 'বিশেষ তিলাওয়াত ও দোয়া'
+    });
+    assert.strictEqual(createRes.statusCode, 201);
+    assert.strictEqual(createRes.data.success, true);
+    const audioId = createRes.data.id;
+    assert.ok(audioId > 0);
+
+    // 3. Get single audio resource by ID
+    const getRes = await request('GET', `/api/admin/commerce/ruqyah-audios/${audioId}`);
+    assert.strictEqual(getRes.statusCode, 200);
+    assert.strictEqual(getRes.data.success, true);
+    assert.strictEqual(getRes.data.audio.title_bn, 'টেস্ট রুকইয়াহ অডিও তিলাওয়াত');
+    assert.strictEqual(getRes.data.audio.audio_url, uploadRes.data.audio_url);
+
+    // 4. Update audio resource (Edit)
+    const updateRes = await request('PUT', `/api/admin/commerce/ruqyah-audios/${audioId}`, {
+      title_bn: 'আপডেটেড রুকইয়াহ অডিও তিলাওয়াত',
+      duration: '২০ মিনিট',
+      category: 'sihr_jinn'
+    });
+    assert.strictEqual(updateRes.statusCode, 200);
+    assert.strictEqual(updateRes.data.success, true);
+
+    const getUpdated = await request('GET', `/api/admin/commerce/ruqyah-audios/${audioId}`);
+    assert.strictEqual(getUpdated.data.audio.title_bn, 'আপডেটেড রুকইয়াহ অডিও তিলাওয়াত');
+    assert.strictEqual(getUpdated.data.audio.duration, '২০ মিনিট');
+    assert.strictEqual(getUpdated.data.audio.category, 'sihr_jinn');
+    // Ensure audio_url was preserved
+    assert.strictEqual(getUpdated.data.audio.audio_url, uploadRes.data.audio_url);
+
+    // 5. Delete audio resource
+    const delRes = await request('DELETE', `/api/admin/commerce/ruqyah-audios/${audioId}`);
+    assert.strictEqual(delRes.statusCode, 200);
+    assert.strictEqual(delRes.data.success, true);
+
+    const getDeleted = await request('GET', `/api/admin/commerce/ruqyah-audios/${audioId}`);
+    assert.strictEqual(getDeleted.statusCode, 404);
+  });
+
+  // FIX 2: Advertisements & Banners - Image uploading and management
+  await test('ADMIN FIX 2: Advertisements & Banners Upload & Management (Upload, Create, List, Edit, Toggle, Delete)', async () => {
+    // 1. Upload sample banner image binary
+    const dummyImageBuffer = Buffer.from('\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' + '0'.repeat(500));
+    const uploadRes = await uploadMultipart(
+      '/api/admin/commerce/upload-banner',
+      'banner',
+      'promo-banner.png',
+      dummyImageBuffer,
+      'image/png'
+    );
+    assert.strictEqual(uploadRes.statusCode, 200);
+    assert.strictEqual(uploadRes.data.success, true);
+    assert.ok(uploadRes.data.image_url.startsWith('/uploads/banners/'));
+
+    // 2. Create new Advertisement / Banner
+    const createRes = await request('POST', '/api/admin/commerce/advertisements', {
+      title: 'বিশেষ রমজান অফার - মধু ও কালোজিরা',
+      description: '৩০% ছাড়ে খাঁটি সুন্দরবনের মধু অর্ডার করুন',
+      image_url: uploadRes.data.image_url,
+      placement: 'homepage',
+      button_text: 'এখনই কিনুন',
+      target_url: '/shop'
+    });
+    assert.strictEqual(createRes.statusCode, 201);
+    assert.strictEqual(createRes.data.success, true);
+    const adId = createRes.data.id;
+    assert.ok(adId > 0);
+
+    // 3. List all ads from admin endpoint
+    const listRes = await request('GET', '/api/admin/commerce/advertisements');
+    assert.strictEqual(listRes.statusCode, 200);
+    assert.strictEqual(listRes.data.success, true);
+    const foundAd = listRes.data.advertisements.find(a => a.id === adId);
+    assert.ok(foundAd, 'Created ad must appear in admin advertisements list');
+    assert.strictEqual(foundAd.title, 'বিশেষ রমজান অফার - মধু ও কালোজিরা');
+
+    // 4. Get single ad by ID
+    const getRes = await request('GET', `/api/admin/commerce/advertisements/${adId}`);
+    assert.strictEqual(getRes.statusCode, 200);
+    assert.strictEqual(getRes.data.advertisement.button_text, 'এখনই কিনুন');
+
+    // 5. Update advertisement
+    const editRes = await request('PUT', `/api/admin/commerce/advertisements/${adId}`, {
+      title: 'আপডেটেড ব্যানার অফার',
+      placement: 'shop',
+      button_text: 'শপ দেখুন'
+    });
+    assert.strictEqual(editRes.statusCode, 200);
+
+    // 6. Toggle status
+    const toggleRes = await request('POST', `/api/admin/commerce/advertisements/${adId}/toggle`);
+    assert.strictEqual(toggleRes.statusCode, 200);
+    assert.strictEqual(toggleRes.data.is_active, 0);
+
+    // 7. Delete ad
+    const delRes = await request('DELETE', `/api/admin/commerce/advertisements/${adId}`);
+    assert.strictEqual(delRes.statusCode, 200);
+    const getAfterDel = await request('GET', `/api/admin/commerce/advertisements/${adId}`);
+    assert.strictEqual(getAfterDel.statusCode, 404);
+  });
+
+  // FIX 3 & 4: Supplement Orders & Order Details
+  await test('ADMIN FIX 3 & 4: Orders List with Items and Full Order Details Modal endpoint', async () => {
+    // 1. Fetch all orders from admin
+    const ordersRes = await request('GET', '/api/admin/commerce/orders');
+    assert.strictEqual(ordersRes.statusCode, 200);
+    assert.strictEqual(ordersRes.data.success, true);
+    assert.ok(Array.isArray(ordersRes.data.orders));
+    assert.ok(ordersRes.data.orders.length > 0, 'Orders list must not be empty');
+
+    // Verify each order includes ordered products and quantities in the items array
+    const sampleOrder = ordersRes.data.orders[0];
+    assert.ok('order_number' in sampleOrder);
+    assert.ok('customer_name' in sampleOrder);
+    assert.ok('customer_phone' in sampleOrder);
+    assert.ok('shipping_address' in sampleOrder);
+    assert.ok('total_amount' in sampleOrder);
+    assert.ok(Array.isArray(sampleOrder.items), 'Every order must include an items array');
+    assert.ok(typeof sampleOrder.total_items_count === 'number');
+
+    // Verify items have product_name, quantity, and unit_price
+    if (sampleOrder.items.length > 0) {
+      const it = sampleOrder.items[0];
+      assert.ok(it.product_name, 'Ordered item must contain product_name');
+      assert.ok(it.quantity > 0, 'Ordered item must contain positive quantity');
+      assert.ok(typeof it.unit_price === 'number', 'Ordered item must contain unit_price');
+    }
+
+    // 2. Fetch single order details by ID
+    const singleOrderRes = await request('GET', `/api/admin/commerce/orders/${sampleOrder.id}`);
+    assert.strictEqual(singleOrderRes.statusCode, 200);
+    assert.strictEqual(singleOrderRes.data.success, true);
+    assert.strictEqual(singleOrderRes.data.order.id, sampleOrder.id);
+    assert.ok(Array.isArray(singleOrderRes.data.items), 'Order details must return itemized products list');
+
+    // 3. Update order status and internal admin notes
+    const updateStatusRes = await request('PUT', `/api/admin/commerce/orders/${sampleOrder.id}/status`, {
+      status: 'Processing',
+      internal_admin_notes: 'রেডএক্স কুরিয়ার চালান কনফার্মড'
+    });
+    assert.strictEqual(updateStatusRes.statusCode, 200);
+    assert.strictEqual(updateStatusRes.data.success, true);
+
+    const recheckOrder = await request('GET', `/api/admin/commerce/orders/${sampleOrder.id}`);
+    assert.strictEqual(recheckOrder.data.order.status, 'Processing');
+    assert.strictEqual(recheckOrder.data.order.internal_admin_notes, 'রেডএক্স কুরিয়ার চালান কনফার্মড');
+  });
+
+  // FIX 5: Product Management - Product Editing and Image Uploading
+  await test('ADMIN FIX 5: Product Image Upload & Non-destructive Editing', async () => {
+    // 1. Upload product image binary
+    const dummyProdImg = Buffer.from('\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' + '1'.repeat(500));
+    const uploadRes = await uploadMultipart(
+      '/api/admin/commerce/upload-product-image',
+      'image',
+      'new-product-sidr.png',
+      dummyProdImg,
+      'image/png'
+    );
+    assert.strictEqual(uploadRes.statusCode, 200);
+    assert.strictEqual(uploadRes.data.success, true);
+    assert.ok(uploadRes.data.image_url.startsWith('/uploads/products/'));
+
+    // 2. Create a new test product
+    const createProd = await request('POST', '/api/admin/commerce/products', {
+      category_id: 1,
+      name_bn: 'টেস্ট খাঁটি কালোজিরা মধু',
+      name_en: 'Test Black Seed Honey',
+      price: 750,
+      discount_price: 690,
+      stock_quantity: 45,
+      image_url: uploadRes.data.image_url,
+      description_bn: 'অর্গানিক ও ১০০% প্রাকৃতিক'
+    });
+    assert.strictEqual(createProd.statusCode, 201);
+    const prodId = createProd.data.product_id;
+    assert.ok(prodId > 0);
+
+    // 3. Fetch single product by ID
+    const getProd = await request('GET', `/api/admin/commerce/products/${prodId}`);
+    assert.strictEqual(getProd.statusCode, 200);
+    assert.strictEqual(getProd.data.product.name_bn, 'টেস্ট খাঁটি কালোজিরা মধু');
+    assert.strictEqual(getProd.data.product.image_url, uploadRes.data.image_url);
+    assert.strictEqual(getProd.data.product.price, 750);
+    assert.strictEqual(getProd.data.product.stock_quantity, 45);
+
+    // 4. Update product details (safe edit)
+    const updateProd = await request('PUT', `/api/admin/commerce/products/${prodId}`, {
+      price: 800,
+      discount_price: 720,
+      stock_quantity: 50,
+      description_bn: 'নতুন প্যাকেজিং ও হালনাগাদকৃত বিবরণ'
+    });
+    assert.strictEqual(updateProd.statusCode, 200);
+
+    // Verify non-destructive update preserved name_bn and image_url
+    const getUpdatedProd = await request('GET', `/api/admin/commerce/products/${prodId}`);
+    assert.strictEqual(getUpdatedProd.data.product.name_bn, 'টেস্ট খাঁটি কালোজিরা মধু');
+    assert.strictEqual(getUpdatedProd.data.product.image_url, uploadRes.data.image_url);
+    assert.strictEqual(getUpdatedProd.data.product.price, 800);
+    assert.strictEqual(getUpdatedProd.data.product.discount_price, 720);
+    assert.strictEqual(getUpdatedProd.data.product.stock_quantity, 50);
+
+    // 5. Delete product
+    const delProd = await request('DELETE', `/api/admin/commerce/products/${prodId}`);
+    assert.strictEqual(delProd.statusCode, 200);
+    const getAfterDel = await request('GET', `/api/admin/commerce/products/${prodId}`);
+    assert.strictEqual(getAfterDel.statusCode, 404);
   });
 
   console.log('================================================================');

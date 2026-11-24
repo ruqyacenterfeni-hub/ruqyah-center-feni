@@ -1053,13 +1053,14 @@
                     <th>তারিখ</th>
                     <th>গ্রাহক ও মোবাইল</th>
                     <th>ঠিকানা</th>
+                    <th>অর্ডারকৃত পণ্য ও পরিমাণ</th>
                     <th>মোট টাকা</th>
                     <th>স্ট্যাটাস</th>
                     <th>অ্যাকশন</th>
                   </tr>
                 </thead>
                 <tbody id="adminOrdersTbody">
-                  <tr><td colspan="7" style="text-align: center; padding: 2rem;">অর্ডার লোড হচ্ছে...</td></tr>
+                  <tr><td colspan="8" style="text-align: center; padding: 2rem;">অর্ডার লোড হচ্ছে...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1071,17 +1072,18 @@
               <table class="data-table" style="width: 100%; font-size: 0.9rem;">
                 <thead>
                   <tr>
+                    <th>ছবি</th>
                     <th>পণ্য</th>
                     <th>ক্যাটাগরি</th>
                     <th>বিক্রয় মূল্য</th>
-                    <th>ডিসকাউন্ট</th>
+                    <th>ছাড়ের মূল্য</th>
                     <th>মজুত (স্টক)</th>
                     <th>অবস্থা</th>
                     <th>অ্যাকশন</th>
                   </tr>
                 </thead>
                 <tbody id="adminProductsTbody">
-                  <tr><td colspan="7" style="text-align: center; padding: 2rem;">পণ্য লোড হচ্ছে...</td></tr>
+                  <tr><td colspan="8" style="text-align: center; padding: 2rem;">পণ্য লোড হচ্ছে...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1429,15 +1431,17 @@
             <table class="data-table" style="width: 100%; font-size: 0.9rem;">
               <thead>
                 <tr>
-                  <th>শিরোনাম</th>
+                  <th>ব্যানার ছবি</th>
+                  <th>শিরোনাম ও বিবরণ</th>
                   <th>স্থান (Placement)</th>
                   <th>বাটনের লেখা</th>
                   <th>টার্গেট লিঙ্ক</th>
                   <th>অবস্থা</th>
+                  <th>অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody id="adminAdsTbody">
-                <tr><td colspan="5" style="text-align: center; padding: 2rem;">বিজ্ঞাপনসমূহ লোড হচ্ছে...</td></tr>
+                <tr><td colspan="7" style="text-align: center; padding: 2rem;">বিজ্ঞাপনসমূহ লোড হচ্ছে...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2070,7 +2074,22 @@
               <input type="text" id="addProdNameEn" class="form-control" placeholder="e.g. Pure Honey (500g)">
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">ক্যাটাগরি</label>
+              <select id="addProdCategory" class="form-control">
+                <option value="1">খাঁটি মধু ও সুরভী</option>
+                <option value="2">কালোজিরা ও তেল</option>
+                <option value="3">রুকইয়াহ সামগ্রী ও ভেষজ</option>
+                <option value="4">আজওয়া খেজুর ও খাদ্য</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">প্রাথমিক স্টক (টি) *</label>
+              <input type="number" id="addProdStock" class="form-control" value="50" min="0" required>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
             <div class="form-group">
               <label class="form-label">বিক্রয় মূল্য (BDT) *</label>
               <input type="number" id="addProdPrice" class="form-control" required min="1">
@@ -2079,14 +2098,14 @@
               <label class="form-label">ছাড়ের মূল্য (BDT)</label>
               <input type="number" id="addProdDiscount" class="form-control" min="0" placeholder="ঐচ্ছিক">
             </div>
-            <div class="form-group">
-              <label class="form-label">প্রাথমিক স্টক (টি) *</label>
-              <input type="number" id="addProdStock" class="form-control" value="50" min="0" required>
-            </div>
           </div>
           <div class="form-group" style="margin-bottom: 0.75rem;">
-            <label class="form-label">ছবির লিংক (Image URL)</label>
-            <input type="text" id="addProdImage" class="form-control" placeholder="/images/products/product.jpg" value="/images/products/honey.jpg">
+            <label class="form-label">পণ্যের ছবি আপলোড (Product Image)</label>
+            <input type="file" id="addProdImageFile" accept="image/*" class="form-control" onchange="handleProductImageUpload(this, 'addProdImage', 'addProdImagePreview')">
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+              <img id="addProdImagePreview" src="/images/products/honey.jpg" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;">
+              <input type="text" id="addProdImage" class="form-control" placeholder="/images/products/honey.jpg" value="/images/products/honey.jpg" style="font-size: 0.85rem;">
+            </div>
           </div>
           <div class="form-group" style="margin-bottom: 0.75rem;">
             <label class="form-label">সংক্ষিপ্ত বিবরণ (বাংলা) *</label>
@@ -2095,6 +2114,78 @@
           <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
             <button type="button" class="btn btn-secondary" onclick="closeModal('addProductModal')">বাতিল</button>
             <button type="submit" class="btn btn-primary">+ পণ্য সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Product -->
+  <div id="editProductModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">✏️ পণ্য সম্পাদনা (Edit Product)</h3>
+        <button class="modal-close" onclick="closeModal('editProductModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="editProductForm" onsubmit="saveEditProduct(event)">
+          <input type="hidden" id="editProdId">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">পণ্যের নাম (বাংলা) *</label>
+              <input type="text" id="editProdNameBn" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Product Name (English)</label>
+              <input type="text" id="editProdNameEn" class="form-control">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">ক্যাটাগরি</label>
+              <select id="editProdCategory" class="form-control">
+                <option value="1">খাঁটি মধু ও সুরভী</option>
+                <option value="2">কালোজিরা ও তেল</option>
+                <option value="3">রুকইয়াহ সামগ্রী ও ভেষজ</option>
+                <option value="4">আজওয়া খেজুর ও খাদ্য</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">মজুত / স্টক (টি) *</label>
+              <input type="number" id="editProdStock" class="form-control" min="0" required>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">বিক্রয় মূল্য (BDT) *</label>
+              <input type="number" id="editProdPrice" class="form-control" required min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ছাড়ের মূল্য (BDT)</label>
+              <input type="number" id="editProdDiscount" class="form-control" min="0" placeholder="ছাড় না থাকলে ফাঁকা রাখুন">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">পণ্যের নতুন ছবি আপলোড</label>
+            <input type="file" id="editProdImageFile" accept="image/*" class="form-control" onchange="handleProductImageUpload(this, 'editProdImage', 'editProdImagePreview')">
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+              <img id="editProdImagePreview" src="/images/products/honey.jpg" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;">
+              <input type="text" id="editProdImage" class="form-control" style="font-size: 0.85rem;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">সংক্ষিপ্ত বিবরণ (বাংলা) *</label>
+            <textarea id="editProdDescBn" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="editProdActive" checked>
+              <span>পণ্যটি ওয়েবসাইটে প্রকাশিত (Published & Active)</span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editProductModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
           </div>
         </form>
       </div>
@@ -2171,8 +2262,13 @@
             </div>
           </div>
           <div class="form-group" style="margin-bottom: 0.75rem;">
-            <label class="form-label">অডিও ফাইল লিংক (MP3 URL) *</label>
-            <input type="text" id="addAudioUrl" class="form-control" required placeholder="/audio/filename.mp3 বা অনলাইন URL">
+            <label class="form-label">অডিও ফাইল আপলোড (MP3, WAV, M4A, OGG)</label>
+            <input type="file" id="addAudioFile" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac" class="form-control" onchange="handleAudioUpload(this, 'addAudioUrl', 'addAudioUploadStatus')">
+            <div id="addAudioUploadStatus" style="font-size: 0.8rem; margin-top: 4px; color: var(--primary);"></div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">অথবা অডিও ফাইল লিংক (MP3 URL) *</label>
+            <input type="text" id="addAudioUrl" class="form-control" required placeholder="/uploads/audio/audio.mp3 বা অনলাইন লিংক">
           </div>
           <div class="form-group" style="margin-bottom: 0.75rem;">
             <label class="form-label">সংক্ষিপ্ত বর্ণনা বা দোয়া (বাংলা)</label>
@@ -2183,6 +2279,290 @@
             <button type="submit" class="btn btn-primary">+ অডিও সংরক্ষণ করুন</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Ruqyah Audio -->
+  <div id="editRuqyahAudioModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">✏️ রুকইয়াহ অডিও সম্পাদনা</h3>
+        <button class="modal-close" onclick="closeModal('editRuqyahAudioModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="editRuqyahAudioForm" onsubmit="saveEditRuqyahAudio(event)">
+          <input type="hidden" id="editAudioId">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">শিরোনাম (বাংলা) *</label>
+            <input type="text" id="editAudioTitleBn" class="form-control" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">Title / Verses (Arabic)</label>
+            <input type="text" id="editAudioTitleAr" class="form-control" dir="rtl">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">ক্যাটাগরি *</label>
+              <select id="editAudioCategory" class="form-control" required>
+                <option value="general_ruqyah">সাধারণ রুকইয়াহ (General Ruqyah)</option>
+                <option value="ayn_hasad">বদনজর ও হিংসা (Evil Eye)</option>
+                <option value="sihr_jinn">সিহর ও জিন নিরাময় (Sihr & Jinn)</option>
+                <option value="sleep_protection">ঘুমের দোয়া ও দুঃস্বপ্ন</option>
+                <option value="children_family">শিশু ও পরিবারের নিরাপত্তা</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">সময়কাল *</label>
+              <input type="text" id="editAudioDuration" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">নতুন অডিও ফাইল আপলোড (পরিবর্তন করতে চাইলে)</label>
+            <input type="file" id="editAudioFile" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac" class="form-control" onchange="handleAudioUpload(this, 'editAudioUrl', 'editAudioUploadStatus')">
+            <div id="editAudioUploadStatus" style="font-size: 0.8rem; margin-top: 4px; color: var(--primary);"></div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">অডিও ফাইল লিংক (MP3 URL) *</label>
+            <input type="text" id="editAudioUrl" class="form-control" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">সংক্ষিপ্ত বর্ণনা বা দোয়া (বাংলা)</label>
+            <textarea id="editAudioTextBn" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="editAudioActive" checked>
+              <span>পাবলিক লাইব্রেরিতে প্রকাশিত (Active & Published)</span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editRuqyahAudioModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Advertisement / Banner -->
+  <div id="addAdModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">+ নতুন ব্যানার বিজ্ঞাপন যুক্ত করুন</h3>
+        <button class="modal-close" onclick="closeModal('addAdModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="addAdForm" onsubmit="saveNewAd(event)">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">বিজ্ঞাপনের শিরোনাম *</label>
+            <input type="text" id="addAdTitle" class="form-control" required placeholder="যেমন: বিশেষ ছাড় - খাঁটি মধু ও রুকইয়াহ তেল">
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">সংক্ষিপ্ত বিবরণ</label>
+            <textarea id="addAdDesc" class="form-control" rows="2" placeholder="বিজ্ঞাপনের আকর্ষণীয় বিবরণ..."></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">ব্যানার ছবি আপলোড (Banner Image) *</label>
+            <input type="file" id="addAdImageFile" accept="image/*" class="form-control" onchange="handleBannerUpload(this, 'addAdImageUrl', 'addAdImagePreview')">
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+              <img id="addAdImagePreview" src="/images/hero-banner.jpg" style="width: 120px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1; background: #F1F5F9;">
+              <input type="text" id="addAdImageUrl" class="form-control" required placeholder="/uploads/banners/banner.jpg বা ইমেজ লিংক" style="font-size: 0.85rem;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">বিজ্ঞাপনের স্থান (Placement) *</label>
+              <select id="addAdPlacement" class="form-control" required>
+                <option value="homepage">হোমপেজ (Homepage)</option>
+                <option value="shop">সাপ্লিমেন্ট শপ (Shop)</option>
+                <option value="articles">আর্টিকেল ও ব্লগ (Articles)</option>
+                <option value="lifestyle">আমল ও লাইফস্টাইল (Lifestyle)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">বাটনের লেখা</label>
+              <input type="text" id="addAdButtonText" class="form-control" value="বিস্তারিত দেখুন">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">টার্গেট লিঙ্ক (ক্লিক করলে যেখানে যাবে)</label>
+            <input type="text" id="addAdTargetUrl" class="form-control" value="/shop" placeholder="/shop, /book বা ওয়েবসাইট লিঙ্ক">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="addAdActive" checked>
+              <span>বিজ্ঞাপনটি সক্রিয় ও প্রদর্শিত থাকবে (Active)</span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addAdModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">+ ব্যানার সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Advertisement / Banner -->
+  <div id="editAdModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--primary);">✏️ ব্যানার বিজ্ঞাপন সম্পাদনা</h3>
+        <button class="modal-close" onclick="closeModal('editAdModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <form id="editAdForm" onsubmit="saveEditAd(event)">
+          <input type="hidden" id="editAdId">
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">বিজ্ঞাপনের শিরোনাম *</label>
+            <input type="text" id="editAdTitle" class="form-control" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">সংক্ষিপ্ত বিবরণ</label>
+            <textarea id="editAdDesc" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">নতুন ব্যানার ছবি আপলোড (পরিবর্তন করতে চাইলে)</label>
+            <input type="file" id="editAdImageFile" accept="image/*" class="form-control" onchange="handleBannerUpload(this, 'editAdImageUrl', 'editAdImagePreview')">
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+              <img id="editAdImagePreview" src="" style="width: 120px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1; background: #F1F5F9;">
+              <input type="text" id="editAdImageUrl" class="form-control" required style="font-size: 0.85rem;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">বিজ্ঞাপনের স্থান (Placement) *</label>
+              <select id="editAdPlacement" class="form-control" required>
+                <option value="homepage">হোমপেজ (Homepage)</option>
+                <option value="shop">সাপ্লিমেন্ট শপ (Shop)</option>
+                <option value="articles">আর্টিকেল ও ব্লগ (Articles)</option>
+                <option value="lifestyle">আমল ও লাইফস্টাইল (Lifestyle)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">বাটনের লেখা</label>
+              <input type="text" id="editAdButtonText" class="form-control">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label">টার্গেট লিঙ্ক</label>
+            <input type="text" id="editAdTargetUrl" class="form-control">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="editAdActive" checked>
+              <span>বিজ্ঞাপনটি সক্রিয় ও প্রদর্শিত থাকবে (Active)</span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editAdModal')">বাতিল</button>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Order Details & Customer Fulfillment -->
+  <div id="orderDetailsModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 780px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem;">
+        <div>
+          <h3 style="margin: 0; color: var(--primary); font-size: 1.25rem;">📦 অর্ডার বিবরণ — <span id="ordDetNumber"></span></h3>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+            অর্ডারের তারিখ: <span id="ordDetDate"></span> | স্ট্যাটাস: <span id="ordDetStatusBadge"></span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('orderDetailsModal')">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto; padding: 1.25rem 1rem;">
+        
+        <!-- Customer & Order Meta Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem;">
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #1E293B;">👤 গ্রাহকের তথ্য</h4>
+            <div style="font-size: 0.88rem; line-height: 1.6;">
+              <div><strong>নাম:</strong> <span id="ordDetCustomerName"></span></div>
+              <div><strong>মোবাইল:</strong> <a id="ordDetCustomerPhone" href="#" style="color: var(--primary); font-weight: 600;"></a></div>
+              <div><strong>ডেলিভারি ঠিকানা:</strong> <span id="ordDetCustomerAddress"></span></div>
+              <div id="ordDetNotesWrap" style="margin-top: 0.5rem; display: none; background: #FEF3C7; color: #92400E; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem;">
+                <strong>গ্রাহকের বিশেষ নোট:</strong> <span id="ordDetCustomerNotes"></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem;">
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #1E293B;">⚙️ অর্ডার স্ট্যাটাস ও নোট</h4>
+            <div style="margin-bottom: 0.75rem;">
+              <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">স্ট্যাটাস পরিবর্তন করুন:</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <select id="ordDetStatusSelect" class="form-control" style="font-size: 0.85rem;">
+                  <option value="Order Received">Order Received (অর্ডার গৃহীত)</option>
+                  <option value="Processing">Processing (প্রক্রিয়াধীন)</option>
+                  <option value="Shipped">Shipped (কুরিয়ারে প্রেরিত)</option>
+                  <option value="Delivered">Delivered (ডেলিভার্ড সম্পন্ন)</option>
+                  <option value="Cancelled">Cancelled (বাতিলকৃত)</option>
+                </select>
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveOrderDetailsStatus()">আপডেট</button>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">অ্যাডমিন ইন্টারনাল নোট:</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="ordDetAdminNotes" class="form-control" placeholder="যেমন: রেডএক্স ট্র্যাকিং #123456" style="font-size: 0.85rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="saveOrderDetailsNotes()">নোট সেভ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ordered Products Itemized Table -->
+        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #1E293B;">🛒 অর্ডারকৃত পণ্য ও পরিমাণ (Ordered Products)</h4>
+        <div style="border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-bottom: 1.25rem;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+            <thead style="background: #F1F5F9; border-bottom: 1px solid #E2E8F0;">
+              <tr>
+                <th style="padding: 8px 12px;">ছবি</th>
+                <th style="padding: 8px 12px;">পণ্যের নাম</th>
+                <th style="padding: 8px 12px; text-align: right;">একক মূল্য</th>
+                <th style="padding: 8px 12px; text-align: center;">পরিমাণ</th>
+                <th style="padding: 8px 12px; text-align: right;">মোট মূল্য</th>
+              </tr>
+            </thead>
+            <tbody id="ordDetItemsTbody">
+              <tr><td colspan="5" style="text-align: center; padding: 1.5rem;">আইটেম লোড হচ্ছে...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Financial Summary -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+          <div style="width: 280px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+              <span>সাবটোটাল:</span>
+              <strong>৳<span id="ordDetSubtotal">0</span></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #CBD5E1;">
+              <span>ডেলিভারি চার্জ:</span>
+              <strong>৳<span id="ordDetShipping">0</span></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 1.05rem; color: var(--primary);">
+              <span>সর্বমোট প্রদেয়:</span>
+              <strong>৳<span id="ordDetTotal">0</span></strong>
+            </div>
+            <div style="font-size: 0.78rem; color: #64748B; text-align: right; margin-top: 2px;">
+              পদ্ধতি: ক্যাশ অন ডেলিভারি (COD)
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="printOrderPackingSlip()">🖨️ প্রিন্ট অর্ডার স্লিপ / ইনভয়েস</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="closeModal('orderDetailsModal')">বন্ধ করুন</button>
+        </div>
+
       </div>
     </div>
   </div>
