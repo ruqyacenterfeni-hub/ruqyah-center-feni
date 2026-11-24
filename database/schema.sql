@@ -76,10 +76,8 @@ CREATE TABLE IF NOT EXISTS appointments (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Unique index to strictly prevent double booking of active appointments
-CREATE UNIQUE INDEX IF NOT EXISTS idx_active_appointment_slot 
-ON appointments(appointment_date, time_slot) 
-WHERE status NOT IN ('Cancelled');
+-- Two-seat capacity per time slot: dropped 1-seat unique index
+DROP INDEX IF EXISTS idx_active_appointment_slot;
 
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);

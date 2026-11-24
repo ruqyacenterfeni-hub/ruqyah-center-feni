@@ -127,25 +127,58 @@ function getAvailabilityForDate(dateStr) {
 
   // 5. Gather booked and blocked slots
   const bookedAppointments = getBookedAppointments(dateStr);
-  const bookedSlotLabels = new Set(bookedAppointments.map(a => a.time_slot));
+  const slotBookingsMap = new Map();
+  bookedAppointments.forEach(a => {
+    if (!slotBookingsMap.has(a.time_slot)) {
+      slotBookingsMap.set(a.time_slot, []);
+    }
+    slotBookingsMap.get(a.time_slot).push(a);
+  });
 
   const blockedRecords = getBlockedSlots(dateStr);
   const blockedSlotLabels = new Set(blockedRecords.map(b => b.time_slot));
 
-  // 6. Filter TIME_SLOTS
+  // 6. Map TIME_SLOTS with 2-seat capacity per slot
   const allSlots = TIME_SLOTS.map(slot => {
-    const isBooked = bookedSlotLabels.has(slot.label);
+    const bookings = slotBookingsMap.get(slot.label) || [];
+    const bookedCount = bookings.length;
     const isBlocked = blockedSlotLabels.has(slot.label);
-    const available = !isBooked && !isBlocked;
+    const capacity = 2; // Total capacity of exactly 2 patients per hourly slot
+    const availableSeats = isBlocked ? 0 : Math.max(0, capacity - bookedCount);
+    const isFull = bookedCount >= capacity;
+    const available = !isBlocked && availableSeats > 0;
+
+    let seatsText = '২টি আসন খালি আছে';
+    if (isBlocked) {
+      seatsText = 'ব্লক করা';
+    } else if (availableSeats === 2) {
+      seatsText = '২টি আসন খালি আছে';
+    } else if (availableSeats === 1) {
+      seatsText = '১টি আসন খালি আছে';
+    } else {
+      seatsText = 'আসন পূর্ণ';
+    }
 
     return {
       id: slot.id,
       label: slot.label,
       start: slot.start,
       end: slot.end,
+      capacity: capacity,
+      booked_count: bookedCount,
+      available_seats: availableSeats,
+      seats_text: seatsText,
       available: available,
-      status: isBooked ? 'booked' : (isBlocked ? 'blocked' : 'available'),
-      reason: isBlocked ? (blockedRecords.find(b => b.time_slot === slot.label)?.reason || 'Blocked by Clinic') : (isBooked ? 'Already Booked' : null)
+      status: isBlocked ? 'blocked' : (isFull ? 'booked' : 'available'),
+      reason: isBlocked 
+        ? (blockedRecords.find(b => b.time_slot === slot.label)?.reason || 'Blocked by Clinic') 
+        : (isFull ? 'Already Booked (Both seats occupied)' : null),
+      bookedDetails: bookings[0] || null,
+      bookedAppointments: bookings.map(b => ({
+        appointment_id: b.appointment_id,
+        patient_name: b.patient_name,
+        service_name: b.service_name
+      }))
     };
   });
 

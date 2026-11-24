@@ -226,14 +226,14 @@ router.post('/:id/reschedule', (req, res) => {
         throw new Error('This time slot is blocked on the selected date.');
       }
 
-      // Check existing booked slot (excluding this appointment)
-      const existing = db.prepare(`
-        SELECT id FROM appointments
+      // Check existing booked slot (excluding this appointment) - max 2 patients per slot
+      const bookedCount = db.prepare(`
+        SELECT COUNT(*) as count FROM appointments
         WHERE appointment_date = ? AND time_slot = ? AND status NOT IN ('Cancelled') AND id != ?
-      `).get(new_date, new_time_slot, appointment.id);
+      `).get(new_date, new_time_slot, appointment.id).count;
 
-      if (existing) {
-        throw new Error('The target time slot is already booked by another appointment.');
+      if (bookedCount >= 2) {
+        throw new Error('The target time slot is already fully booked (both seats are occupied).');
       }
 
       const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
@@ -301,14 +301,14 @@ router.post('/create', (req, res) => {
     }
 
     const createTx = db.transaction(() => {
-      // Check slot conflict
-      const existing = db.prepare(`
-        SELECT id FROM appointments
+      // Check seat capacity: maximum 2 patients per slot
+      const bookedCount = db.prepare(`
+        SELECT COUNT(*) as count FROM appointments
         WHERE appointment_date = ? AND time_slot = ? AND status NOT IN ('Cancelled')
-      `).get(appointment_date, time_slot);
+      `).get(appointment_date, time_slot).count;
 
-      if (existing) {
-        throw new Error('This time slot is already booked.');
+      if (bookedCount >= 2) {
+        throw new Error('This time slot is already fully booked (both seats occupied).');
       }
 
       let pId = patient_id;

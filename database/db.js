@@ -61,6 +61,13 @@ db.pragma('foreign_keys = ON');
 function initDb() {
   const schema = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schema);
+
+  // Ensure 1-seat unique index is dropped for 2-seat capacity
+  try {
+    db.exec("DROP INDEX IF EXISTS idx_active_appointment_slot;");
+  } catch (idxErr) {
+    // ignore
+  }
   
   // Run non-destructive migrations
   try {

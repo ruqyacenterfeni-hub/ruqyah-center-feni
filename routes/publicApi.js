@@ -227,14 +227,14 @@ router.post('/book', (req, res) => {
         throw new Error('This time slot is reserved or blocked by the clinic.');
       }
 
-      // Check slot already booked
-      const existing = db.prepare(`
-        SELECT id FROM appointments 
+      // Check seat capacity: maximum 2 patients per hourly time slot
+      const bookedCount = db.prepare(`
+        SELECT COUNT(*) as count FROM appointments 
         WHERE appointment_date = ? AND time_slot = ? AND status NOT IN ('Cancelled')
-      `).get(appointment_date, time_slot);
+      `).get(appointment_date, time_slot).count;
 
-      if (existing) {
-        throw new Error('This time slot has just been booked by another patient. Please choose an alternative slot.');
+      if (bookedCount >= 2) {
+        throw new Error('This time slot is fully booked (both seats are occupied). Please choose an alternative slot.');
       }
 
       // Find or create patient record

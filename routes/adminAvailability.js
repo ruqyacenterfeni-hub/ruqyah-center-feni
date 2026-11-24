@@ -54,13 +54,18 @@ router.get('/check', (req, res) => {
 
     const bookedMap = {};
     for (const b of bookedApts) {
-      bookedMap[b.time_slot] = b;
+      if (!bookedMap[b.time_slot]) {
+        bookedMap[b.time_slot] = [];
+      }
+      bookedMap[b.time_slot].push(b);
     }
 
     const enrichedSlots = avail.slots.map(s => {
+      const apts = bookedMap[s.label] || [];
       return {
         ...s,
-        bookedDetails: bookedMap[s.label] || null
+        bookedDetails: apts[0] || null,
+        bookedAppointments: apts
       };
     });
 

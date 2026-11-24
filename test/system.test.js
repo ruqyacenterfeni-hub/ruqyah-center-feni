@@ -242,16 +242,19 @@ async function runTests() {
     bookedAptId = res.data.data.appointment_id;
   });
 
-  await test('MANDATORY REQUIREMENT: Booked time slot automatically disappears from available list', async () => {
+  await test('TWO-SEAT CAPACITY: After 1st booking, slot displays "১টি আসন খালি আছে" and allows 2nd patient', async () => {
     const res = await request('GET', `/api/public/availability?date=${testDateStr}`);
     assert.strictEqual(res.statusCode, 200);
-    const availableSlotLabels = res.data.availableSlots.map(s => s.label);
-    assert(!availableSlotLabels.includes(slotToBook), 'Booked slot must disappear from availableSlots');
-    assert.strictEqual(res.data.availableCount, 9);
-  });
+    const slotObj = res.data.slots.find(s => s.label === slotToBook);
+    assert.ok(slotObj, 'Target slot must be found in slots list');
+    assert.strictEqual(slotObj.capacity, 2, 'Total capacity must be exactly 2');
+    assert.strictEqual(slotObj.booked_count, 1, 'Booked count must be 1 after first booking');
+    assert.strictEqual(slotObj.available_seats, 1, 'Available seats must be 1');
+    assert.strictEqual(slotObj.seats_text, '১টি আসন খালি আছে', 'Slot must display "১টি আসন খালি আছে"');
+    assert.strictEqual(slotObj.available, true, 'Slot must still be available for 2nd patient');
 
-  await test('MANDATORY REQUIREMENT: Concurrency test - Patient B tries booking same slot -> strictly REJECTED', async () => {
-    const payload = {
+    // 2nd patient books the same slot
+    const payloadB = {
       full_name: 'Test Patient B',
       phone: '01899990000',
       address: 'Dagonbhuiyan, Feni',
@@ -259,13 +262,56 @@ async function runTests() {
       number_of_patients: 1,
       appointment_date: testDateStr,
       time_slot: slotToBook, // Exact same slot!
-      additional_notes: 'Duplicate attempt test'
+      additional_notes: 'Second patient booking same slot'
     };
+    const resB = await request('POST', '/api/public/book', payloadB);
+    assert.strictEqual(resB.statusCode, 201);
+    assert.strictEqual(resB.data.success, true);
+    assert.strictEqual(resB.data.data.time_slot, slotToBook);
+  });
 
-    const res = await request('POST', '/api/public/book', payload);
-    assert.strictEqual(res.statusCode, 400);
-    assert.strictEqual(res.data.success, false);
-    assert(res.data.error.includes('already been booked') || res.data.error.includes('alternative slot'));
+  await test('TWO-SEAT CAPACITY: After 2nd booking, slot displays "আসন পূর্ণ" and 3rd booking is REJECTED', async () => {
+    // Verify slot is now full
+    const res = await request('GET', `/api/public/availability?date=${testDateStr}`);
+    assert.strictEqual(res.statusCode, 200);
+    const slotObj = res.data.slots.find(s => s.label === slotToBook);
+    assert.strictEqual(slotObj.booked_count, 2, 'Booked count must be 2');
+    assert.strictEqual(slotObj.available_seats, 0, 'Available seats must be 0');
+    assert.strictEqual(slotObj.seats_text, 'আসন পূর্ণ', 'Slot must display "আসন পূর্ণ"');
+    assert.strictEqual(slotObj.available, false, 'Full slot must not be available');
+
+    // 3rd patient tries booking the same slot -> REJECTED
+    const payloadC = {
+      full_name: 'Test Patient C',
+      phone: '01888880000',
+      address: 'Feni Sadar',
+      service_type: 'ruqyah',
+      number_of_patients: 1,
+      appointment_date: testDateStr,
+      time_slot: slotToBook,
+      additional_notes: 'Third attempt should be rejected'
+    };
+    const resC = await request('POST', '/api/public/book', payloadC);
+    assert.strictEqual(resC.statusCode, 400);
+    assert.strictEqual(resC.data.success, false);
+    assert(resC.data.error.includes('fully booked') || resC.data.error.includes('both seats'));
+  });
+
+  await test('TWO-SEAT CAPACITY: Cancelling a booking automatically restores available seat count', async () => {
+    // Cancel Patient A's appointment
+    db.prepare("UPDATE appointments SET status = 'Cancelled' WHERE appointment_id = ?").run(bookedAptId);
+
+    // Verify seat is restored
+    const checkRes = await request('GET', `/api/public/availability?date=${testDateStr}`);
+    assert.strictEqual(checkRes.statusCode, 200);
+    const slotObj = checkRes.data.slots.find(s => s.label === slotToBook);
+    assert.strictEqual(slotObj.booked_count, 1, 'Booked count must drop to 1 after cancellation');
+    assert.strictEqual(slotObj.available_seats, 1, 'Available seats must be restored to 1');
+    assert.strictEqual(slotObj.seats_text, '১টি আসন খালি আছে', 'Slot must display "১টি আসন খালি আছে" again');
+    assert.strictEqual(slotObj.available, true, 'Slot must be available again');
+
+    // Restore to Confirmed for subsequent tests
+    db.prepare("UPDATE appointments SET status = 'Confirmed' WHERE appointment_id = ?").run(bookedAptId);
   });
 
   // 4. Appointment Booking: Hijama (Consultation based)
@@ -428,7 +474,9 @@ async function runTests() {
     const checkRes = await request('GET', `/api/public/availability?date=${testDateStr}`);
     const labels = checkRes.data.availableSlots.map(s => s.label);
     assert(labels.includes(slotToBook), 'Previous slot must become available again');
-    assert(!labels.includes(newRescheduleSlot), 'New slot must be reserved');
+    const newSlotObj = checkRes.data.slots.find(s => s.label === newRescheduleSlot);
+    assert.strictEqual(newSlotObj.booked_count, 1, 'New slot must have 1 booked patient');
+    assert.strictEqual(newSlotObj.available_seats, 1, 'New slot must have 1 seat remaining');
   });
 
   // 10. Patient CRM & Expanded History Form (PRD 7: সমস্যা কত দিন ধরে? & কী কী প্রক্রিয়ায় চিকিৎসা নিয়েছেন?)
@@ -1357,6 +1405,7 @@ async function runTests() {
   await test('HOMEPAGE INTEGRATION: Dedicated section "আমল ও প্রতিযোগিতা" exists with 4 core modules', async () => {
     const homeRes = await request('GET', '/');
     assert.strictEqual(homeRes.statusCode, 200);
+    assert.ok(!homeRes.data.includes('শুক্রবার (সাপ্তাহিক ছুটি):'), 'Patient Interview section must not have red Friday closed text');
     assert.ok(homeRes.data.includes('id="amalCompetitionSection"'));
     assert.ok(homeRes.data.includes('আমল ও প্রতিযোগিতা'));
     assert.ok(homeRes.data.includes('দৈনিক আমল ট্র্যাকার'));

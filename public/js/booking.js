@@ -217,17 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // If no available slots
+      // If no available slots at all
       if (!data.availableSlots || data.availableSlots.length === 0) {
         const msg = isBn
-          ? 'এই তারিখের সকল ১ ঘণ্টার স্লট ইতোমধ্যে বুকিং হয়ে গেছে। অনুগ্রহ করে অন্য তারিখ নির্বাচন করুন।'
+          ? 'এই তারিখের সকল ১ ঘণ্টার স্লট ইতোমধ্যে সম্পূর্ণ বুকিং হয়ে গেছে (আসন পূর্ণ)। অনুগ্রহ করে অন্য তারিখ নির্বাচন করুন।'
           : 'All appointment slots on this date are fully booked. Please select another date.';
         showSlotMessage(msg, 'warning');
-        return;
       }
 
-      // Render ONLY available slots! Booked slots disappear!
-      renderAvailableSlots(data.availableSlots, data.date);
+      // Render slots with 2-seat capacity display ("২টি আসন খালি আছে", "১টি আসন খালি আছে", "আসন পূর্ণ")
+      const allSlotsToRender = (data.slots && data.slots.length > 0) ? data.slots : (data.availableSlots || []);
+      renderAvailableSlots(allSlotsToRender, data.date);
 
     } catch (err) {
       if (slotLoading) slotLoading.style.display = 'none';
@@ -276,31 +276,79 @@ document.addEventListener('DOMContentLoaded', () => {
     infoHeader.style.color = 'var(--primary)';
     infoHeader.style.fontWeight = '600';
     infoHeader.innerHTML = isBn 
-      ? `✓ ${slots.length} টি ১ ঘণ্টার খালি স্লট পাওয়া গেছে (${dateStr}):`
-      : `✓ ${slots.length} available 1-hour slot(s) found for ${dateStr}:`;
+      ? `✓ সময়সূচী ও আসন প্রাপ্যতা (${dateStr}) — প্রতি স্লটে সর্বোচ্চ ২টি আসন:`
+      : `✓ Schedule & Seat Availability (${dateStr}) — 2 Seats Per Slot:`;
     slotsGrid.appendChild(infoHeader);
 
     slots.forEach(slot => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'slot-btn';
+
+      const seatsLeft = typeof slot.available_seats !== 'undefined' ? slot.available_seats : (slot.available ? 2 : 0);
+      const isBlocked = slot.status === 'blocked';
+      const isFull = seatsLeft === 0;
+
+      let seatText = '';
+      let seatColor = '';
+      let seatIcon = '●';
+
+      if (isBlocked) {
+        seatText = isBn ? 'ব্লক করা' : 'Blocked';
+        seatColor = '#94A3B8';
+        seatIcon = '🚫';
+      } else if (seatsLeft === 2) {
+        seatText = isBn ? '২টি আসন খালি আছে' : '2 Seats Available';
+        seatColor = '#065F46';
+        seatIcon = '●';
+      } else if (seatsLeft === 1) {
+        seatText = isBn ? '১টি আসন খালি আছে' : '1 Seat Available';
+        seatColor = '#D97706';
+        seatIcon = '●';
+      } else {
+        seatText = isBn ? 'আসন পূর্ণ' : 'Fully Booked';
+        seatColor = '#DC2626';
+        seatIcon = '✕';
+      }
+
+      if (isBlocked || isFull) {
+        btn.disabled = true;
+        btn.classList.add('unavailable');
+        btn.style.opacity = '0.65';
+        btn.style.cursor = 'not-allowed';
+        btn.style.backgroundColor = '#F8FAFC';
+      }
+
       btn.innerHTML = `
         <span style="font-size: 0.95rem; font-weight: 700;">${slot.label}</span>
-        <span style="font-size: 0.75rem; color: var(--primary-light); margin-top: 2px;">● ${isBn ? 'খালি আছে (১ ঘণ্টা)' : 'Available (1 Hour)'}</span>
+        <span class="slot-seat-badge" style="font-size: 0.76rem; color: ${seatColor}; margin-top: 3px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${seatIcon} ${seatText}</span>
       `;
 
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedSlot = slot.label;
-        if (selectedSlotInput) selectedSlotInput.value = slot.label;
+      if (!btn.disabled) {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.slot-btn').forEach(b => {
+            b.classList.remove('selected');
+            const badge = b.querySelector('.slot-seat-badge');
+            if (badge && badge.dataset.origColor) {
+              badge.style.color = badge.dataset.origColor;
+            }
+          });
+          btn.classList.add('selected');
+          const badge = btn.querySelector('.slot-seat-badge');
+          if (badge) {
+            badge.dataset.origColor = seatColor;
+            badge.style.color = '#FFFFFF';
+          }
+          selectedSlot = slot.label;
+          if (selectedSlotInput) selectedSlotInput.value = slot.label;
 
-        // Auto scroll smoothly to patient details
-        const detailsHeader = document.getElementById('patientDetailsHeader');
-        if (detailsHeader) {
-          detailsHeader.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
+          // Auto scroll smoothly to patient details
+          const detailsHeader = document.getElementById('patientDetailsHeader');
+          if (detailsHeader) {
+            detailsHeader.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }
 
       slotsGrid.appendChild(btn);
     });
