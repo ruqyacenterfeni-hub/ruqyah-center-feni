@@ -1375,6 +1375,60 @@
             </div>
           </div>
 
+          <!-- Section 4.5: Homepage Top Profiles Display Control (Requirement 2 & 3) -->
+          <div class="card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 2px solid #FCD34D; background: #FFFDF5; border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h3 style="margin: 0; color: #92400E; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>⭐</span> <span>হোমপেজ টপ প্রোফাইল প্রদর্শন নিয়ন্ত্রণ (Top Profiles Display)</span>
+                </h3>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #78350F;">
+                  হোমপেজের "আমল ও প্রতিযোগিতা" সেকশনে প্রদর্শিত শীর্ষ প্রোফাইলের সংখ্যা ও ম্যানুয়াল সংযোজন/বর্জন নির্ধারণ করুন। ডিফল্ট: শীর্ষ ৩ জন।
+                </p>
+              </div>
+              
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <label for="adminTopProfilesLimitSelect" style="font-size: 0.88rem; font-weight: 700; color: #92400E;">প্রদর্শন সংখ্যা:</label>
+                  <select id="adminTopProfilesLimitSelect" class="form-control" style="width: auto; padding: 0.4rem 0.75rem; font-weight: 700;">
+                    <option value="1">১ জন</option>
+                    <option value="2">২ জন</option>
+                    <option value="3" selected>৩ জন (ডিফল্ট)</option>
+                    <option value="4">৪ জন</option>
+                    <option value="5">৫ জন</option>
+                    <option value="6">৬ জন</option>
+                    <option value="8">৮ জন</option>
+                    <option value="10">১০ জন</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveAdminTopProfilesLimit()" style="padding: 0.45rem 1rem; font-size: 0.88rem;">
+                  সংরক্ষণ করুন
+                </button>
+              </div>
+            </div>
+
+            <!-- Status summary and quick manual add -->
+            <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px dashed #FDE68A; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem;">
+              <div id="adminTopProfilesStatusText" style="color: #92400E; font-weight: 600;">
+                বর্তমানে হোমপেজে শীর্ষ ৩ জন প্রতিযোগী প্রদর্শিত হচ্ছে।
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <select id="adminTopProfilesManualAddSelect" class="form-control" style="width: auto; max-width: 250px; font-size: 0.82rem; padding: 0.35rem 0.6rem;">
+                  <option value="">-- প্রতিযোগী নির্বাচন করুন --</option>
+                </select>
+                <button class="btn btn-sm" onclick="adminAddSelectedParticipantToTopProfiles()" style="background: #065F46; color: #FFF; border: none; padding: 0.4rem 0.85rem; font-size: 0.82rem; font-weight: 700; border-radius: 4px; cursor: pointer;">
+                  + হোমপেজে যোগ করুন
+                </button>
+              </div>
+            </div>
+
+            <!-- Overrides chips -->
+            <div id="adminTopProfilesOverridesChipsContainer" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+              <!-- Dynamic chips -->
+            </div>
+          </div>
+
           <!-- Section 5: Live Participants & Detailed Profiles (Requirement 3, 5 & 6) -->
           <div class="card" style="padding: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
@@ -1399,6 +1453,7 @@
                     <th>ছবি ও নাম</th>
                     <th>মোবাইল নম্বর</th>
                     <th>ঠিকানা (উপজেলা ও জেলা)</th>
+                    <th>হোমপেজ প্রদর্শন</th>
                     <th>সম্পন্ন দিন</th>
                     <th>বর্তমান স্তর</th>
                     <th>মোট পয়েন্ট</th>
@@ -1406,7 +1461,7 @@
                   </tr>
                 </thead>
                 <tbody id="adminLifestyleTbody">
-                  <tr><td colspan="8" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
+                  <tr><td colspan="9" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
                 </tbody>
               </table>
             </div>

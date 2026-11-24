@@ -2114,6 +2114,104 @@ async function runTests() {
     assert.strictEqual(getAfterDel.statusCode, 404);
   });
 
+  await test('TOP PROFILES REQ 1-5: Homepage Top 3 Profiles, Admin Limit Control & Manual Include/Exclude Overrides', async () => {
+    // 1. Verify Homepage contains Top Profiles section
+    const homeRes = await request('GET', '/');
+    assert.strictEqual(homeRes.statusCode, 200);
+    assert.ok(homeRes.data.includes('id="homepageTopProfilesSection"'), 'Homepage must contain #homepageTopProfilesSection');
+    assert.ok(homeRes.data.includes('শীর্ষ প্রতিযোগী প্রোফাইল (Top Profiles)'), 'Homepage must contain Top Profiles heading');
+
+    // 2. Public API GET /api/lifestyle/top-profiles: default Top 3
+    const topRes = await request('GET', '/api/lifestyle/top-profiles');
+    assert.strictEqual(topRes.statusCode, 200);
+    assert.strictEqual(topRes.data.success, true);
+    assert.ok(Array.isArray(topRes.data.profiles), 'profiles must be an array');
+    assert.ok(topRes.data.profiles.length <= 3, 'Default displayed profiles must be at most 3');
+    assert.strictEqual(topRes.data.config.display_limit, 3, 'Default display limit must be 3');
+
+    // Verify ordering by points DESC and masked phone privacy
+    for (let i = 0; i < topRes.data.profiles.length; i++) {
+      const p = topRes.data.profiles[i];
+      assert.ok(p.full_name, 'Profile must have a full_name');
+      assert.ok(p.masked_phone.includes('****'), 'Phone number must be masked with **** for privacy');
+      assert.strictEqual(p.rank, i + 1, 'Rank must be sequential 1, 2, 3...');
+      if (i > 0) {
+        assert.ok(topRes.data.profiles[i - 1].total_points >= p.total_points, 'Profiles must be sorted by points descending');
+      }
+    }
+
+    // 3. Admin Top Profiles Config API: GET /api/lifestyle/admin/top-profiles-config
+    const adminCfgRes = await request('GET', '/api/lifestyle/admin/top-profiles-config');
+    assert.strictEqual(adminCfgRes.statusCode, 200);
+    assert.strictEqual(adminCfgRes.data.success, true);
+    assert.strictEqual(adminCfgRes.data.config.display_limit, 3);
+    assert.ok(Array.isArray(adminCfgRes.data.currently_displayed_ids));
+    assert.ok(Array.isArray(adminCfgRes.data.participants));
+
+    // 4. Admin updates display limit to 2
+    const setLimitRes = await request('POST', '/api/lifestyle/admin/top-profiles-config', {
+      display_limit: 2
+    });
+    assert.strictEqual(setLimitRes.statusCode, 200);
+    assert.strictEqual(setLimitRes.data.config.display_limit, 2);
+
+    // Verify public API now returns exactly at most 2 profiles
+    const topLimit2Res = await request('GET', '/api/lifestyle/top-profiles');
+    assert.strictEqual(topLimit2Res.statusCode, 200);
+    assert.ok(topLimit2Res.data.profiles.length <= 2, 'Profiles count must now be at most 2');
+    assert.strictEqual(topLimit2Res.data.config.display_limit, 2);
+
+    // 5. Admin manually excludes top profile from homepage display
+    if (topLimit2Res.data.profiles.length > 0) {
+      const firstUserId = topLimit2Res.data.profiles[0].user_id;
+
+      const excludeRes = await request('POST', '/api/lifestyle/admin/top-profiles/toggle', {
+        user_id: firstUserId,
+        action: 'exclude'
+      });
+      assert.strictEqual(excludeRes.statusCode, 200);
+      assert.strictEqual(excludeRes.data.success, true);
+
+      // Verify excluded user is omitted from homepage display
+      const topAfterExclude = await request('GET', '/api/lifestyle/top-profiles');
+      assert.strictEqual(topAfterExclude.statusCode, 200);
+      const isStillThere = topAfterExclude.data.profiles.some(p => p.user_id === firstUserId);
+      assert.strictEqual(isStillThere, false, 'Excluded user must not appear in homepage top profiles');
+
+      // 6. Admin manually includes the user back
+      const includeRes = await request('POST', '/api/lifestyle/admin/top-profiles/toggle', {
+        user_id: firstUserId,
+        action: 'include'
+      });
+      assert.strictEqual(includeRes.statusCode, 200);
+
+      const topAfterInclude = await request('GET', '/api/lifestyle/top-profiles');
+      const isBack = topAfterInclude.data.profiles.some(p => p.user_id === firstUserId);
+      assert.strictEqual(isBack, true, 'Manually included user must appear in homepage top profiles');
+
+      // 7. Reset override back to natural rank
+      const resetRes = await request('POST', '/api/lifestyle/admin/top-profiles/toggle', {
+        user_id: firstUserId,
+        action: 'reset'
+      });
+      assert.strictEqual(resetRes.statusCode, 200);
+    }
+
+    // 8. Restore default limit = 3 and verify participant records remain unchanged
+    const restoreRes = await request('POST', '/api/lifestyle/admin/top-profiles-config', {
+      display_limit: 3,
+      manual_included_ids: [],
+      manual_excluded_ids: []
+    });
+    assert.strictEqual(restoreRes.statusCode, 200);
+    assert.strictEqual(restoreRes.data.config.display_limit, 3);
+    assert.deepStrictEqual(restoreRes.data.config.manual_included_ids, []);
+    assert.deepStrictEqual(restoreRes.data.config.manual_excluded_ids, []);
+
+    const finalTop = await request('GET', '/api/lifestyle/top-profiles');
+    assert.strictEqual(finalTop.data.config.display_limit, 3);
+  });
+
   console.log('================================================================');
   console.log(` AUDIT & VERIFICATION RESULTS: ${passed} PASSED, ${failed} FAILED `);
   console.log('================================================================');

@@ -3994,6 +3994,8 @@ async function toggleCourseStatus(id) {
 
 let adminParticipantsList = [];
 let adminAmalCategoriesList = [];
+let adminTopProfilesConfig = { display_limit: 3, manual_included_ids: [], manual_excluded_ids: [] };
+let adminTopProfilesCurrentlyDisplayedIds = [];
 
 let currentAdminParticipantId = null;
 
@@ -4001,6 +4003,7 @@ async function loadLifestyleMgrData() {
   await Promise.all([
     loadAdminPinnedWinner(),
     loadAdminAmalCategories(),
+    loadAdminTopProfilesConfig(),
     loadAdminParticipants(),
     loadAdminAmalAnalytics()
   ]);
@@ -4103,45 +4106,75 @@ async function searchAdminParticipants() {
       if (countBadge) countBadge.innerText = `মোট ${data.participants.length} জন প্রতিযোগী`;
 
       if (!adminParticipantsList.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">কোনো প্রতিযোগী পাওয়া যায়নি।</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">কোনো প্রতিযোগী পাওয়া যায়নি।</td></tr>';
         return;
       }
 
-      tbody.innerHTML = adminParticipantsList.map(p => `
-        <tr>
-          <td><strong>#${p.rank}</strong></td>
-          <td>
-            <div style="display: flex; align-items: center; gap: 0.65rem;">
-              <img src="${p.profile_photo || '/images/default-avatar.svg'}" alt="${p.full_name}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #10B981;">
-              <div>
-                <strong style="color:#0F172A;">${p.full_name}</strong>
-                <div style="font-size: 0.75rem; color: #64748B;">আইডি: ${p.user_uuid || ('#' + p.id)}</div>
+      tbody.innerHTML = adminParticipantsList.map(p => {
+        const isDisplayed = adminTopProfilesCurrentlyDisplayedIds.includes(p.id);
+        const isManuallyInc = (adminTopProfilesConfig.manual_included_ids || []).includes(p.id);
+        const isManuallyExc = (adminTopProfilesConfig.manual_excluded_ids || []).includes(p.id);
+
+        let displayStatusHtml = '';
+        if (isManuallyExc) {
+          displayStatusHtml = '<span style="background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px;">🚫 লুকানো</span>';
+        } else if (isDisplayed) {
+          displayStatusHtml = `<span style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px;">🌟 প্রদর্শিত ${isManuallyInc ? '<small>(ম্যানুয়াল)</small>' : ''}</span>`;
+        } else {
+          displayStatusHtml = '<span style="background: #F1F5F9; color: #64748B; font-size: 0.72rem; padding: 2px 7px; border-radius: 9999px;">তালিকার বাইরে</span>';
+        }
+
+        let toggleBtnHtml = '';
+        if (isDisplayed || isManuallyInc) {
+          toggleBtnHtml = `<button class="btn btn-sm" onclick="toggleTopProfileHomepage(${p.id}, 'exclude')" style="background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; padding: 3px 6px; font-size: 0.75rem; font-weight: 600; border-radius: 4px; cursor: pointer;" title="হোমপেজ থেকে বাদ দিন">🚫 বাদ দিন</button>`;
+        } else {
+          toggleBtnHtml = `<button class="btn btn-sm" onclick="toggleTopProfileHomepage(${p.id}, 'include')" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; padding: 3px 6px; font-size: 0.75rem; font-weight: 600; border-radius: 4px; cursor: pointer;" title="হোমপেজে দেখান">⭐ যোগ করুন</button>`;
+        }
+
+        let resetBtnHtml = '';
+        if (isManuallyInc || isManuallyExc) {
+          resetBtnHtml = `<button class="btn btn-sm" onclick="toggleTopProfileHomepage(${p.id}, 'reset')" style="background: #F8FAFC; color: #475569; border: 1px solid #CBD5E1; padding: 3px 5px; font-size: 0.72rem; border-radius: 4px; cursor: pointer;" title="স্বয়ংক্রিয় র‍্যাংকে রিসেট">🔄</button>`;
+        }
+
+        return `
+          <tr>
+            <td><strong>#${p.rank}</strong></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <img src="${p.profile_photo || '/images/default-avatar.svg'}" alt="${p.full_name}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #10B981;">
+                <div>
+                  <strong style="color:#0F172A;">${p.full_name}</strong>
+                  <div style="font-size: 0.75rem; color: #64748B;">আইডি: ${p.user_uuid || ('#' + p.id)}</div>
+                </div>
               </div>
-            </div>
-          </td>
-          <td>
-            <strong style="color: #065F46;">${p.phone || '-'}</strong>
-          </td>
-          <td>
-            <span style="font-size: 0.85rem; color: #475569;">
-              ${p.upazila ? p.upazila + ', ' : ''}${p.district || 'ফেনী'}
-            </span>
-          </td>
-          <td>${p.completed_days || 0} / 40 দিন</td>
-          <td><span class="badge badge-primary">${p.current_level || 'Improvement'}</span></td>
-          <td><strong style="color:var(--primary); font-size: 1.05rem;">${p.total_points}</strong></td>
-          <td style="text-align: right;">
-            <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
-              <button class="btn btn-sm btn-primary" onclick="openAdminParticipantModal(${p.id})" style="padding: 3px 8px; font-size: 0.78rem;">
-                👤 বিস্তারিত প্রোফাইল
-              </button>
-              <button class="btn btn-sm" onclick="openPinWinnerModal(${p.id})" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; padding: 3px 8px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; cursor: pointer;">
-                👑 পিন
-              </button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+            <td>
+              <strong style="color: #065F46;">${p.phone || '-'}</strong>
+            </td>
+            <td>
+              <span style="font-size: 0.85rem; color: #475569;">
+                ${p.upazila ? p.upazila + ', ' : ''}${p.district || 'ফেনী'}
+              </span>
+            </td>
+            <td>${displayStatusHtml}</td>
+            <td>${p.completed_days || 0} / 40 দিন</td>
+            <td><span class="badge badge-primary">${p.current_level || 'Improvement'}</span></td>
+            <td><strong style="color:var(--primary); font-size: 1.05rem;">${p.total_points}</strong></td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 0.25rem; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+                ${toggleBtnHtml}
+                ${resetBtnHtml}
+                <button class="btn btn-sm btn-primary" onclick="openAdminParticipantModal(${p.id})" style="padding: 3px 7px; font-size: 0.75rem;">
+                  👤 প্রোফাইল
+                </button>
+                <button class="btn btn-sm" onclick="openPinWinnerModal(${p.id})" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; padding: 3px 6px; font-size: 0.75rem; font-weight: 700; border-radius: 4px; cursor: pointer;">
+                  👑 পিন
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
   } catch (err) {
     console.error('Error searching participants:', err);
@@ -4523,43 +4556,129 @@ async function loadAdminAmalCategories() {
   }
 }
 
-async function loadAdminParticipants() {
+// ==============================================================
+// HOMEPAGE TOP PROFILES DISPLAY CONTROL (Admin Configurable)
+// ==============================================================
+async function loadAdminTopProfilesConfig() {
   try {
-    const res = await fetch('/api/lifestyle/leaderboard');
+    const res = await fetch('/api/lifestyle/admin/top-profiles-config');
     const data = await res.json();
-    const tbody = document.getElementById('adminLifestyleTbody');
-    if (data.success && data.leaderboard) {
-      adminParticipantsList = data.leaderboard;
-      if (!adminParticipantsList.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">এখনো কোনো প্রতিযোগী নিবন্ধন করেনি।</td></tr>';
-        return;
-      }
-      tbody.innerHTML = adminParticipantsList.map(p => `
-        <tr>
-          <td><strong>#${p.rank}</strong></td>
-          <td>
-            <div style="display: flex; align-items: center; gap: 0.65rem;">
-              <img src="${p.profile_photo || '/images/default-avatar.svg'}" alt="${p.full_name}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid #CBD5E1;">
-              <div>
-                <strong>${p.full_name}</strong>
-                <div style="font-size: 0.75rem; color: #64748B;">আইডি: #${p.id}</div>
-              </div>
-            </div>
-          </td>
-          <td>${p.masked_phone}</td>
-          <td>${p.completed_days} / 40 দিন</td>
-          <td><span class="badge badge-primary">${p.current_level}</span></td>
-          <td><strong style="color:var(--primary); font-size: 1rem;">${p.total_points}</strong></td>
-          <td style="text-align: right;">
-            <button class="btn btn-sm" onclick="openPinWinnerModal(${p.id})" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; padding: 3px 8px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; cursor: pointer;">
-              👑 বিজয়ী পিন করুন
-            </button>
-          </td>
-        </tr>
-      `).join('');
+    if (!data.success) return;
+
+    adminTopProfilesConfig = data.config || { display_limit: 3, manual_included_ids: [], manual_excluded_ids: [] };
+    adminTopProfilesCurrentlyDisplayedIds = data.currently_displayed_ids || [];
+
+    // 1. Set limit select
+    const limitSelect = document.getElementById('adminTopProfilesLimitSelect');
+    if (limitSelect) {
+      limitSelect.value = String(adminTopProfilesConfig.display_limit || 3);
     }
-  } catch (e) {
-    console.error(e);
+
+    // 2. Set status text
+    const statusText = document.getElementById('adminTopProfilesStatusText');
+    if (statusText) {
+      const totalCount = adminTopProfilesCurrentlyDisplayedIds.length;
+      statusText.innerHTML = `বর্তমানে হোমপেজে <strong>${totalCount} জন</strong> প্রতিযোগী প্রদর্শিত হচ্ছে (সর্বোচ্চ সীমা: ${adminTopProfilesConfig.display_limit} জন)।`;
+    }
+
+    // 3. Populate manual add dropdown
+    const addSelect = document.getElementById('adminTopProfilesManualAddSelect');
+    if (addSelect && data.participants) {
+      addSelect.innerHTML = '<option value="">-- প্রতিযোগী নির্বাচন করুন --</option>' +
+        data.participants.map(p => {
+          const isDisp = p.is_displayed ? ' [বর্তমানে প্রদর্শিত]' : '';
+          return `<option value="${p.user_id}">#${p.rank} ${p.full_name} (${p.total_points} পয়েন্ট)${isDisp}</option>`;
+        }).join('');
+    }
+
+    // 4. Render chips for overrides
+    const chipsContainer = document.getElementById('adminTopProfilesOverridesChipsContainer');
+    if (chipsContainer) {
+      let chipsHtml = '';
+      if (adminTopProfilesConfig.manual_included_ids.length > 0) {
+        chipsHtml += '<span style="font-size: 0.8rem; font-weight: 700; color: #065F46;">ম্যানুয়ালি যোগ করা:</span>';
+        adminTopProfilesConfig.manual_included_ids.forEach(uid => {
+          const p = data.participants ? data.participants.find(x => x.user_id === uid) : null;
+          const name = p ? p.full_name : `#${uid}`;
+          chipsHtml += `
+            <span style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-size: 0.78rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>⭐ ${name}</span>
+              <button onclick="toggleTopProfileHomepage(${uid}, 'reset')" style="background: none; border: none; cursor: pointer; color: #065F46; font-size: 0.85rem; padding: 0;" title="রিসেট">✕</button>
+            </span>
+          `;
+        });
+      }
+
+      if (adminTopProfilesConfig.manual_excluded_ids.length > 0) {
+        chipsHtml += '<span style="font-size: 0.8rem; font-weight: 700; color: #991B1B; margin-left: 0.5rem;">ম্যানুয়ালি বাদ দেওয়া:</span>';
+        adminTopProfilesConfig.manual_excluded_ids.forEach(uid => {
+          const p = data.participants ? data.participants.find(x => x.user_id === uid) : null;
+          const name = p ? p.full_name : `#${uid}`;
+          chipsHtml += `
+            <span style="background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-size: 0.78rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>🚫 ${name}</span>
+              <button onclick="toggleTopProfileHomepage(${uid}, 'reset')" style="background: none; border: none; cursor: pointer; color: #991B1B; font-size: 0.85rem; padding: 0;" title="রিসেট">✕</button>
+            </span>
+          `;
+        });
+      }
+
+      chipsContainer.innerHTML = chipsHtml;
+    }
+  } catch (err) {
+    console.error('Failed to load admin top profiles config:', err);
+  }
+}
+
+async function saveAdminTopProfilesLimit() {
+  const limitSelect = document.getElementById('adminTopProfilesLimitSelect');
+  const limit = limitSelect ? parseInt(limitSelect.value, 10) : 3;
+
+  try {
+    const res = await fetch('/api/lifestyle/admin/top-profiles-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display_limit: limit })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(`হোমপেজ প্রদর্শন সংখ্যা সফলভাবে ${limit} জনে পরিবর্তন করা হয়েছে!`);
+      await loadAdminTopProfilesConfig();
+      await searchAdminParticipants();
+    } else {
+      alert(data.error || 'সংরক্ষণ ব্যর্থ হয়েছে।');
+    }
+  } catch (err) {
+    alert('সার্ভার ত্রুটি: ' + err.message);
+  }
+}
+
+async function adminAddSelectedParticipantToTopProfiles() {
+  const select = document.getElementById('adminTopProfilesManualAddSelect');
+  const userId = select ? parseInt(select.value, 10) : null;
+  if (!userId) {
+    alert('অনুগ্রহ করে প্রতিযোগী নির্বাচন করুন।');
+    return;
+  }
+  await toggleTopProfileHomepage(userId, 'include');
+}
+
+async function toggleTopProfileHomepage(userId, action) {
+  try {
+    const res = await fetch('/api/lifestyle/admin/top-profiles/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, action: action })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await loadAdminTopProfilesConfig();
+      await searchAdminParticipants();
+    } else {
+      alert(data.error || 'পরিবর্তন ব্যর্থ হয়েছে।');
+    }
+  } catch (err) {
+    alert('সার্ভার ত্রুটি: ' + err.message);
   }
 }
 

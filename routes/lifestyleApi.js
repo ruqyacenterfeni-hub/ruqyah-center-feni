@@ -7,6 +7,178 @@ const multer = require('multer');
 const db = require('../database/db');
 const { requireAdmin, requireRole } = require('../middleware/auth');
 
+// ==================== HOMEPAGE TOP PROFILES CONFIG ====================
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS homepage_top_profiles_config (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      display_limit INTEGER DEFAULT 3,
+      manual_included_ids TEXT DEFAULT '[]',
+      manual_excluded_ids TEXT DEFAULT '[]',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    INSERT OR IGNORE INTO homepage_top_profiles_config (id, display_limit, manual_included_ids, manual_excluded_ids)
+    VALUES (1, 3, '[]', '[]');
+  `);
+} catch (configTableErr) {
+  console.warn('homepage_top_profiles_config init warning:', configTableErr.message);
+}
+
+function getTopProfilesConfig() {
+  try {
+    const row = db.prepare("SELECT * FROM homepage_top_profiles_config WHERE id = 1").get();
+    if (!row) {
+      return { display_limit: 3, manual_included_ids: [], manual_excluded_ids: [] };
+    }
+    let manualIncluded = [];
+    let manualExcluded = [];
+    try {
+      manualIncluded = JSON.parse(row.manual_included_ids || '[]');
+      if (!Array.isArray(manualIncluded)) manualIncluded = [];
+    } catch (e) { manualIncluded = []; }
+    try {
+      manualExcluded = JSON.parse(row.manual_excluded_ids || '[]');
+      if (!Array.isArray(manualExcluded)) manualExcluded = [];
+    } catch (e) { manualExcluded = []; }
+
+    return {
+      display_limit: Number(row.display_limit) || 3,
+      manual_included_ids: manualIncluded.map(Number).filter(n => !isNaN(n)),
+      manual_excluded_ids: manualExcluded.map(Number).filter(n => !isNaN(n)),
+      updated_at: row.updated_at
+    };
+  } catch (err) {
+    console.error('getTopProfilesConfig error:', err);
+    return { display_limit: 3, manual_included_ids: [], manual_excluded_ids: [] };
+  }
+}
+
+function getTopProfiles() {
+  const config = getTopProfilesConfig();
+  const limit = Math.max(1, Math.min(50, config.display_limit || 3));
+  const manualIncluded = config.manual_included_ids;
+  const manualExcluded = config.manual_excluded_ids;
+
+  // Active competition
+  const activeComp = db.prepare("SELECT * FROM competitions WHERE status = 'active' ORDER BY id DESC LIMIT 1").get();
+  let rawCandidates = [];
+
+  if (activeComp) {
+    rawCandidates = db.prepare(`
+      SELECT cp.id as participant_id, cp.total_points, cp.completed_days, cp.current_level,
+             lu.id as user_id, lu.full_name, lu.phone, lu.profile_photo, lu.upazila, lu.district, lu.village
+      FROM competition_participants cp
+      JOIN lifestyle_users lu ON cp.user_id = lu.id
+      WHERE cp.competition_id = ?
+      ORDER BY cp.total_points DESC, cp.completed_days DESC, cp.id ASC
+    `).all(activeComp.id);
+  }
+
+  // Fallback if no participants in active competition
+  if (!rawCandidates || rawCandidates.length === 0) {
+    rawCandidates = db.prepare(`
+      SELECT lu.id as user_id, lu.id as participant_id, lu.total_points, lu.current_level,
+             lu.full_name, lu.phone, lu.profile_photo, lu.upazila, lu.district, lu.village,
+             COALESCE(cp.completed_days, 0) as completed_days
+      FROM lifestyle_users lu
+      LEFT JOIN competition_participants cp ON lu.id = cp.user_id
+      ORDER BY lu.total_points DESC, lu.id ASC
+    `).all();
+  }
+
+  // Assign overall natural ranking
+  const naturalRankingMap = new Map();
+  rawCandidates.forEach((c, idx) => {
+    naturalRankingMap.set(c.user_id, idx + 1);
+  });
+
+  // Filter out any manually excluded users
+  const nonExcluded = rawCandidates.filter(c => !manualExcluded.includes(c.user_id));
+
+  // If manualIncluded has IDs not yet in nonExcluded, fetch them
+  const nonExcludedUserIds = new Set(nonExcluded.map(c => c.user_id));
+  for (const incId of manualIncluded) {
+    if (manualExcluded.includes(incId)) continue;
+    if (!nonExcludedUserIds.has(incId)) {
+      const extraUser = db.prepare(`
+        SELECT lu.id as user_id, lu.id as participant_id, lu.total_points, lu.current_level,
+               lu.full_name, lu.phone, lu.profile_photo, lu.upazila, lu.district, lu.village,
+               COALESCE(cp.completed_days, 0) as completed_days
+        FROM lifestyle_users lu
+        LEFT JOIN competition_participants cp ON lu.id = cp.user_id
+        WHERE lu.id = ?
+      `).get(incId);
+      if (extraUser) {
+        nonExcluded.push(extraUser);
+        nonExcludedUserIds.add(incId);
+      }
+    }
+  }
+
+  const includedUsers = [];
+  const regularPool = [];
+
+  for (const c of nonExcluded) {
+    if (manualIncluded.includes(c.user_id)) {
+      includedUsers.push(c);
+    } else {
+      regularPool.push(c);
+    }
+  }
+
+  // Priority to included users, then fill from regular pool up to limit
+  let finalSelected = [];
+  if (includedUsers.length >= limit) {
+    finalSelected = includedUsers.slice(0, limit);
+  } else {
+    finalSelected = [...includedUsers];
+    const slotsNeeded = limit - finalSelected.length;
+    finalSelected.push(...regularPool.slice(0, slotsNeeded));
+  }
+
+  // Sort final selected by points DESC, completed_days DESC
+  finalSelected.sort((a, b) => {
+    if ((b.total_points || 0) !== (a.total_points || 0)) {
+      return (b.total_points || 0) - (a.total_points || 0);
+    }
+    return (b.completed_days || 0) - (a.completed_days || 0);
+  });
+
+  // Format with privacy masking
+  const formattedProfiles = finalSelected.map((p, idx) => {
+    const raw = p.phone || '';
+    const masked = raw.length >= 11
+      ? raw.substring(0, 3) + '****' + raw.substring(raw.length - 4)
+      : '018****' + (p.user_id + 10);
+
+    const naturalRank = naturalRankingMap.get(p.user_id) || (idx + 1);
+
+    return {
+      rank: idx + 1,
+      natural_rank: naturalRank,
+      user_id: p.user_id,
+      full_name: p.full_name,
+      profile_photo: p.profile_photo || '/images/default-avatar.svg',
+      masked_phone: masked,
+      total_points: p.total_points || 0,
+      completed_days: p.completed_days || 0,
+      current_level: p.current_level || 'Improvement',
+      location: [p.upazila, p.district].filter(Boolean).join(', ') || 'ফেনী',
+      is_manually_included: manualIncluded.includes(p.user_id)
+    };
+  });
+
+  return {
+    config: {
+      display_limit: limit,
+      total_displayed: formattedProfiles.length,
+      manual_included_count: manualIncluded.length,
+      manual_excluded_count: manualExcluded.length
+    },
+    profiles: formattedProfiles
+  };
+}
+
 // ==================== AVATAR UPLOAD SETUP ====================
 const avatarUploadDir = path.join(__dirname, '..', 'public', 'uploads', 'avatars');
 if (!fs.existsSync(avatarUploadDir)) {
@@ -856,6 +1028,23 @@ router.post('/submit-daily', authenticateLifestyleUser, (req, res) => {
 });
 
 // ==============================================================
+// 7.5. PUBLIC HOMEPAGE TOP PROFILES API (TOP 3 BY DEFAULT, ADMIN CONFIGURABLE)
+// ==============================================================
+router.get('/top-profiles', (req, res) => {
+  try {
+    const result = getTopProfiles();
+    res.json({
+      success: true,
+      config: result.config,
+      profiles: result.profiles
+    });
+  } catch (err) {
+    console.error('Fetch top profiles error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==============================================================
 // 8. PUBLIC LEADERBOARD API (VISIBLE RANKS & PROFILE PHOTOS)
 // ==============================================================
 router.get('/leaderboard', (req, res) => {
@@ -1139,6 +1328,130 @@ router.delete('/admin/pinned-winner', requireRole('superadmin', 'admin', 'lifest
     db.prepare('DELETE FROM pinned_monthly_winner WHERE id = 1').run();
     res.json({ success: true, message: 'Pinned winner removed successfully' });
   } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==============================================================
+// 10.5. ADMIN HOMEPAGE TOP PROFILES CONFIG & OVERRIDES
+// ==============================================================
+// Admin: Get Top Profiles Config & Status
+router.get('/admin/top-profiles-config', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const config = getTopProfilesConfig();
+    const topProfilesData = getTopProfiles();
+    const currentlyDisplayedIds = topProfilesData.profiles.map(p => p.user_id);
+
+    // List of participants for admin selector & management
+    const participants = db.prepare(`
+      SELECT lu.id as user_id, lu.full_name, lu.phone, lu.profile_photo, lu.total_points, lu.current_level,
+             lu.upazila, lu.district,
+             COALESCE(cp.completed_days, 0) as completed_days
+      FROM lifestyle_users lu
+      LEFT JOIN competition_participants cp ON lu.id = cp.user_id
+      ORDER BY lu.total_points DESC, lu.id DESC
+      LIMIT 200
+    `).all().map((u, idx) => ({
+      user_id: u.user_id,
+      full_name: u.full_name,
+      phone: u.phone,
+      profile_photo: u.profile_photo || '/images/default-avatar.svg',
+      total_points: u.total_points,
+      completed_days: u.completed_days,
+      current_level: u.current_level,
+      location: [u.upazila, u.district].filter(Boolean).join(', ') || 'ফেনী',
+      rank: idx + 1,
+      is_displayed: currentlyDisplayedIds.includes(u.user_id),
+      is_manually_included: config.manual_included_ids.includes(u.user_id),
+      is_manually_excluded: config.manual_excluded_ids.includes(u.user_id)
+    }));
+
+    res.json({
+      success: true,
+      config,
+      currently_displayed_ids: currentlyDisplayedIds,
+      participants
+    });
+  } catch (err) {
+    console.error('Get top profiles config error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Save Top Profiles Settings (Display Limit, Manual List)
+router.post('/admin/top-profiles-config', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const { display_limit, manual_included_ids, manual_excluded_ids } = req.body;
+    const current = getTopProfilesConfig();
+
+    const limit = display_limit !== undefined ? Math.max(1, Math.min(50, parseInt(display_limit, 10) || 3)) : current.display_limit;
+    const included = Array.isArray(manual_included_ids) ? manual_included_ids.map(Number).filter(n => !isNaN(n)) : current.manual_included_ids;
+    const excluded = Array.isArray(manual_excluded_ids) ? manual_excluded_ids.map(Number).filter(n => !isNaN(n)) : current.manual_excluded_ids;
+
+    db.prepare(`
+      UPDATE homepage_top_profiles_config
+      SET display_limit = ?,
+          manual_included_ids = ?,
+          manual_excluded_ids = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `).run(limit, JSON.stringify(included), JSON.stringify(excluded));
+
+    const updated = getTopProfilesConfig();
+    const result = getTopProfiles();
+
+    res.json({
+      success: true,
+      message: 'Homepage top profiles configuration updated successfully',
+      config: updated,
+      profiles: result.profiles
+    });
+  } catch (err) {
+    console.error('Update top profiles config error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Toggle a participant's homepage status (include / exclude / reset)
+router.post('/admin/top-profiles/toggle', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const { user_id, action } = req.body;
+    const uid = parseInt(user_id, 10);
+    if (!uid) {
+      return res.status(400).json({ success: false, error: 'Valid user_id is required' });
+    }
+
+    const current = getTopProfilesConfig();
+    let included = current.manual_included_ids.filter(id => id !== uid);
+    let excluded = current.manual_excluded_ids.filter(id => id !== uid);
+
+    if (action === 'include' || action === 'add') {
+      included.push(uid);
+    } else if (action === 'exclude' || action === 'remove') {
+      excluded.push(uid);
+    } else if (action === 'reset' || action === 'auto') {
+      // Both arrays already had uid filtered out
+    } else {
+      return res.status(400).json({ success: false, error: 'Invalid action: must be include, exclude, or reset' });
+    }
+
+    db.prepare(`
+      UPDATE homepage_top_profiles_config
+      SET manual_included_ids = ?,
+          manual_excluded_ids = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `).run(JSON.stringify(included), JSON.stringify(excluded));
+
+    const updated = getTopProfiles();
+    res.json({
+      success: true,
+      message: `Participant #${uid} homepage status updated (${action})`,
+      config: updated.config,
+      profiles: updated.profiles
+    });
+  } catch (err) {
+    console.error('Toggle top profile error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

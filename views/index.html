@@ -492,6 +492,31 @@
         </div>
       </div>
 
+      <!-- TOP PROFILES DISPLAY (Requirement 1, 2, 3, 4: Top 3 by default, Admin Configurable) -->
+      <div id="homepageTopProfilesSection" style="display: none; margin-bottom: 3.5rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <span style="background: #FEF3C7; color: #92400E; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 9999px; border: 1px solid #FCD34D;">
+            ⭐ সেরা প্রতিযোগী
+          </span>
+          <h3 style="font-size: 1.85rem; color: #0F172A; font-weight: 800; margin: 0.5rem 0 0.35rem 0;" id="homepageTopProfilesHeading">
+            শীর্ষ প্রতিযোগী প্রোফাইল (Top Profiles)
+          </h3>
+          <p style="color: #64748B; font-size: 0.95rem; max-width: 600px; margin: 0 auto;" id="homepageTopProfilesSubtext">
+            ৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় অর্জিত পয়েন্ট ও ধারাবাহিক আমলের ভিত্তিতে শীর্ষস্থান অধিকারী কৃতি প্রতিযোগীগণ।
+          </p>
+        </div>
+
+        <div id="homepageTopProfilesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <!-- Dynamically populated from /api/lifestyle/top-profiles -->
+        </div>
+
+        <div style="text-align: center; margin-top: 1.5rem;">
+          <a href="/lifestyle/leaderboard" class="btn btn-secondary" style="padding: 0.65rem 1.5rem; font-size: 0.92rem; border-radius: 8px;">
+            🏆 সম্পূর্ণ লিডারবোর্ড দেখুন →
+          </a>
+        </div>
+      </div>
+
       <!-- Core Modules Grid (Single Unified Amal Tracker Architecture - Requirement 3) -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.75rem; margin-bottom: 3.5rem;">
         
@@ -1513,6 +1538,121 @@
       }
     }
 
+    // Load Top Profiles (Requirement 1, 2, 3, 4: Top 3 by default, Admin configurable)
+    async function loadHomepageTopProfiles() {
+      try {
+        const res = await fetch('/api/lifestyle/top-profiles');
+        const data = await res.json();
+        const section = document.getElementById('homepageTopProfilesSection');
+        const container = document.getElementById('homepageTopProfilesContainer');
+
+        if (data.success && data.profiles && data.profiles.length > 0) {
+          section.style.display = 'block';
+
+          container.innerHTML = data.profiles.map(p => {
+            let cardBorder = '#10B981';
+            let badgeBg = '#ECFDF5';
+            let badgeColor = '#065F46';
+            let badgeBorder = '#A7F3D0';
+            let medalEmoji = '🏅';
+            let rankText = `#${p.rank} স্থান`;
+            let photoBorder = '#10B981';
+            let photoBadgeBg = '#065F46';
+            let photoBadgeIcon = '★';
+
+            if (p.rank === 1) {
+              cardBorder = '#F59E0B';
+              badgeBg = '#FEF3C7';
+              badgeColor = '#92400E';
+              badgeBorder = '#FCD34D';
+              medalEmoji = '🥇';
+              rankText = '১ম স্থান';
+              photoBorder = '#F59E0B';
+              photoBadgeBg = '#D97706';
+              photoBadgeIcon = '👑';
+            } else if (p.rank === 2) {
+              cardBorder = '#94A3B8';
+              badgeBg = '#F1F5F9';
+              badgeColor = '#334155';
+              badgeBorder = '#CBD5E1';
+              medalEmoji = '🥈';
+              rankText = '২য় স্থান';
+              photoBorder = '#94A3B8';
+              photoBadgeBg = '#475569';
+              photoBadgeIcon = '⭐';
+            } else if (p.rank === 3) {
+              cardBorder = '#D97706';
+              badgeBg = '#FFEDD5';
+              badgeColor = '#9A3412';
+              badgeBorder = '#FDBA74';
+              medalEmoji = '🥉';
+              rankText = '৩য় স্থান';
+              photoBorder = '#D97706';
+              photoBadgeBg = '#C2410C';
+              photoBadgeIcon = '✨';
+            }
+
+            return `
+              <div class="card" style="background: #FFFFFF; border: 2px solid ${cardBorder}; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                <div style="position: absolute; top: -12px; right: 16px; background: ${badgeBg}; color: ${badgeColor}; font-size: 0.78rem; font-weight: 800; padding: 4px 12px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid ${badgeBorder};">
+                  ${medalEmoji} ${rankText}
+                </div>
+
+                <div>
+                  <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.15rem; margin-top: 0.25rem;">
+                    <div style="position: relative; flex-shrink: 0;">
+                      <img src="${p.profile_photo || '/images/default-avatar.svg'}" alt="${p.full_name}" style="width: 68px; height: 68px; border-radius: 50%; border: 3px solid ${photoBorder}; object-fit: cover; background: #FFF; box-shadow: 0 3px 8px rgba(0,0,0,0.1);">
+                      <span style="position: absolute; bottom: -2px; right: -2px; background: ${photoBadgeBg}; color: #FFF; font-size: 0.85rem; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2);">${photoBadgeIcon}</span>
+                    </div>
+                    <div style="overflow: hidden;">
+                      <h4 style="margin: 0; font-size: 1.2rem; color: #0F172A; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.full_name}">
+                        ${p.full_name}
+                      </h4>
+                      <div style="font-size: 0.82rem; color: #065F46; font-weight: 700; margin-top: 0.2rem; display: flex; align-items: center; gap: 0.35rem;">
+                        <span>📱</span> <span>${p.masked_phone}</span>
+                      </div>
+                      <div style="font-size: 0.78rem; color: #64748B; margin-top: 0.15rem;">
+                        📍 ${p.location || 'ফেনী'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                      <span style="font-size: 0.82rem; color: #64748B;">মোট পয়েন্ট</span>
+                      <strong style="font-size: 1.15rem; color: #065F46; font-weight: 800;">${p.total_points}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-size: 0.82rem; color: #64748B;">বর্তমান স্তর</span>
+                      <span style="background: #ECFDF5; color: #065F46; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #A7F3D0;">
+                        ${p.current_level}
+                      </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed #E2E8F0;">
+                      <span style="font-size: 0.82rem; color: #64748B;">সম্পন্ন দিন</span>
+                      <span style="font-size: 0.82rem; font-weight: 600; color: #334155;">
+                        ${p.completed_days} / ৪০ দিন
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <a href="/lifestyle/leaderboard" class="btn btn-outline-primary" style="width: 100%; text-align: center; text-decoration: none; padding: 0.55rem; font-size: 0.88rem; border-radius: 8px; font-weight: 600; display: block;">
+                    🏅 লিডারবোর্ডে অবস্থান দেখুন
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          section.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Failed to load top profiles on homepage:', err);
+      }
+    }
+
     // Auto-load all modules on DOM ready
     document.addEventListener('DOMContentLoaded', function() {
       loadHomepageHijamaPackages();
@@ -1522,6 +1662,7 @@
       loadHomepageArticles();
       loadHomepagePinnedWinner();
       loadHomepageHallOfFame();
+      loadHomepageTopProfiles();
     });
   </script>
 
