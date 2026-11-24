@@ -1272,12 +1272,22 @@ body.page-book .mobile-bottom-bar {
 }
 
 /* ==========================================================================
-   Admin Dashboard Responsive Styles
+   Admin Dashboard Responsive Styles (Global Dashboard Scrolling System - Req 6)
    ========================================================================== */
+body:has(.admin-layout),
+body.admin-body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden !important;
+}
+
 .admin-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .admin-sidebar {
@@ -1288,6 +1298,11 @@ body.page-book .mobile-bottom-bar {
   flex-direction: column;
   border-right: 1px solid #1E293B;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-sidebar-header {
@@ -1332,7 +1347,9 @@ body.page-book .mobile-bottom-bar {
   background-color: #F8FAF9;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   min-width: 0;
 }
 
@@ -1346,11 +1363,27 @@ body.page-book .mobile-bottom-bar {
   position: sticky;
   top: 0;
   z-index: 20;
+  flex-shrink: 0;
 }
 
 .admin-content {
   padding: 1.5rem;
   flex-grow: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+
+.admin-tab-header {
+  position: sticky;
+  top: -1.5rem;
+  background: #F8FAF9;
+  z-index: 10;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .metrics-grid {

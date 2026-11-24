@@ -10,6 +10,7 @@
  * 7. PDF Report generation
  */
 
+process.env.NODE_ENV = 'test';
 const assert = require('assert');
 const path = require('path');
 const http = require('http');
@@ -1260,9 +1261,13 @@ async function runTests() {
     assert.strictEqual(regRes.data.success, true);
     const token = regRes.data.token;
 
+    // Get current day from today-status
+    const todayStatusRes = await request('GET', '/api/lifestyle/today-status', null, { 'Authorization': 'Bearer ' + token });
+    const currentDay = todayStatusRes.data.today_bst;
+
     // Daily submission without honesty confirmation fails
     const failHonesty = await request('POST', '/api/lifestyle/submit-daily', {
-      submission_date: '2026-11-23',
+      submission_date: currentDay,
       answers: { fajr: 'congregation' },
       honesty_confirmed: false
     }, { 'Authorization': 'Bearer ' + token });
@@ -1270,7 +1275,7 @@ async function runTests() {
 
     // Full daily submission with all items checked - must strictly never exceed 100 points
     const fullSubmit = await request('POST', '/api/lifestyle/submit-daily', {
-      submission_date: '2026-11-23',
+      submission_date: currentDay,
       answers: {
         fajr: 'congregation',
         dhuhr: 'congregation',
@@ -1684,6 +1689,154 @@ async function runTests() {
 
     // 4. Re-pin for public display
     await request('POST', '/api/lifestyle/admin/pinned-winner', pinPayload, adminCookie);
+  });
+
+  await test('AMAL V10 REQ 1 & 5: Winner Profiles, Hall of Fame, and Strict Privacy Protection', async () => {
+    // 1. Pinned winner returns rich profile attributes
+    const pinRes = await request('GET', '/api/lifestyle/pinned-winner');
+    assert.strictEqual(pinRes.statusCode, 200);
+    assert.strictEqual(pinRes.data.success, true);
+    assert.ok(pinRes.data.pinned_winner);
+    const pw = pinRes.data.pinned_winner;
+    assert.ok('short_bio' in pw, 'Pinned winner should contain short_bio');
+    assert.ok('achievement_details' in pw, 'Pinned winner should contain achievement_details');
+    assert.ok('competition_name' in pw, 'Pinned winner should contain competition_name');
+    assert.ok('winning_position' in pw, 'Pinned winner should contain winning_position');
+
+    // 2. Hall of fame returns published winners with masked phone numbers
+    const hofRes = await request('GET', '/api/lifestyle/hall-of-fame');
+    assert.strictEqual(hofRes.statusCode, 200);
+    assert.strictEqual(hofRes.data.success, true);
+    assert.ok(Array.isArray(hofRes.data.hall_of_fame));
+    hofRes.data.hall_of_fame.forEach(w => {
+      assert.ok(w.masked_phone.includes('****'), 'Phone number must be masked in public Hall of Fame');
+      assert.strictEqual(w.phone, undefined, 'Raw phone must never be exposed publicly');
+      assert.strictEqual(w.address, undefined, 'Address must never be exposed publicly');
+    });
+
+    // 3. Admin updates pinned winner rich fields
+    const richPinPayload = {
+      user_id: 1,
+      month_title: 'গত মাসের বিজয়ী!',
+      blessing_message: 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।',
+      short_bio: 'নিয়মিত জামাতে সালাত আদায়কারী, কুরআন তিলাওয়াত ও মাসনুন জিকিরে অবিচল কৃতি প্রতিযোগী।',
+      achievement_details: 'টানা ৪০ দিন ১০০% জামাতে সালাত, তাহাজ্জুদ ও পূর্ণাঙ্গ সুন্নাহ লাইফস্টাইল অনুসরণে ৩৯৫০ পয়েন্ট অর্জন করেছেন।',
+      competition_name: '৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা (ব্যাচ-০১)',
+      winning_position: '১ম স্থান (বিজয়ী)',
+      total_points: 3950,
+      level: 'Platinum (মুহসিন)',
+      is_active: 1
+    };
+    const adminPinRes = await request('POST', '/api/lifestyle/admin/pinned-winner', richPinPayload, adminCookie);
+    assert.strictEqual(adminPinRes.statusCode, 200);
+    assert.strictEqual(adminPinRes.data.success, true);
+    assert.strictEqual(adminPinRes.data.pinned_winner.short_bio, richPinPayload.short_bio);
+    assert.strictEqual(adminPinRes.data.pinned_winner.competition_name, richPinPayload.competition_name);
+  });
+
+  await test('AMAL V10 REQ 2 & 5: User View Amal Activity Report, Streaks, Frequency Analysis & Address Update', async () => {
+    // 1. Authenticate user
+    const loginRes = await request('POST', '/api/lifestyle/login', {
+      login_identifier: uniquePhone,
+      password: 'StrongPassword123!'
+    });
+    const userToken = loginRes.data.token;
+    const authHeaders = { 'Authorization': 'Bearer ' + userToken };
+
+    // 2. User updates address details
+    const addrPayload = {
+      full_name: 'Mahmudur Rahman',
+      email: `mahmud_${Date.now()}@example.com`,
+      village: 'ভূঞা বাড়ি',
+      union_name: 'শর্শদী',
+      upazila: 'ফেনী সদর',
+      district: 'Feni',
+      address: 'ভূঞা ম্যানশন, মহিপাল, ফেনী'
+    };
+    const updateProfRes = await request('PUT', '/api/lifestyle/profile', addrPayload, authHeaders);
+    assert.strictEqual(updateProfRes.statusCode, 200);
+    assert.strictEqual(updateProfRes.data.success, true);
+    assert.strictEqual(updateProfRes.data.user.village, 'ভূঞা বাড়ি');
+    assert.strictEqual(updateProfRes.data.user.upazila, 'ফেনী সদর');
+
+    // 3. User Amal Activity & Report
+    const reportRes = await request('GET', '/api/lifestyle/my-report', null, authHeaders);
+    assert.strictEqual(reportRes.statusCode, 200);
+    assert.strictEqual(reportRes.data.success, true);
+    assert.ok(reportRes.data.streaks, 'my-report must return streaks');
+    assert.ok(typeof reportRes.data.streaks.current_streak === 'number');
+    assert.ok(typeof reportRes.data.streaks.longest_streak === 'number');
+    assert.ok(reportRes.data.summary, 'my-report must return summary');
+    assert.ok(reportRes.data.frequency_analysis, 'my-report must return frequency_analysis');
+    assert.ok(Array.isArray(reportRes.data.frequency_analysis.frequencyList));
+
+    // 4. User inspects specific day submission breakdown
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dayBreakdownRes = await request('GET', `/api/lifestyle/my-submission?date=${todayStr}`, null, authHeaders);
+    assert.strictEqual(dayBreakdownRes.statusCode, 200);
+    assert.strictEqual(dayBreakdownRes.data.success, true);
+    assert.ok(Array.isArray(dayBreakdownRes.data.breakdown));
+    if (dayBreakdownRes.data.submitted) {
+      assert.ok(dayBreakdownRes.data.breakdown.length >= 10);
+      assert.ok('points_earned' in dayBreakdownRes.data.breakdown[0]);
+      assert.ok('status_text' in dayBreakdownRes.data.breakdown[0]);
+    }
+  });
+
+  await test('AMAL V10 REQ 3 & 4: Admin Detailed Participant Profile, Address, Date Analytics & Search', async () => {
+    // 1. Admin gets detailed participant profile with unmasked phone and address
+    const partRes = await request('GET', '/api/lifestyle/admin/participants/1', null, adminCookie);
+    assert.strictEqual(partRes.statusCode, 200);
+    assert.strictEqual(partRes.data.success, true);
+    const participant = partRes.data.participant;
+    assert.ok(participant.phone, 'Admin participant profile must include unmasked phone number');
+    assert.ok(!participant.phone.includes('****'), 'Admin phone must be completely unmasked');
+    assert.ok('village' in participant);
+    assert.ok('upazila' in participant);
+    assert.ok('district' in participant);
+    assert.ok('rank' in participant);
+    assert.ok('current_streak' in participant);
+    assert.ok(partRes.data.frequency_analysis, 'Must include frequency analysis for participant');
+
+    // 2. Admin inspects date-specific submission for participant
+    const todayStr = new Date().toISOString().split('T')[0];
+    const subRes = await request('GET', `/api/lifestyle/admin/participants/1/submissions?date=${todayStr}`, null, adminCookie);
+    assert.strictEqual(subRes.statusCode, 200);
+    assert.strictEqual(subRes.data.success, true);
+    assert.ok('submitted' in subRes.data);
+
+    // 3. Admin updates participant address
+    const editPartRes = await request('PUT', '/api/lifestyle/admin/participants/1/profile', {
+      village: 'উত্তর চাড়িপুর',
+      upazila: 'ফেনী সদর',
+      district: 'Feni',
+      address: 'চাড়িপুর রোড, ফেনী'
+    }, adminCookie);
+    assert.strictEqual(editPartRes.statusCode, 200);
+    assert.strictEqual(editPartRes.data.participant.village, 'উত্তর চাড়িপুর');
+
+    // 4. Admin Analytics by Date
+    const analyticsRes = await request('GET', `/api/lifestyle/admin/analytics?date=${todayStr}`, null, adminCookie);
+    assert.strictEqual(analyticsRes.statusCode, 200);
+    assert.strictEqual(analyticsRes.data.success, true);
+    assert.ok(typeof analyticsRes.data.total_participants === 'number');
+    assert.ok(typeof analyticsRes.data.submitted_count === 'number');
+    assert.ok(typeof analyticsRes.data.not_submitted_count === 'number');
+    assert.ok(typeof analyticsRes.data.submission_rate === 'number');
+    assert.ok(Array.isArray(analyticsRes.data.top_scorers_on_date));
+    assert.ok(Array.isArray(analyticsRes.data.most_frequent_amals_on_date));
+    assert.ok(Array.isArray(analyticsRes.data.least_frequent_amals_on_date));
+
+    // 5. Admin Participant Search & Filtering
+    const searchRes = await request('GET', '/api/lifestyle/admin/participants/search?rank_min=1&rank_max=10', null, adminCookie);
+    assert.strictEqual(searchRes.statusCode, 200);
+    assert.strictEqual(searchRes.data.success, true);
+    assert.ok(Array.isArray(searchRes.data.participants));
+    searchRes.data.participants.forEach(p => {
+      assert.ok(p.rank >= 1 && p.rank <= 10, 'Filtered participants must be within rank range');
+      assert.ok(p.phone, 'Admin participant search must include unmasked phone number');
+      assert.ok(!p.phone.includes('****'), 'Admin participant phone must not be masked');
+    });
   });
 
   console.log('================================================================');

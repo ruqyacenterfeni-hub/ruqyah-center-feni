@@ -142,53 +142,211 @@
       </div>
     </div>
 
-    <!-- Daily Submission Status & 9:00 PM BST Rule Banner (Requirement 2) -->
-    <div id="submissionRuleBanner" style="display: block; border-radius: 10px; padding: 1.15rem 1.25rem; margin-bottom: 1.5rem;">
-      <!-- Dynamically filled by loadTodayStatus() -->
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span style="font-size: 1.4rem;">⏳</span>
-        <div style="font-size: 0.92rem; color: #334155;">দৈনিক আমল সাবমিশন স্ট্যাটাস যাচাই করা হচ্ছে...</div>
-      </div>
+    <!-- Navigation Tabs -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem; flex-wrap: wrap;">
+      <button id="navTabTracker" class="btn btn-primary" onclick="switchTrackerTab('tracker')" style="padding: 0.5rem 1rem; font-size: 0.92rem; border-radius: 8px;">
+        📝 দৈনিক আমল ট্র্যাকার
+      </button>
+      <button id="navTabReport" class="btn btn-secondary" onclick="switchTrackerTab('report')" style="padding: 0.5rem 1rem; font-size: 0.92rem; border-radius: 8px;">
+        📊 আমল রিপোর্ট ও ধারাবাহিকতা
+      </button>
+      <button id="navTabProfile" class="btn btn-secondary" onclick="switchTrackerTab('profile')" style="padding: 0.5rem 1rem; font-size: 0.92rem; border-radius: 8px;">
+        👤 প্রোফাইল ও ঠিকানা
+      </button>
     </div>
 
-    <!-- Live Score Sticky Bar (Strict Max 100) -->
-    <div class="score-sticky-bar">
-      <div>
-        <span style="font-size: 0.9rem; opacity: 0.9;">আজকের একীভূত আমল স্কোর:</span>
-        <strong style="font-size: 1.45rem; margin-left: 0.5rem;" id="liveScoreText">০</strong>
-        <span style="font-size: 0.9rem; opacity: 0.8;">/ ১০০ পয়েন্ট (সর্বোচ্চ)</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 6px;" id="currentDateDisplay">
-          তারিখ: লোড হচ্ছে...
-        </span>
-      </div>
-    </div>
-
-    <!-- Unified Single Amal Form (Requirement 3 & 4: Admin Controlled Categories) -->
-    <form id="amalForm" onsubmit="submitAmal(event)">
-      <!-- Dynamic Categories Container -->
-      <div id="dynamicCategoriesContainer">
-        <div style="background: #FFF; border-radius: 10px; padding: 2rem; text-align: center; color: #64748B;">
-          আমল ক্যাটাগরিসমূহ লোড হচ্ছে...
+    <!-- TAB 1: DAILY AMAL TRACKER -->
+    <div id="sectionTracker">
+      <!-- Daily Submission Status & 9:00 PM BST Rule Banner (Requirement 2) -->
+      <div id="submissionRuleBanner" style="display: block; border-radius: 10px; padding: 1.15rem 1.25rem; margin-bottom: 1.5rem;">
+        <!-- Dynamically filled by loadTodayStatus() -->
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.4rem;">⏳</span>
+          <div style="font-size: 0.92rem; color: #334155;">দৈনিক আমল সাবমিশন স্ট্যাটাস যাচাই করা হচ্ছে...</div>
         </div>
       </div>
 
-      <!-- Mandatory Honesty Declaration -->
-      <div style="background: #FFFBEB; border: 2px solid #FCD34D; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
-        <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; color: #92400E; font-weight: 600; line-height: 1.5;">
-          <input type="checkbox" id="honestyCheckbox" required style="margin-top: 3px; transform: scale(1.2);">
-          <span>"আমি মহান আল্লাহর সামনে সাক্ষ্য দিচ্ছি যে, এখানে প্রদত্ত সকল তথ্য সম্পূর্ণ সত্য, নিষ্ঠাবান এবং সৎভাবে প্রদান করেছি।" *</span>
-        </label>
+      <!-- Live Score Sticky Bar (Strict Max 100) -->
+      <div class="score-sticky-bar">
+        <div>
+          <span style="font-size: 0.9rem; opacity: 0.9;">আজকের একীভূত আমল স্কোর:</span>
+          <strong style="font-size: 1.45rem; margin-left: 0.5rem;" id="liveScoreText">০</strong>
+          <span style="font-size: 0.9rem; opacity: 0.8;">/ ১০০ পয়েন্ট (সর্বোচ্চ)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 6px;" id="currentDateDisplay">
+            তারিখ: লোড হচ্ছে...
+          </span>
+        </div>
       </div>
 
-      <!-- Submission Button (Disabled before 9 PM or if already submitted) -->
-      <div id="submitBtnWrapper">
-        <button type="submit" id="submitAmalBtn" class="btn btn-primary" style="width: 100%; padding: 0.95rem; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(6, 95, 70, 0.3);">
-          ✅ আজকের আমল জমা দিন
-        </button>
+      <!-- Unified Single Amal Form (Requirement 3 & 4: Admin Controlled Categories) -->
+      <form id="amalForm" onsubmit="submitAmal(event)">
+        <!-- Dynamic Categories Container -->
+        <div id="dynamicCategoriesContainer">
+          <div style="background: #FFF; border-radius: 10px; padding: 2rem; text-align: center; color: #64748B;">
+            আমল ক্যাটাগরিসমূহ লোড হচ্ছে...
+          </div>
+        </div>
+
+        <!-- Mandatory Honesty Declaration -->
+        <div style="background: #FFFBEB; border: 2px solid #FCD34D; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+          <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; color: #92400E; font-weight: 600; line-height: 1.5;">
+            <input type="checkbox" id="honestyCheckbox" required style="margin-top: 3px; transform: scale(1.2);">
+            <span>"আমি মহান আল্লাহর সামনে সাক্ষ্য দিচ্ছি যে, এখানে প্রদত্ত সকল তথ্য সম্পূর্ণ সত্য, নিষ্ঠাবান এবং সৎভাবে প্রদান করেছি।" *</span>
+          </label>
+        </div>
+
+        <!-- Submission Button (Disabled before 9 PM or if already submitted) -->
+        <div id="submitBtnWrapper">
+          <button type="submit" id="submitAmalBtn" class="btn btn-primary" style="width: 100%; padding: 0.95rem; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(6, 95, 70, 0.3);">
+            ✅ আজকের আমল জমা দিন
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TAB 2: AMAL ACTIVITY & REPORT -->
+    <div id="sectionReport" style="display: none;">
+      <!-- Streak & Consistency Highlights -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 2rem; margin-bottom: 0.25rem;">🔥</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #EA580C;" id="repCurrentStreak">০ দিন</div>
+          <div style="font-size: 0.82rem; color: #64748B; font-weight: 600;">বর্তমান ধারাবাহিকতা (Streak)</div>
+        </div>
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 2rem; margin-bottom: 0.25rem;">⭐</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #065F46;" id="repLongestStreak">০ দিন</div>
+          <div style="font-size: 0.82rem; color: #64748B; font-weight: 600;">সর্বোচ্চ একটানা রেকর্ড</div>
+        </div>
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 2rem; margin-bottom: 0.25rem;">📈</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #2563EB;" id="rep7DaysAvg">০</div>
+          <div style="font-size: 0.82rem; color: #64748B; font-weight: 600;">সাপ্তাহিক গড় পয়েন্ট (৭ দিন)</div>
+        </div>
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 2rem; margin-bottom: 0.25rem;">📊</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #7C3AED;" id="rep30DaysAvg">০</div>
+          <div style="font-size: 0.82rem; color: #64748B; font-weight: 600;">মাসিক গড় পয়েন্ট (৩০ দিন)</div>
+        </div>
       </div>
-    </form>
+
+      <!-- Date-Specific Submission Report Inspector -->
+      <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <h3 style="font-size: 1.15rem; color: #0F172A; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔍</span> <span>তারিখ অনুযায়ী বিস্তারিত আমল রিপোর্ট</span>
+        </h3>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem;">
+          <input type="date" id="repDateSelector" style="padding: 0.6rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 0.95rem;">
+          <button class="btn btn-primary" onclick="loadSpecificDayReport()" style="padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+            রিপোর্ট দেখুন
+          </button>
+        </div>
+
+        <!-- Selected Day Breakdown View -->
+        <div id="dayReportDetailsContainer" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.25rem;">
+          <div style="text-align: center; color: #64748B; font-size: 0.9rem;">
+            একটি তারিখ নির্বাচন করে "রিপোর্ট দেখুন" বাটনে ক্লিক করুন অথবা নিচের তালিকা থেকে কোনো দিন নির্বাচন করুন।
+          </div>
+        </div>
+      </div>
+
+      <!-- Amal Consistency & Frequency Analysis -->
+      <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <h3 style="font-size: 1.15rem; color: #0F172A; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📊</span> <span>আমল ধারাবাহিকতা ও পুনরাবৃত্তি বিশ্লেষণ</span>
+        </h3>
+        <p style="font-size: 0.85rem; color: #64748B; margin-top: -0.5rem; margin-bottom: 1.25rem;">
+          অংশগ্রহণের শুরু থেকে আপনি কোন আমলে কতটুকু যত্নবান ছিলেন এবং মোট কত বার সম্পন্ন করেছেন তার বিস্তারিত চিত্র।
+        </p>
+        <div id="frequencyAnalysisTableWrapper" style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 2px solid #E2E8F0; color: #64748B;">
+                <th style="padding: 0.6rem 0.5rem;">আমলের নাম</th>
+                <th style="padding: 0.6rem 0.5rem;">সম্পন্ন দিন</th>
+                <th style="padding: 0.6rem 0.5rem;">ধারাবাহিকতার হার</th>
+                <th style="padding: 0.6rem 0.5rem; text-align: right;">মোট পয়েন্ট</th>
+              </tr>
+            </thead>
+            <tbody id="frequencyAnalysisTbody">
+              <tr><td colspan="4" style="text-align: center; padding: 1rem; color: #94A3B8;">বিশ্লেষণ লোড হচ্ছে...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: USER PROFILE & ADDRESS -->
+    <div id="sectionProfile" style="display: none;">
+      <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <h3 style="font-size: 1.2rem; color: #0F172A; margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          <span>👤</span> <span>ব্যক্তিগত তথ্য ও ঠিকানা বিবরণ</span>
+        </h3>
+        <p style="font-size: 0.85rem; color: #64748B; margin-bottom: 1.5rem;">
+          পুরস্কার বিতরণ ও যোগাযোগের সুবিধার জন্য আপনার বর্তমান ও সঠিক ঠিকানা আপডেট রাখুন। আপনার ফোন নম্বর ও ঠিকানা অন্য কারো কাছে প্রকাশ করা হয় না।
+        </p>
+
+        <form id="userProfileForm" onsubmit="saveUserProfile(event)">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                পুরো নাম *
+              </label>
+              <input type="text" id="profFullName" required style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                মোবাইল নম্বর (অপরিবর্তনযোগ্য)
+              </label>
+              <input type="text" id="profPhone" disabled style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #E2E8F0; border-radius: 8px; background: #F1F5F9; color: #64748B;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                ইমেইল ঠিকানা (ঐচ্ছিক)
+              </label>
+              <input type="email" id="profEmail" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                গ্রাম / বাড়ি / সড়ক
+              </label>
+              <input type="text" id="profVillage" placeholder="যেমন: ভূঞা বাড়ি / আদর্শ হাউজিং" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                ইউনিয়ন / ওয়ার্ড
+              </label>
+              <input type="text" id="profUnion" placeholder="যেমন: শর্শদী ইউনিয়ন / ২নং ওয়ার্ড" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                উপজেলা / থানা
+              </label>
+              <input type="text" id="profUpazila" placeholder="যেমন: ফেনী সদর" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                জেলা
+              </label>
+              <input type="text" id="profDistrict" value="Feni" placeholder="যেমন: ফেনী" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px;">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+              পূর্ণাঙ্গ ঠিকানা
+            </label>
+            <textarea id="profAddress" rows="2" placeholder="বাড়ি নং, রাস্তা, এলাকা ইত্যাদি বিস্তারিত লিখুন..." style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px; font-family: inherit;"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
+            💾 প্রোফাইল ও ঠিকানা সংরক্ষণ করুন
+          </button>
+        </form>
+      </div>
+    </div>
 
     <!-- Submission History Card -->
     <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-top: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
@@ -491,7 +649,11 @@
                 <td style="padding: 0.6rem 0.5rem; font-weight: 600; color: #1E293B;">${s.submission_date}</td>
                 <td style="padding: 0.6rem 0.5rem; font-weight: 700; color: #065F46;">${s.total_points_awarded} / ১০০</td>
                 <td style="padding: 0.6rem 0.5rem; color: #059669;">✓ আমানতদারিতা স্বীকৃত</td>
-                <td style="padding: 0.6rem 0.5rem; text-align: right;"><span style="background: #ECFDF5; color: #065F46; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">সংরক্ষিত</span></td>
+                <td style="padding: 0.6rem 0.5rem; text-align: right;">
+                  <button class="btn btn-secondary" onclick="viewDateReport('${s.submission_date}')" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 4px;">
+                    বিস্তারিত রিপোর্ট
+                  </button>
+                </td>
               </tr>
             `).join('');
           } else {
@@ -503,6 +665,235 @@
         }
       } catch (e) {
         console.error(e);
+      }
+    }
+
+    // Tab Switching Functionality
+    function switchTrackerTab(tab) {
+      const sectionTracker = document.getElementById('sectionTracker');
+      const sectionReport = document.getElementById('sectionReport');
+      const sectionProfile = document.getElementById('sectionProfile');
+
+      const btnTracker = document.getElementById('navTabTracker');
+      const btnReport = document.getElementById('navTabReport');
+      const btnProfile = document.getElementById('navTabProfile');
+
+      sectionTracker.style.display = tab === 'tracker' ? 'block' : 'none';
+      sectionReport.style.display = tab === 'report' ? 'block' : 'none';
+      sectionProfile.style.display = tab === 'profile' ? 'block' : 'none';
+
+      btnTracker.className = tab === 'tracker' ? 'btn btn-primary' : 'btn btn-secondary';
+      btnReport.className = tab === 'report' ? 'btn btn-primary' : 'btn btn-secondary';
+      btnProfile.className = tab === 'profile' ? 'btn btn-primary' : 'btn btn-secondary';
+
+      if (tab === 'report') {
+        loadAmalReport();
+      } else if (tab === 'profile') {
+        loadProfileForm();
+      }
+    }
+
+    // View specific date report from history table
+    function viewDateReport(dateStr) {
+      switchTrackerTab('report');
+      document.getElementById('repDateSelector').value = dateStr;
+      loadSpecificDayReport(dateStr);
+    }
+
+    // Load Amal Report & Frequency Analysis
+    async function loadAmalReport() {
+      try {
+        const res = await fetch('/api/lifestyle/my-report', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (!data.success) return;
+
+        // Streaks & summary stats
+        document.getElementById('repCurrentStreak').innerText = (data.streaks?.current_streak || 0) + ' দিন';
+        document.getElementById('repLongestStreak').innerText = (data.streaks?.longest_streak || 0) + ' দিন';
+        document.getElementById('rep7DaysAvg').innerText = (data.summary?.last_7_days_avg_points || 0) + ' / ১০০';
+        document.getElementById('rep30DaysAvg').innerText = (data.summary?.last_30_days_avg_points || 0) + ' / ১০০';
+
+        // Set date selector default
+        const dateInput = document.getElementById('repDateSelector');
+        if (!dateInput.value) {
+          dateInput.value = todayDateBST || new Date().toISOString().split('T')[0];
+        }
+
+        // Render frequency analysis table
+        const freq = data.frequency_analysis;
+        const tbody = document.getElementById('frequencyAnalysisTbody');
+        if (freq && freq.frequencyList && freq.frequencyList.length > 0) {
+          tbody.innerHTML = freq.frequencyList.map(item => `
+            <tr style="border-bottom: 1px solid #F1F5F9;">
+              <td style="padding: 0.75rem 0.5rem; font-weight: 600; color: #1E293B;">
+                ${item.title_bn}
+                <div style="font-size: 0.75rem; color: #64748B;">${item.title_en} (${item.category})</div>
+              </td>
+              <td style="padding: 0.75rem 0.5rem; color: #065F46; font-weight: 700;">
+                ${item.completed_count} / ${freq.total_days} দিন
+              </td>
+              <td style="padding: 0.75rem 0.5rem; min-width: 140px;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <div style="flex: 1; height: 8px; background: #E2E8F0; border-radius: 9999px; overflow: hidden;">
+                    <div style="width: ${item.completion_rate}%; height: 100%; background: ${item.completion_rate >= 80 ? '#10B981' : item.completion_rate >= 50 ? '#3B82F6' : '#F59E0B'};"></div>
+                  </div>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #334155;">${item.completion_rate}%</span>
+                </div>
+              </td>
+              <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 700; color: #065F46;">
+                +${item.total_points_earned}
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 1.5rem; color: #94A3B8;">কোনো তথ্য পাওয়া যায়নি।</td></tr>';
+        }
+
+        // Auto load selected date
+        loadSpecificDayReport(dateInput.value);
+      } catch (err) {
+        console.error('Error loading report:', err);
+      }
+    }
+
+    // Load Specific Day's Itemized Submission
+    async function loadSpecificDayReport(targetDate) {
+      const date = targetDate || document.getElementById('repDateSelector').value;
+      if (!date) return;
+
+      const container = document.getElementById('dayReportDetailsContainer');
+      container.innerHTML = '<div style="text-align: center; color: #64748B; padding: 1rem;">রিপোর্ট লোড হচ্ছে...</div>';
+
+      try {
+        const res = await fetch(`/api/lifestyle/my-submission?date=${date}`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (!data.success) {
+          container.innerHTML = `<div style="text-align: center; color: #EF4444; padding: 1rem;">ত্রুটি: ${data.error || 'তথ্য পাওয়া যায়নি'}</div>`;
+          return;
+        }
+
+        if (!data.submitted) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 1.5rem 1rem;">
+              <span style="font-size: 2rem;">📭</span>
+              <h4 style="margin: 0.5rem 0 0.25rem 0; color: #334155; font-size: 1.05rem;">
+                ${date} তারিখে কোনো আমল জমা দেওয়া হয়নি
+              </h4>
+              <p style="margin: 0; color: #64748B; font-size: 0.85rem;">
+                এই নির্দিষ্ট দিনে আপনার কোনো আমল রেকর্ড সংরক্ষিত নেই।
+              </p>
+            </div>
+          `;
+          return;
+        }
+
+        const sub = data.submission;
+        const breakdown = data.breakdown || [];
+
+        container.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.85rem; margin-bottom: 1rem;">
+            <div>
+              <h4 style="margin: 0; color: #0F172A; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📅</span> <span>${sub.submission_date} এর আমল বিবরণী</span>
+              </h4>
+              <div style="font-size: 0.8rem; color: #059669; margin-top: 0.2rem;">
+                ✓ মহান আল্লাহর সামনে সাক্ষ্য অনুযায়ী সত্য ও সঠিক হিসেবে সংরক্ষিত
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span style="background: #065F46; color: #FFF; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.95rem;">
+                অর্জিত স্কোর: ${sub.total_points_awarded} / ১০০
+              </span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem;">
+            ${breakdown.map(item => `
+              <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.9rem; color: #1E293B;">${item.title_bn}</div>
+                  <div style="font-size: 0.78rem; color: ${item.completed ? '#059669' : '#94A3B8'};">
+                    ${item.status_text}
+                  </div>
+                </div>
+                <div>
+                  <span style="background: ${item.points_earned > 0 ? '#ECFDF5' : '#F1F5F9'}; color: ${item.points_earned > 0 ? '#065F46' : '#94A3B8'}; font-weight: 700; font-size: 0.85rem; padding: 2px 8px; border-radius: 6px;">
+                    ${item.points_earned > 0 ? '+' + item.points_earned : '০'}
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = '<div style="text-align: center; color: #EF4444; padding: 1rem;">সার্ভার যোগাযোগে ত্রুটি</div>';
+      }
+    }
+
+    // Load Profile Form with Address details
+    async function loadProfileForm() {
+      try {
+        const res = await fetch('/api/lifestyle/profile', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+          const u = data.user;
+          document.getElementById('profFullName').value = u.full_name || '';
+          document.getElementById('profPhone').value = u.phone || '';
+          document.getElementById('profEmail').value = u.email || '';
+          document.getElementById('profVillage').value = u.village || '';
+          document.getElementById('profUnion').value = u.union_name || '';
+          document.getElementById('profUpazila').value = u.upazila || '';
+          document.getElementById('profDistrict').value = u.district || 'Feni';
+          document.getElementById('profAddress').value = u.address || '';
+        }
+      } catch (err) {
+        console.error('Error loading profile form:', err);
+      }
+    }
+
+    // Save User Profile & Address
+    async function saveUserProfile(e) {
+      e.preventDefault();
+      const full_name = document.getElementById('profFullName').value.trim();
+      const email = document.getElementById('profEmail').value.trim();
+      const village = document.getElementById('profVillage').value.trim();
+      const union_name = document.getElementById('profUnion').value.trim();
+      const upazila = document.getElementById('profUpazila').value.trim();
+      const district = document.getElementById('profDistrict').value.trim();
+      const address = document.getElementById('profAddress').value.trim();
+
+      try {
+        const res = await fetch('/api/lifestyle/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            full_name,
+            email,
+            village,
+            union_name,
+            upazila,
+            district,
+            address
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('আপনার প্রোফাইল ও ঠিকানা সফলভাবে সংরক্ষিত হয়েছে!');
+          loadProfile();
+        } else {
+          alert('ত্রুটি: ' + (data.error || 'সংরক্ষণ ব্যর্থ হয়েছে'));
+        }
+      } catch (err) {
+        alert('সার্ভার যোগাযোগে ত্রুটি হয়েছে');
       }
     }
 

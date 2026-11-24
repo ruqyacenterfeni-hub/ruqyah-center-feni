@@ -98,6 +98,208 @@ function authenticateLifestyleUser(req, res, next) {
   }
 }
 
+// ==================== AMAL DEFINITIONS & REPORT HELPERS ====================
+const AMAL_DEFINITIONS = [
+  { slug: 'fajr', title_bn: 'ফজর সালাত', title_en: 'Fajr Prayer', category: 'prayers', type: 'prayer', max_points: 10 },
+  { slug: 'dhuhr', title_bn: 'যোহর সালাত', title_en: 'Dhuhr Prayer', category: 'prayers', type: 'prayer', max_points: 10 },
+  { slug: 'asr', title_bn: 'আসর সালাত', title_en: 'Asr Prayer', category: 'prayers', type: 'prayer', max_points: 10 },
+  { slug: 'maghrib', title_bn: 'মাগরিব সালাত', title_en: 'Maghrib Prayer', category: 'prayers', type: 'prayer', max_points: 10 },
+  { slug: 'isha', title_bn: 'ইশা সালাত', title_en: 'Isha Prayer', category: 'prayers', type: 'prayer', max_points: 10 },
+  
+  { slug: 'tahajjud', title_bn: 'তাহাজ্জুদ সালাত', title_en: 'Tahajjud Prayer', category: 'nafl', type: 'checkbox', max_points: 5 },
+  { slug: 'ishraq_duha', title_bn: 'ইশরাক / চাশত সালাত', title_en: 'Ishraq / Duha Prayer', category: 'nafl', type: 'checkbox', max_points: 5 },
+  { slug: 'rawatib', title_bn: '১২ রাকাত সুন্নাত সালাত', title_en: '12 Sunnah Prayers', category: 'nafl', type: 'checkbox', max_points: 5 },
+  { slug: 'witr', title_bn: 'বিতর সালাত', title_en: 'Witr Prayer', category: 'nafl', type: 'checkbox', max_points: 5 },
+
+  { slug: 'morning_evening_adhkar', title_bn: 'সকাল-সন্ধ্যার মাসনুন জিকির', title_en: 'Morning & Evening Adhkar', category: 'quran_dhikr', type: 'checkbox', max_points: 5 },
+  { slug: 'quran_tilawat', title_bn: 'কুরআন তিলাওয়াত ও তাদাব্বুর', title_en: 'Quran Recitation', category: 'quran_dhikr', type: 'checkbox', max_points: 5 },
+
+  { slug: 'sadaqah', title_bn: 'দান-সদকা ও সহযোগিতা', title_en: 'Sadaqah & Charity', category: 'charity', type: 'checkbox', max_points: 5 },
+  { slug: 'parents_family_kindness', title_bn: 'পিতা-মাতা ও পরিবারের খেদমত', title_en: 'Kindness to Parents & Family', category: 'charity', type: 'checkbox', max_points: 5 },
+
+  { slug: 'sunnah_food_honey_kalojira', title_bn: 'সুন্নাহ খাদ্য অভ্যাস (মধু, কালোজিরা)', title_en: 'Sunnah Nutrition (Honey/Black Seed)', category: 'sunnah_lifestyle', type: 'checkbox', max_points: 4 },
+  { slug: 'early_sleep_sunnah_routine', title_bn: 'তাড়াতাড়ি ঘুমানো ও সুন্নাহ রুটিন', title_en: 'Early Sleep Routine', category: 'sunnah_lifestyle', type: 'checkbox', max_points: 3 },
+  { slug: 'harmless_tongue_gossip_free', title_bn: 'গীবত ও মিথ্যা মুক্ত থাকা', title_en: 'Gossip-Free Speech', category: 'sunnah_lifestyle', type: 'checkbox', max_points: 3 }
+];
+
+function calculateStreaks(datesDescending) {
+  if (!datesDescending || datesDescending.length === 0) {
+    return { currentStreak: 0, longestStreak: 0 };
+  }
+
+  const { todayStr } = getBangladeshDateTime();
+  const d = new Date(todayStr);
+  d.setDate(d.getDate() - 1);
+  const yesterdayStr = d.toISOString().split('T')[0];
+
+  const dateSet = new Set(datesDescending);
+
+  // Current streak
+  let currentStreak = 0;
+  let checkDate = new Date(todayStr);
+
+  if (dateSet.has(todayStr)) {
+    while (dateSet.has(checkDate.toISOString().split('T')[0])) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+  } else if (dateSet.has(yesterdayStr)) {
+    checkDate = new Date(yesterdayStr);
+    while (dateSet.has(checkDate.toISOString().split('T')[0])) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+  }
+
+  // Longest streak
+  const sortedUnique = Array.from(dateSet).sort();
+  let longestStreak = 0;
+  let tempStreak = 0;
+  let prevDate = null;
+
+  for (const dateStr of sortedUnique) {
+    const cur = new Date(dateStr);
+    if (!prevDate) {
+      tempStreak = 1;
+    } else {
+      const diffDays = Math.round((cur - prevDate) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        tempStreak++;
+      } else if (diffDays > 1) {
+        tempStreak = 1;
+      }
+    }
+    if (tempStreak > longestStreak) {
+      longestStreak = tempStreak;
+    }
+    prevDate = cur;
+  }
+
+  return { currentStreak, longestStreak: Math.max(longestStreak, currentStreak) };
+}
+
+function parseSubmissionBreakdown(answers) {
+  if (!answers || typeof answers !== 'object') answers = {};
+  return AMAL_DEFINITIONS.map(amal => {
+    let statusText = 'সম্পন্ন হয়নি';
+    let statusEn = 'not_completed';
+    let points = 0;
+    let completed = false;
+
+    if (amal.type === 'prayer') {
+      const mode = answers[amal.slug];
+      if (mode === 'congregation') {
+        points = 10;
+        statusText = 'জামাতে আদায় (১০ পয়েন্ট)';
+        statusEn = 'congregation';
+        completed = true;
+      } else if (mode === 'individual') {
+        points = 6;
+        statusText = 'একাকী আদায় (৬ পয়েন্ট)';
+        statusEn = 'individual';
+        completed = true;
+      } else if (mode === 'missed') {
+        points = 0;
+        statusText = 'কাজা / বাদ পড়েছে (০ পয়েন্ট)';
+        statusEn = 'missed';
+        completed = false;
+      } else {
+        statusText = 'তথ্য নেই (০ পয়েন্ট)';
+        statusEn = 'none';
+        completed = false;
+      }
+    } else {
+      const val = answers[amal.slug];
+      if (val === true || val === 'true' || val === 1 || val === '1') {
+        points = amal.max_points;
+        statusText = `সম্পন্ন হয়েছে (${points} পয়েন্ট)`;
+        statusEn = 'completed';
+        completed = true;
+      } else {
+        points = 0;
+        statusText = 'সম্পন্ন হয়নি (০ পয়েন্ট)';
+        statusEn = 'not_completed';
+        completed = false;
+      }
+    }
+
+    return {
+      slug: amal.slug,
+      title_bn: amal.title_bn,
+      title_en: amal.title_en,
+      category: amal.category,
+      type: amal.type,
+      max_points: amal.max_points,
+      points_earned: points,
+      status_text: statusText,
+      status: statusEn,
+      completed
+    };
+  });
+}
+
+function calculateFrequencyAnalysis(submissions) {
+  const totalDays = submissions.length;
+  const counts = {};
+  AMAL_DEFINITIONS.forEach(a => {
+    counts[a.slug] = {
+      slug: a.slug,
+      title_bn: a.title_bn,
+      title_en: a.title_en,
+      category: a.category,
+      completed_count: 0,
+      congregation_count: 0,
+      individual_count: 0,
+      total_points_earned: 0,
+      total_days: totalDays,
+      completion_rate: 0
+    };
+  });
+
+  submissions.forEach(sub => {
+    let answers = {};
+    try {
+      answers = typeof sub.answers_json === 'string' ? JSON.parse(sub.answers_json) : (sub.answers_json || {});
+    } catch (e) {}
+
+    AMAL_DEFINITIONS.forEach(amal => {
+      const item = counts[amal.slug];
+      if (amal.type === 'prayer') {
+        const mode = answers[amal.slug];
+        if (mode === 'congregation') {
+          item.completed_count++;
+          item.congregation_count++;
+          item.total_points_earned += 10;
+        } else if (mode === 'individual') {
+          item.completed_count++;
+          item.individual_count++;
+          item.total_points_earned += 6;
+        }
+      } else {
+        const val = answers[amal.slug];
+        if (val === true || val === 'true' || val === 1 || val === '1') {
+          item.completed_count++;
+          item.total_points_earned += amal.max_points;
+        }
+      }
+    });
+  });
+
+  const frequencyList = Object.values(counts).map(item => {
+    item.completion_rate = totalDays > 0 ? Math.round((item.completed_count / totalDays) * 100) : 0;
+    return item;
+  });
+
+  frequencyList.sort((a, b) => b.completion_rate - a.completion_rate);
+
+  return {
+    total_days: totalDays,
+    frequencyList,
+    most_frequent: frequencyList.slice(0, 5),
+    least_frequent: frequencyList.slice(-5).reverse()
+  };
+}
+
 // ==============================================================
 // 1. REGISTER LIFESTYLE USER (ENFORCE 1 USER = 1 PROFILE)
 // ==============================================================
@@ -224,7 +426,7 @@ router.post('/login', (req, res) => {
 router.get('/profile', authenticateLifestyleUser, (req, res) => {
   try {
     const userId = req.lifestyleUser.id;
-    const user = db.prepare('SELECT id, user_uuid, full_name, phone, email, profile_photo, total_points, current_level, created_at FROM lifestyle_users WHERE id = ?').get(userId);
+    const user = db.prepare('SELECT id, user_uuid, full_name, phone, email, profile_photo, total_points, current_level, village, union_name, upazila, district, address, created_at FROM lifestyle_users WHERE id = ?').get(userId);
 
     // Get competition standing
     const activeComp = db.prepare("SELECT * FROM competitions WHERE status = 'active' ORDER BY id DESC LIMIT 1").get();
@@ -273,6 +475,59 @@ router.get('/profile', authenticateLifestyleUser, (req, res) => {
   } catch (err) {
     console.error('Profile fetch error:', err);
     res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// Update Profile & Address Information
+router.put('/profile', authenticateLifestyleUser, (req, res) => {
+  try {
+    const userId = req.lifestyleUser.id;
+    const { full_name, email, village, union_name, upazila, district, address } = req.body;
+
+    if (!full_name || !full_name.trim()) {
+      return res.status(400).json({ success: false, error: 'পুরো নাম পূরণ করা আবশ্যক' });
+    }
+
+    if (email && email.trim()) {
+      const cleanEmail = email.trim().toLowerCase();
+      const existing = db.prepare("SELECT id FROM lifestyle_users WHERE email = ? AND id != ? AND email IS NOT NULL AND email != ''").get(cleanEmail, userId);
+      if (existing) {
+        return res.status(400).json({ success: false, error: 'এই ইমেইলটি অন্য একজন ব্যবহারকারী ইতিমধ্যে ব্যবহার করছেন' });
+      }
+    }
+
+    db.prepare(`
+      UPDATE lifestyle_users
+      SET full_name = ?,
+          email = ?,
+          village = ?,
+          union_name = ?,
+          upazila = ?,
+          district = ?,
+          address = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      full_name.trim(),
+      email ? email.trim().toLowerCase() : null,
+      village ? village.trim() : null,
+      union_name ? union_name.trim() : null,
+      upazila ? upazila.trim() : null,
+      district ? district.trim() : 'Feni',
+      address ? address.trim() : null,
+      userId
+    );
+
+    const updated = db.prepare('SELECT id, user_uuid, full_name, phone, email, profile_photo, village, union_name, upazila, district, address, total_points, current_level FROM lifestyle_users WHERE id = ?').get(userId);
+
+    res.json({
+      success: true,
+      message: 'প্রোফাইল তথ্য সফলভাবে আপডেট হয়েছে',
+      user: updated
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -753,6 +1008,10 @@ router.get('/pinned-winner', (req, res) => {
         total_points: pinned.total_points || 0,
         level: pinned.level || 'Platinum (মুহসিন)',
         blessing_message: pinned.blessing_message || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।',
+        short_bio: pinned.short_bio || 'নিয়মিত জামাতে সালাত আদায়কারী ও সুন্নাহ জীবনধারা অনুসরণকারী।',
+        achievement_details: pinned.achievement_details || 'সর্বোচ্চ আমল স্কোর ও ধারাবাহিকতার স্বীকৃতি।',
+        competition_name: pinned.competition_name || '৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা',
+        winning_position: pinned.winning_position || '১ম স্থান (বিজয়ী)',
         pinned_at: pinned.pinned_at
       }
     });
@@ -788,7 +1047,7 @@ router.get('/admin/pinned-winner', requireRole('superadmin', 'admin', 'lifestyle
 // Admin: Pin or Update Previous Month Winner
 router.post('/admin/pinned-winner', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
   try {
-    const { user_id, custom_name, month_title, total_points, level, profile_photo, blessing_message } = req.body;
+    const { user_id, custom_name, month_title, total_points, level, profile_photo, blessing_message, short_bio, achievement_details, competition_name, winning_position } = req.body;
 
     let fullName = custom_name;
     let photo = profile_photo;
@@ -811,11 +1070,15 @@ router.post('/admin/pinned-winner', requireRole('superadmin', 'admin', 'lifestyl
 
     const blessing = blessing_message || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
     const month = month_title || 'গত মাসের বিজয়ী!';
+    const bio = short_bio || 'নিয়মিত জামাতে সালাত আদায়কারী ও সুন্নাহ জীবনধারা অনুসরণকারী।';
+    const ach = achievement_details || 'সর্বোচ্চ আমল স্কোর ও ধারাবাহিকতার স্বীকৃতি।';
+    const compName = competition_name || '৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা (ব্যাচ-০১)';
+    const winPos = winning_position || '১ম স্থান (বিজয়ী)';
 
     // Upsert row id = 1
     db.prepare(`
-      INSERT INTO pinned_monthly_winner (id, user_id, full_name, profile_photo, month_title, total_points, level, blessing_message, is_active, pinned_at)
-      VALUES (1, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+      INSERT INTO pinned_monthly_winner (id, user_id, full_name, profile_photo, month_title, total_points, level, blessing_message, short_bio, achievement_details, competition_name, winning_position, is_active, pinned_at)
+      VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         user_id = excluded.user_id,
         full_name = excluded.full_name,
@@ -824,9 +1087,13 @@ router.post('/admin/pinned-winner', requireRole('superadmin', 'admin', 'lifestyl
         total_points = excluded.total_points,
         level = excluded.level,
         blessing_message = excluded.blessing_message,
+        short_bio = excluded.short_bio,
+        achievement_details = excluded.achievement_details,
+        competition_name = excluded.competition_name,
+        winning_position = excluded.winning_position,
         is_active = 1,
         pinned_at = CURRENT_TIMESTAMP
-    `).run(user_id || null, fullName, photo || '/images/default-avatar.svg', month, points || 0, winnerLevel || 'Platinum (মুহসিন)', blessing);
+    `).run(user_id || null, fullName, photo || '/images/default-avatar.svg', month, points || 0, winnerLevel || 'Platinum (মুহসিন)', blessing, bio, ach, compName, winPos);
 
     res.json({
       success: true,
@@ -840,6 +1107,10 @@ router.post('/admin/pinned-winner', requireRole('superadmin', 'admin', 'lifestyl
         total_points: points || 0,
         level: winnerLevel || 'Platinum (মুহসিন)',
         blessing_message: blessing,
+        short_bio: bio,
+        achievement_details: ach,
+        competition_name: compName,
+        winning_position: winPos,
         is_active: 1
       }
     });
@@ -1391,6 +1662,560 @@ router.put('/admin/winners/:id/gift', requireRole('superadmin', 'admin', 'lifest
   } catch (err) {
     console.error('Update gift error:', err);
     res.status(500).json({ success: false, error: 'Internal server error updating gift' });
+  }
+});
+
+// ==============================================================
+// 17. WINNER PROFILE & HALL OF FAME APIS
+// ==============================================================
+// Public: Hall of Fame (Published Competition Winners)
+router.get('/hall-of-fame', (req, res) => {
+  try {
+    const winners = db.prepare(`
+      SELECT 
+        cw.id,
+        cw.user_id,
+        cw.position,
+        cw.final_score,
+        cw.awarded_level,
+        cw.gift_details,
+        cw.short_bio,
+        cw.achievement_details,
+        cw.trophy_title,
+        COALESCE(cw.winner_photo, lu.profile_photo, '/images/default-avatar.svg') as profile_photo,
+        lu.full_name,
+        lu.phone,
+        c.title as competition_title,
+        c.start_date,
+        c.end_date
+      FROM competition_winners cw
+      JOIN lifestyle_users lu ON cw.user_id = lu.id
+      JOIN competitions c ON cw.competition_id = c.id
+      WHERE cw.is_published = 1
+      ORDER BY cw.position ASC, cw.final_score DESC
+    `).all();
+
+    const formatted = winners.map(w => {
+      const raw = w.phone || '';
+      const masked = raw.length >= 11 
+        ? raw.substring(0, 3) + '****' + raw.substring(raw.length - 4)
+        : '018****XXXX';
+      return {
+        id: w.id,
+        user_id: w.user_id,
+        full_name: w.full_name,
+        masked_phone: masked,
+        profile_photo: w.profile_photo,
+        position: w.position,
+        final_score: w.final_score,
+        awarded_level: w.awarded_level,
+        gift_details: w.gift_details,
+        short_bio: w.short_bio || '৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় অনন্য সাফল্য অর্জনকারী।',
+        achievement_details: w.achievement_details || `${w.final_score} পয়েন্ট অর্জন করে অনন্য কৃতিত্বের স্বাক্ষর রেখেছেন।`,
+        trophy_title: w.trophy_title || (w.position === 1 ? 'চ্যাম্পিয়ন ট্রফি' : w.position === 2 ? '১ম রানার আপ মেডেল' : 'সেরা আমলকারী ক্রেস্ট'),
+        competition_title: w.competition_title,
+        poster_url: `/api/lifestyle/poster/${w.id}`
+      };
+    });
+
+    res.json({ success: true, hall_of_fame: formatted });
+  } catch (err) {
+    console.error('Hall of Fame error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Public: Get Detailed Winner Profile
+router.get('/winner/:id', (req, res) => {
+  try {
+    const winner = db.prepare(`
+      SELECT 
+        cw.*,
+        COALESCE(cw.winner_photo, lu.profile_photo, '/images/default-avatar.svg') as photo,
+        lu.full_name,
+        lu.phone,
+        c.title as competition_title,
+        c.start_date,
+        c.end_date
+      FROM competition_winners cw
+      JOIN lifestyle_users lu ON cw.user_id = lu.id
+      JOIN competitions c ON cw.competition_id = c.id
+      WHERE cw.id = ? AND cw.is_published = 1
+    `).get(req.params.id);
+
+    if (!winner) {
+      return res.status(404).json({ success: false, error: 'Winner profile not found or not published' });
+    }
+
+    const raw = winner.phone || '';
+    const masked = raw.length >= 11 
+      ? raw.substring(0, 3) + '****' + raw.substring(raw.length - 4)
+      : '018****XXXX';
+
+    res.json({
+      success: true,
+      winner: {
+        id: winner.id,
+        user_id: winner.user_id,
+        full_name: winner.full_name,
+        masked_phone: masked,
+        profile_photo: winner.photo,
+        position: winner.position,
+        final_score: winner.final_score,
+        awarded_level: winner.awarded_level,
+        gift_details: winner.gift_details,
+        short_bio: winner.short_bio || '৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় অনন্য সাফল্য অর্জনকারী।',
+        achievement_details: winner.achievement_details || `${winner.final_score} পয়েন্ট অর্জন করে অনন্য কৃতিত্বের স্বাক্ষর রেখেছেন।`,
+        trophy_title: winner.trophy_title || (winner.position === 1 ? 'চ্যাম্পিয়ন ট্রফি' : 'সেরা সম্মাননা'),
+        competition_title: winner.competition_title,
+        poster_url: `/api/lifestyle/poster/${winner.id}`
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Edit Winner Profile
+router.put('/admin/winners/:id/profile', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const { short_bio, achievement_details, trophy_title, winner_photo, position, gift_details, is_published } = req.body;
+    db.prepare(`
+      UPDATE competition_winners
+      SET short_bio = COALESCE(?, short_bio),
+          achievement_details = COALESCE(?, achievement_details),
+          trophy_title = COALESCE(?, trophy_title),
+          winner_photo = COALESCE(?, winner_photo),
+          position = COALESCE(?, position),
+          gift_details = COALESCE(?, gift_details),
+          is_published = COALESCE(?, is_published)
+      WHERE id = ?
+    `).run(
+      short_bio !== undefined ? short_bio : null,
+      achievement_details !== undefined ? achievement_details : null,
+      trophy_title !== undefined ? trophy_title : null,
+      winner_photo !== undefined ? winner_photo : null,
+      position !== undefined ? Number(position) : null,
+      gift_details !== undefined ? gift_details : null,
+      is_published !== undefined ? (is_published ? 1 : 0) : null,
+      req.params.id
+    );
+
+    res.json({ success: true, message: 'Winner profile updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Toggle Winner Publish Status
+router.post('/admin/winners/:id/toggle-publish', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const winner = db.prepare('SELECT id, is_published FROM competition_winners WHERE id = ?').get(req.params.id);
+    if (!winner) return res.status(404).json({ success: false, error: 'Winner not found' });
+    const newStatus = winner.is_published === 1 ? 0 : 1;
+    db.prepare('UPDATE competition_winners SET is_published = ? WHERE id = ?').run(newStatus, req.params.id);
+    res.json({ success: true, is_published: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==============================================================
+// 18. USER AMAL ACTIVITY & REPORT APIS
+// ==============================================================
+// User: Comprehensive Amal Report & Consistency Analysis
+router.get('/my-report', authenticateLifestyleUser, (req, res) => {
+  try {
+    const userId = req.lifestyleUser.id;
+    const user = db.prepare(`
+      SELECT id, full_name, phone, email, profile_photo, total_points, current_level,
+             village, union_name, upazila, district, address, created_at
+      FROM lifestyle_users
+      WHERE id = ?
+    `).get(userId);
+
+    const submissions = db.prepare(`
+      SELECT id, submission_date, total_points_awarded, answers_json, honesty_confirmed, created_at
+      FROM daily_amal_submissions
+      WHERE user_id = ?
+      ORDER BY submission_date DESC
+    `).all(userId);
+
+    const submissionDates = submissions.map(s => s.submission_date);
+    const { currentStreak, longestStreak } = calculateStreaks(submissionDates);
+
+    // Summary Statistics
+    const totalDays = submissions.length;
+    const avgDailyPoints = totalDays > 0 ? Math.round(user.total_points / totalDays) : 0;
+    
+    // Last 7 days submissions
+    const recent7 = submissions.slice(0, 7);
+    const avg7 = recent7.length > 0 ? Math.round(recent7.reduce((sum, s) => sum + s.total_points_awarded, 0) / recent7.length) : 0;
+
+    // Last 30 days submissions
+    const recent30 = submissions.slice(0, 30);
+    const avg30 = recent30.length > 0 ? Math.round(recent30.reduce((sum, s) => sum + s.total_points_awarded, 0) / recent30.length) : 0;
+
+    // Frequency analysis across submissions
+    const frequency = calculateFrequencyAnalysis(submissions);
+
+    res.json({
+      success: true,
+      user,
+      streaks: {
+        current_streak: currentStreak,
+        longest_streak: longestStreak
+      },
+      summary: {
+        total_points: user.total_points,
+        total_submitted_days: totalDays,
+        current_level: user.current_level,
+        overall_avg_daily_points: avgDailyPoints,
+        last_7_days_avg_points: avg7,
+        last_30_days_avg_points: avg30
+      },
+      frequency_analysis: frequency,
+      submissions: submissions.map(s => ({
+        id: s.id,
+        date: s.submission_date,
+        points: s.total_points_awarded,
+        honesty_confirmed: s.honesty_confirmed,
+        created_at: s.created_at
+      }))
+    });
+  } catch (err) {
+    console.error('my-report error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// User: Get Itemized Submission for a Specific Date
+router.get('/my-submission', authenticateLifestyleUser, (req, res) => {
+  try {
+    const userId = req.lifestyleUser.id;
+    const date = req.query.date;
+    if (!date) {
+      return res.status(400).json({ success: false, error: 'Date is required (YYYY-MM-DD)' });
+    }
+
+    const submission = db.prepare(`
+      SELECT id, submission_date, total_points_awarded, answers_json, honesty_confirmed, created_at
+      FROM daily_amal_submissions
+      WHERE user_id = ? AND submission_date = ?
+    `).get(userId, date);
+
+    if (!submission) {
+      return res.json({
+        success: true,
+        submitted: false,
+        date,
+        submission: null,
+        breakdown: []
+      });
+    }
+
+    let answers = {};
+    try {
+      answers = typeof submission.answers_json === 'string' ? JSON.parse(submission.answers_json) : (submission.answers_json || {});
+    } catch (e) {}
+
+    const breakdown = parseSubmissionBreakdown(answers);
+
+    res.json({
+      success: true,
+      submitted: true,
+      date,
+      submission: {
+        id: submission.id,
+        submission_date: submission.submission_date,
+        total_points_awarded: submission.total_points_awarded,
+        honesty_confirmed: submission.honesty_confirmed,
+        created_at: submission.created_at
+      },
+      breakdown
+    });
+  } catch (err) {
+    console.error('my-submission error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==============================================================
+// 19. ADMIN: DETAILED PARTICIPANT PROFILE & ANALYTICS
+// ==============================================================
+// Admin: Analytics & Reporting (Date-Based & General Stats)
+router.get('/admin/analytics', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const { todayStr } = getBangladeshDateTime();
+    const date = req.query.date || todayStr;
+
+    // Total registered active participants
+    const totalParticipants = db.prepare("SELECT COUNT(*) as count FROM lifestyle_users WHERE is_active = 1").get().count;
+
+    // Submissions on this specific date
+    const dateSubmissions = db.prepare(`
+      SELECT das.*, lu.full_name, lu.phone, lu.profile_photo, lu.current_level
+      FROM daily_amal_submissions das
+      JOIN lifestyle_users lu ON das.user_id = lu.id
+      WHERE das.submission_date = ?
+      ORDER BY das.total_points_awarded DESC, das.id ASC
+    `).all(date);
+
+    const submittedCount = dateSubmissions.length;
+    const notSubmittedCount = Math.max(0, totalParticipants - submittedCount);
+    const submissionRate = totalParticipants > 0 ? Math.round((submittedCount / totalParticipants) * 100) : 0;
+
+    // Frequency analysis on this date
+    const frequency = calculateFrequencyAnalysis(dateSubmissions);
+
+    // Top scorers on this date
+    const topScorers = dateSubmissions.slice(0, 10).map((s, idx) => ({
+      rank: idx + 1,
+      user_id: s.user_id,
+      full_name: s.full_name,
+      phone: s.phone,
+      profile_photo: s.profile_photo || '/images/default-avatar.svg',
+      points: s.total_points_awarded,
+      current_level: s.current_level
+    }));
+
+    // Overall metrics
+    const totalSubmissionsAllTime = db.prepare("SELECT COUNT(*) as count FROM daily_amal_submissions").get().count;
+    const totalPointsAllTime = db.prepare("SELECT COALESCE(SUM(total_points_awarded), 0) as total FROM daily_amal_submissions").get().total;
+
+    res.json({
+      success: true,
+      date,
+      total_participants: totalParticipants,
+      submitted_count: submittedCount,
+      not_submitted_count: notSubmittedCount,
+      submission_rate: submissionRate,
+      top_scorers_on_date: topScorers,
+      most_frequent_amals_on_date: frequency.most_frequent,
+      least_frequent_amals_on_date: frequency.least_frequent,
+      all_amals_frequency_on_date: frequency.frequencyList,
+      overall_metrics: {
+        total_submissions_all_time: totalSubmissionsAllTime,
+        total_points_all_time: totalPointsAllTime
+      }
+    });
+  } catch (err) {
+    console.error('Admin analytics error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Participant Search and Multi-Criteria Filtering (Registered BEFORE /:id)
+router.get('/admin/participants/search', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const { query, date, rank_min, rank_max, level, submission_status } = req.query;
+
+    let sql = `
+      SELECT lu.id, lu.user_uuid, lu.full_name, lu.phone, lu.email, lu.profile_photo,
+             lu.total_points, lu.current_level, lu.is_active, lu.village, lu.union_name, lu.upazila, lu.district,
+             lu.created_at,
+             (SELECT COUNT(*) FROM daily_amal_submissions WHERE user_id = lu.id) as completed_days
+      FROM lifestyle_users lu
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (query && query.trim()) {
+      const q = `%${query.trim()}%`;
+      sql += ` AND (lu.full_name LIKE ? OR lu.phone LIKE ? OR lu.user_uuid LIKE ? OR lu.email LIKE ?)`;
+      params.push(q, q, q, q);
+    }
+
+    if (level && level.trim()) {
+      sql += ` AND lu.current_level = ?`;
+      params.push(level.trim());
+    }
+
+    sql += ` ORDER BY lu.total_points DESC, lu.id DESC`;
+
+    let rows = db.prepare(sql).all(...params);
+
+    // Compute rank
+    rows = rows.map((r, idx) => ({ ...r, rank: idx + 1 }));
+
+    // Rank filters
+    if (rank_min) {
+      rows = rows.filter(r => r.rank >= Number(rank_min));
+    }
+    if (rank_max) {
+      rows = rows.filter(r => r.rank <= Number(rank_max));
+    }
+
+    // Filter by submission status on date if specified
+    if (date) {
+      const submissionsOnDate = new Set(
+        db.prepare("SELECT user_id FROM daily_amal_submissions WHERE submission_date = ?").all(date).map(s => s.user_id)
+      );
+
+      if (submission_status === 'submitted') {
+        rows = rows.filter(r => submissionsOnDate.has(r.id));
+      } else if (submission_status === 'not_submitted') {
+        rows = rows.filter(r => !submissionsOnDate.has(r.id));
+      }
+
+      rows = rows.map(r => ({
+        ...r,
+        submitted_on_date: submissionsOnDate.has(r.id)
+      }));
+    }
+
+    res.json({
+      success: true,
+      count: rows.length,
+      participants: rows
+    });
+  } catch (err) {
+    console.error('Participant search error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Detailed Participant Profile (Unmasked Phone & Full Address)
+router.get('/admin/participants/:id', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = db.prepare(`
+      SELECT id, user_uuid, full_name, phone, email, profile_photo, total_points, current_level, is_active,
+             village, union_name, upazila, district, address, created_at, updated_at
+      FROM lifestyle_users
+      WHERE id = ?
+    `).get(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Participant not found' });
+    }
+
+    const submissions = db.prepare(`
+      SELECT id, submission_date, total_points_awarded, answers_json, honesty_confirmed, created_at
+      FROM daily_amal_submissions
+      WHERE user_id = ?
+      ORDER BY submission_date DESC
+    `).all(userId);
+
+    const submissionDates = submissions.map(s => s.submission_date);
+    const { currentStreak, longestStreak } = calculateStreaks(submissionDates);
+    const frequency = calculateFrequencyAnalysis(submissions);
+
+    // Calculate current rank
+    const rankRow = db.prepare(`
+      SELECT COUNT(*) + 1 as rank FROM lifestyle_users
+      WHERE total_points > (SELECT COALESCE(total_points, 0) FROM lifestyle_users WHERE id = ?)
+    `).get(userId);
+
+    // Today's status in BST
+    const { todayStr } = getBangladeshDateTime();
+    const todaySub = submissions.find(s => s.submission_date === todayStr);
+
+    res.json({
+      success: true,
+      participant: {
+        ...user,
+        rank: rankRow ? rankRow.rank : 1,
+        total_submitted_days: submissions.length,
+        current_streak: currentStreak,
+        longest_streak: longestStreak,
+        submitted_today: !!todaySub,
+        today_points: todaySub ? todaySub.total_points_awarded : 0
+      },
+      frequency_analysis: frequency,
+      recent_submissions: submissions.slice(0, 15)
+    });
+  } catch (err) {
+    console.error('Admin participant fetch error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Participant Historical Submissions Breakdown
+router.get('/admin/participants/:id/submissions', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const userId = req.params.id;
+    const date = req.query.date;
+
+    if (date) {
+      const sub = db.prepare(`
+        SELECT id, submission_date, total_points_awarded, answers_json, honesty_confirmed, created_at
+        FROM daily_amal_submissions
+        WHERE user_id = ? AND submission_date = ?
+      `).get(userId, date);
+
+      if (!sub) {
+        return res.json({ success: true, submitted: false, date, submission: null, breakdown: [] });
+      }
+
+      let answers = {};
+      try { answers = JSON.parse(sub.answers_json); } catch (e) {}
+      const breakdown = parseSubmissionBreakdown(answers);
+      return res.json({
+        success: true,
+        submitted: true,
+        date,
+        submission: sub,
+        breakdown
+      });
+    }
+
+    const list = db.prepare(`
+      SELECT id, submission_date, total_points_awarded, honesty_confirmed, created_at
+      FROM daily_amal_submissions
+      WHERE user_id = ?
+      ORDER BY submission_date DESC
+    `).all(userId);
+
+    res.json({ success: true, submissions: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Update Participant Profile & Address
+router.put('/admin/participants/:id/profile', requireRole('superadmin', 'admin', 'lifestyle_manager'), (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { full_name, phone, email, village, union_name, upazila, district, address, total_points, current_level, is_active } = req.body;
+
+    const existing = db.prepare('SELECT id FROM lifestyle_users WHERE id = ?').get(userId);
+    if (!existing) return res.status(404).json({ success: false, error: 'Participant not found' });
+
+    db.prepare(`
+      UPDATE lifestyle_users
+      SET full_name = COALESCE(?, full_name),
+          phone = COALESCE(?, phone),
+          email = COALESCE(?, email),
+          village = ?,
+          union_name = ?,
+          upazila = ?,
+          district = COALESCE(?, district),
+          address = ?,
+          total_points = COALESCE(?, total_points),
+          current_level = COALESCE(?, current_level),
+          is_active = COALESCE(?, is_active),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      full_name || null,
+      phone || null,
+      email || null,
+      village || null,
+      union_name || null,
+      upazila || null,
+      district || null,
+      address || null,
+      total_points !== undefined && total_points !== '' ? Number(total_points) : null,
+      current_level || null,
+      is_active !== undefined ? (is_active ? 1 : 0) : null,
+      userId
+    );
+
+    const updated = db.prepare('SELECT * FROM lifestyle_users WHERE id = ?').get(userId);
+    res.json({ success: true, message: 'Participant profile updated', participant: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

@@ -11,7 +11,7 @@
     .admin-tab-content.active { display: block; }
   </style>
 </head>
-<body style="background-color: #F8FAF9;">
+<body class="admin-body" style="background-color: #F8FAF9;">
 
   <div class="admin-layout">
     
@@ -1262,15 +1262,131 @@
             </div>
           </div>
 
-          <!-- Section 3: Live Participants & Rankings (Requirement 5 & 6) -->
+          <!-- Section 3: Admin Analytics & Daily Reporting (Requirement 4) -->
+          <div class="card" style="padding: 1.5rem; margin-bottom: 2rem; border-left: 4px solid var(--primary); background: #F8FAFC;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+              <div>
+                <h3 style="margin: 0; color: #065F46; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📈</span> <span>তারিখভিত্তিক আমল অ্যানালিটিক্স ও রিপোর্ট (Requirement 4)</span>
+                </h3>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #64748B;">
+                  যেকোনো নির্দিষ্ট দিনের অংশগ্রহণকারী উপস্থিতি, সাবমিশন হার এবং সর্বাধিক ও সর্বনিম্ন সম্পন্ন আমল পর্যবেক্ষণ করুন।
+                </p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <label style="font-size: 0.88rem; font-weight: 600; color: #334155;">তারিখ:</label>
+                <input type="date" id="adminAnalyticsDateInput" class="form-control" style="width: auto; padding: 0.45rem 0.75rem;" onchange="loadAdminAmalAnalytics()">
+                <button class="btn btn-secondary" onclick="loadAdminAmalAnalytics()" style="padding: 0.45rem 0.85rem;">
+                  🔄 রিফ্রেশ
+                </button>
+              </div>
+            </div>
+
+            <!-- Analytics Metric Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+              <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: #64748B; font-weight: 600;">মোট প্রতিযোগী</div>
+                <div id="admMetricTotalUsers" style="font-size: 1.4rem; font-weight: 800; color: #0F172A; margin-top: 0.25rem;">০</div>
+              </div>
+              <div style="background: #FFF; border: 1px solid #BBF7D0; border-radius: 10px; padding: 1rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: #166534; font-weight: 600;">ঐ দিনে জমাকৃত (Submitted)</div>
+                <div id="admMetricSubmitted" style="font-size: 1.4rem; font-weight: 800; color: #059669; margin-top: 0.25rem;">০</div>
+              </div>
+              <div style="background: #FFF; border: 1px solid #FECACA; border-radius: 10px; padding: 1rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: #991B1B; font-weight: 600;">অনুপস্থিত / বাদ পড়া</div>
+                <div id="admMetricMissed" style="font-size: 1.4rem; font-weight: 800; color: #DC2626; margin-top: 0.25rem;">০</div>
+              </div>
+              <div style="background: #FFF; border: 1px solid #DDD6FE; border-radius: 10px; padding: 1rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: #5B21B6; font-weight: 600;">সাবমিশন হার (%)</div>
+                <div id="admMetricRate" style="font-size: 1.4rem; font-weight: 800; color: #7C3AED; margin-top: 0.25rem;">০%</div>
+              </div>
+              <div style="background: #FFF; border: 1px solid #FDE68A; border-radius: 10px; padding: 1rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: #92400E; font-weight: 600;">ঐ দিনের সর্বোচ্চ স্কোর</div>
+                <div id="admMetricTopScorer" style="font-size: 1.15rem; font-weight: 800; color: #D97706; margin-top: 0.25rem;">-</div>
+              </div>
+            </div>
+
+            <!-- Frequency Highlights: Most and Least Performed Amals on Date -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+              <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: #065F46; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem;">
+                  <span>🟢</span> <span>ঐ দিনের সর্বাধিক সম্পন্ন আমল (Most Performed):</span>
+                </div>
+                <div id="admMostPerformedAmals" style="font-size: 0.85rem; color: #334155;">লোড হচ্ছে...</div>
+              </div>
+              <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: #B45309; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem;">
+                  <span>🟠</span> <span>ঐ দিনের সর্বনিম্ন সম্পন্ন আমল (Least Performed):</span>
+                </div>
+                <div id="admLeastPerformedAmals" style="font-size: 0.85rem; color: #334155;">লোড হচ্ছে...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Search & Multi-Criteria Filtering (Requirement 4) -->
+          <div class="card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; background: #FFFFFF;">
+            <div style="font-size: 1rem; font-weight: 700; color: #0F172A; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🔍</span> <span>অংশগ্রহণকারী অনুসন্ধান ও মাল্টি-ফিল্টারিং</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; align-items: flex-end;">
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 0.25rem;">নাম / ফোন / আইডি:</label>
+                <input type="text" id="filterParticipantQuery" placeholder="নাম অথবা ফোন নম্বর..." class="form-control" style="font-size: 0.85rem; padding: 0.45rem 0.65rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 0.25rem;">নির্দিষ্ট তারিখের উপস্থিতি:</label>
+                <input type="date" id="filterParticipantDate" class="form-control" style="font-size: 0.85rem; padding: 0.45rem 0.65rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 0.25rem;">সাবমিশন অবস্থা:</label>
+                <select id="filterParticipantStatus" class="form-control" style="font-size: 0.85rem; padding: 0.45rem 0.65rem;">
+                  <option value="all">সকল অবস্থা</option>
+                  <option value="submitted">আমল জমা দিয়েছে</option>
+                  <option value="not_submitted">আমল জমা দেয়নি</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 0.25rem;">লেভেল / স্তর:</label>
+                <select id="filterParticipantLevel" class="form-control" style="font-size: 0.85rem; padding: 0.45rem 0.65rem;">
+                  <option value="">সকল স্তর</option>
+                  <option value="Platinum (মুহসিন)">Platinum</option>
+                  <option value="Gold (মুত্তাকী)">Gold</option>
+                  <option value="Silver (সাদিক)">Silver</option>
+                  <option value="Bronze (মুজাহিদ)">Bronze</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 0.25rem;">র‍্যাংক রেঞ্জ (থেকে - পর্যন্ত):</label>
+                <div style="display: flex; gap: 0.25rem;">
+                  <input type="number" id="filterRankMin" placeholder="১" class="form-control" style="font-size: 0.85rem; padding: 0.45rem; width: 50%;">
+                  <input type="number" id="filterRankMax" placeholder="৫০" class="form-control" style="font-size: 0.85rem; padding: 0.45rem; width: 50%;">
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" onclick="searchAdminParticipants()" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
+                  🔍 খুঁজুন
+                </button>
+                <button class="btn btn-secondary" onclick="resetAdminParticipantsFilter()" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                  রিসেট
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: Live Participants & Detailed Profiles (Requirement 3, 5 & 6) -->
           <div class="card" style="padding: 1.5rem;">
-            <div style="margin-bottom: 1rem;">
-              <h3 style="margin: 0; color: #0F172A; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>📊</span> <span>অংশগ্রহণকারী ও লাইভ লিডারবোর্ড র‍্যাংকিং</span>
-              </h3>
-              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
-                সর্বমোট অর্জিত পয়েন্ট ও ধারাবাহিকতার ভিত্তিতে স্বয়ংক্রিয় ক্রমতালিকা। যেকোনো প্রতিযোগী প্রোফাইল এক ক্লিকে পিন করা যাবে।
-              </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+              <div>
+                <h3 style="margin: 0; color: #0F172A; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>👥</span> <span>অংশগ্রহণকারী ও বিস্তারিত প্রোফাইল তালিকা</span>
+                </h3>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                  অংশগ্রহণকারীর পুরো নাম, ঠিকানা, আমল ইতিহাস ও সম্পূর্ণ তথ্য দেখতে "বিস্তারিত প্রোফাইল" বাটনে ক্লিক করুন।
+                </p>
+              </div>
+              <div style="font-size: 0.85rem; color: #065F46; font-weight: 700;" id="adminParticipantCountBadge">
+                মোট ০ জন প্রতিযোগী
+              </div>
             </div>
 
             <div style="overflow-x: auto;">
@@ -1278,8 +1394,9 @@
                 <thead>
                   <tr>
                     <th>র‍্যাংক</th>
-                    <th>ছবি ও অংশগ্রহণকারী</th>
+                    <th>ছবি ও নাম</th>
                     <th>মোবাইল নম্বর</th>
+                    <th>ঠিকানা (উপজেলা ও জেলা)</th>
                     <th>সম্পন্ন দিন</th>
                     <th>বর্তমান স্তর</th>
                     <th>মোট পয়েন্ট</th>
@@ -1287,7 +1404,7 @@
                   </tr>
                 </thead>
                 <tbody id="adminLifestyleTbody">
-                  <tr><td colspan="7" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
+                  <tr><td colspan="8" style="text-align: center; padding: 2rem;">প্রতিযোগিতার তথ্য লোড হচ্ছে...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -2140,6 +2257,27 @@
             </div>
           </div>
 
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label">প্রতিযোগিতার নাম</label>
+              <input type="text" id="pinWinnerCompName" class="form-control" value="৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা (ব্যাচ-০১)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">বিজয়ী স্থান / অবস্থান</label>
+              <input type="text" id="pinWinnerPosition" class="form-control" value="১ম স্থান (বিজয়ী)">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label class="form-label">সংক্ষিপ্ত পরিচিতি (Short Bio) *</label>
+            <input type="text" id="pinWinnerShortBio" class="form-control" value="নিয়মিত জামাতে সালাত আদায়কারী, কুরআন তিলাওয়াত ও মাসনুন জিকিরে অবিচল কৃতি প্রতিযোগী।">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.85rem;">
+            <label class="form-label">বিশেষ কৃতিত্ব ও সম্মাননার বিবরণ *</label>
+            <textarea id="pinWinnerAchievement" class="form-control" rows="2">টানা ৪০ দিন ১০০% জামাতে সালাত, তাহাজ্জুদ ও পূর্ণাঙ্গ সুন্নাহ লাইফস্টাইল অনুসরণে সর্বোচ্চ পয়েন্ট অর্জন করেছেন।</textarea>
+          </div>
+
           <div class="form-group" style="margin-bottom: 0.85rem;">
             <label class="form-label">দোয়া ও শুভেচ্ছা বাণী * (অপরিবর্তনীয় আবশ্যক টেক্সট)</label>
             <textarea id="pinWinnerBlessing" class="form-control" rows="2" required>আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।</textarea>
@@ -2219,6 +2357,186 @@
             <button type="submit" class="btn btn-primary" id="catSubmitBtn">সংরক্ষণ করুন</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: DETAILED PARTICIPANT PROFILE & AMAL HISTORY (Requirement 3) -->
+  <!-- ============================================================== -->
+  <div id="adminParticipantModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border-bottom: 2px solid #BBF7D0;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.5rem;">👤</span>
+          <div>
+            <h3 style="margin: 0; color: #065F46; font-size: 1.25rem;">প্রতিযোগীর বিস্তারিত প্রোফাইল ও আমল রিপোর্ট</h3>
+            <div style="font-size: 0.82rem; color: #166534;" id="admModalSubtitle">আইডি: LU-XXXX</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('adminParticipantModal')">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem;">
+        
+        <!-- Top Profile Info Box (Unmasked Phone & Full Address) -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+          <div style="display: flex; gap: 1.25rem; align-items: flex-start; flex-wrap: wrap;">
+            <img id="admPartPhoto" src="/images/default-avatar.svg" alt="ছবি" style="width: 84px; height: 84px; border-radius: 50%; border: 3px solid #10B981; object-fit: cover; flex-shrink: 0;">
+            
+            <div style="flex: 1; min-width: 260px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <h3 id="admPartName" style="margin: 0; font-size: 1.35rem; color: #0F172A; font-weight: 800;">-</h3>
+                  <div style="font-size: 0.92rem; color: #065F46; font-weight: 700; margin-top: 0.2rem;" id="admPartPhone">
+                    📞 মোবাইল: 01XXXXXXXXX (Unmasked)
+                  </div>
+                  <div style="font-size: 0.85rem; color: #64748B;" id="admPartEmail">
+                    ✉️ ইমেইল: -
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <span id="admPartLevelBadge" style="background: #ECFDF5; color: #065F46; font-weight: 700; font-size: 0.85rem; padding: 3px 12px; border-radius: 9999px;">
+                    Bronze
+                  </span>
+                  <div style="font-size: 1.25rem; font-weight: 800; color: #065F46; margin-top: 0.35rem;">
+                    <span id="admPartTotalPoints">০</span> <span style="font-size: 0.8rem; color: #64748B; font-weight: normal;">পয়েন্ট</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Address Details Section -->
+              <div style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px dashed #E2E8F0; font-size: 0.86rem; color: #334155; line-height: 1.6;">
+                <div><strong>📍 পূর্ণ ঠিকানা:</strong> <span id="admPartAddressText">ঠিকানা দেওয়া হয়নি</span></div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem; color: #64748B; font-size: 0.82rem;">
+                  <span>গ্রাম/বাড়ি: <strong id="admPartVillage" style="color:#1E293B;">-</strong></span>
+                  <span>ইউনিয়ন: <strong id="admPartUnion" style="color:#1E293B;">-</strong></span>
+                  <span>উপজেলা: <strong id="admPartUpazila" style="color:#1E293B;">-</strong></span>
+                  <span>জেলা: <strong id="admPartDistrict" style="color:#1E293B;">Feni</strong></span>
+                  <span>নিবন্ধন: <strong id="admPartRegDate" style="color:#1E293B;">-</strong></span>
+                </div>
+              </div>
+
+              <!-- Action Bar -->
+              <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-secondary" onclick="toggleAdminEditParticipantForm()" style="padding: 4px 10px; font-size: 0.8rem;">
+                  ✏️ তথ্য ও ঠিকানা সম্পাদনা
+                </button>
+                <button class="btn btn-secondary" id="admPartPinBtn" onclick="pinThisParticipantDirectly()" style="padding: 4px 10px; font-size: 0.8rem; background: #FEF3C7; color: #92400E; border-color: #FCD34D;">
+                  👑 গত মাসের বিজয়ী হিসেবে পিন
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inline Edit Participant Form (Hidden by default) -->
+          <div id="admPartEditBox" style="display: none; margin-top: 1.25rem; padding: 1.25rem; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 10px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #0F172A;">✏️ প্রতিযোগী প্রোফাইল ও ঠিকানা সম্পাদনা</h4>
+            <form id="admEditParticipantForm" onsubmit="saveAdminParticipantChanges(event)">
+              <input type="hidden" id="editPartUserId">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                  <label class="form-label">পুরো নাম *</label>
+                  <input type="text" id="editPartName" class="form-control" required>
+                </div>
+                <div>
+                  <label class="form-label">মোবাইল নম্বর *</label>
+                  <input type="text" id="editPartPhone" class="form-control" required>
+                </div>
+                <div>
+                  <label class="form-label">ইমেইল</label>
+                  <input type="email" id="editPartEmail" class="form-control">
+                </div>
+                <div>
+                  <label class="form-label">গ্রাম / বাড়ি</label>
+                  <input type="text" id="editPartVillage" class="form-control">
+                </div>
+                <div>
+                  <label class="form-label">ইউনিয়ন / ওয়ার্ড</label>
+                  <input type="text" id="editPartUnion" class="form-control">
+                </div>
+                <div>
+                  <label class="form-label">উপজেলা</label>
+                  <input type="text" id="editPartUpazila" class="form-control">
+                </div>
+                <div>
+                  <label class="form-label">জেলা</label>
+                  <input type="text" id="editPartDistrict" class="form-control" value="Feni">
+                </div>
+                <div>
+                  <label class="form-label">মোট পয়েন্ট</label>
+                  <input type="number" id="editPartPoints" class="form-control">
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label class="form-label">সম্পূর্ণ ঠিকানা</label>
+                <input type="text" id="editPartAddress" class="form-control">
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="toggleAdminEditParticipantForm()">বাতিল</button>
+                <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Key Metrics & Consistency Streaks -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.75rem; text-align: center;">
+            <div style="font-size: 0.75rem; color: #166534;">বর্তমান র‍্যাংক</div>
+            <div id="admPartRank" style="font-size: 1.25rem; font-weight: 800; color: #065F46;">#১</div>
+          </div>
+          <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: 0.75rem; text-align: center;">
+            <div style="font-size: 0.75rem; color: #92400E;">টানা ধারাবাহিকতা (Streak)</div>
+            <div id="admPartStreak" style="font-size: 1.25rem; font-weight: 800; color: #D97706;">০ দিন</div>
+          </div>
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 0.75rem; text-align: center;">
+            <div style="font-size: 0.75rem; color: #1E40AF;">সর্বোচ্চ রেকর্ড</div>
+            <div id="admPartLongestStreak" style="font-size: 1.25rem; font-weight: 800; color: #2563EB;">০ দিন</div>
+          </div>
+          <div style="background: #FDF2F8; border: 1px solid #FBCFE8; border-radius: 8px; padding: 0.75rem; text-align: center;">
+            <div style="font-size: 0.75rem; color: #9D174D;">আজকের সাবমিশন</div>
+            <div id="admPartTodayStatus" style="font-size: 0.95rem; font-weight: 800; color: #BE185D;">যাচাই হচ্ছে...</div>
+          </div>
+        </div>
+
+        <!-- Date-Based Historical Navigation & Inspection (Requirement 3 & 4) -->
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <h4 style="margin: 0; font-size: 1rem; color: #0F172A; display: flex; align-items: center; gap: 0.4rem;">
+              <span>📅</span> <span>তারিখভিত্তিক আমল সাবমিশন বিস্তারিত পরিদর্শন</span>
+            </h4>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="date" id="admPartInspectDate" class="form-control" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.85rem;" onchange="loadAdminParticipantDayBreakdown()">
+              <button class="btn btn-secondary" onclick="loadAdminParticipantDayBreakdown()" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+                দেখুন
+              </button>
+            </div>
+          </div>
+
+          <!-- Day Breakdown Result Container -->
+          <div id="admPartDayBreakdownContainer" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem; font-size: 0.88rem;">
+            তারিখ নির্বাচন করে "দেখুন" বাটনে ক্লিক করুন।
+          </div>
+        </div>
+
+        <!-- Frequency Analysis: Most and Least Performed Amals -->
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.25rem;">
+          <h4 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #0F172A; display: flex; align-items: center; gap: 0.4rem;">
+            <span>📊</span> <span>এই প্রতিযোগীর আমল ধারাবাহিকতা ও পুনরাবৃত্তি চিত্র</span>
+          </h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+            <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.85rem;">
+              <strong style="color: #166534; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">সবচেয়ে বেশি সম্পন্ন আমল (Top Performed):</strong>
+              <div id="admPartMostAmals" style="font-size: 0.82rem; color: #334155;">লোড হচ্ছে...</div>
+            </div>
+            <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: 0.85rem;">
+              <strong style="color: #92400E; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">সবচেয়ে কম সম্পন্ন আমল (Least Performed):</strong>
+              <div id="admPartLeastAmals" style="font-size: 0.82rem; color: #334155;">লোড হচ্ছে...</div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

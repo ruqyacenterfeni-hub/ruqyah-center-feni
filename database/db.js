@@ -83,6 +83,13 @@ function initDb() {
   } catch (mErr9) {
     console.warn('Migration V9 warning:', mErr9.message);
   }
+
+  try {
+    const { runMigrationV10 } = require('./migrate_v10_amal_reports_analytics');
+    runMigrationV10(db);
+  } catch (mErr10) {
+    console.warn('Migration V10 warning:', mErr10.message);
+  }
 }
 
 initDb();

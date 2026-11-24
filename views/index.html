@@ -411,37 +411,84 @@
         </p>
       </div>
 
-      <!-- Pinned Previous Month Winner Banner (Requirement 7) -->
-      <div id="homepagePinnedWinnerContainer" style="display: none; margin-bottom: 3rem;">
-        <div style="background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border: 2px solid #F59E0B; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
-          <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
-            <div style="position: relative;">
-              <img id="hpPinnedWinnerPhoto" src="/images/default-avatar.svg" alt="বিজয়ীর ছবি" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #F59E0B; object-fit: cover; background: #FFF;">
-              <span style="position: absolute; bottom: -5px; right: -5px; background: #D97706; color: #FFF; font-size: 1rem; border-radius: 50%; padding: 2px 6px;">👑</span>
+      <!-- WINNER PROFILE & HALL OF FAME (Requirement 1) -->
+      <div id="homepagePinnedWinnerContainer" style="display: none; margin-bottom: 3.5rem;">
+        <div style="background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border: 2px solid #F59E0B; border-radius: 18px; padding: 2.25rem 2rem; box-shadow: 0 12px 30px -6px rgba(245, 158, 11, 0.25); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -15px; right: -15px; background: rgba(245, 158, 11, 0.1); width: 140px; height: 140px; border-radius: 50%; pointer-events: none;"></div>
+
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; position: relative; z-index: 2;">
+            
+            <!-- Left: Profile Photo & Key Info -->
+            <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; max-width: 620px;">
+              <div style="position: relative; flex-shrink: 0;">
+                <img id="hpPinnedWinnerPhoto" src="/images/default-avatar.svg" alt="বিজয়ীর ছবি" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #F59E0B; object-fit: cover; background: #FFF; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                <span style="position: absolute; bottom: -4px; right: -4px; background: #D97706; color: #FFF; font-size: 1.35rem; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">👑</span>
+              </div>
+              <div>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.4rem;">
+                  <span style="background: #D97706; color: #FFF; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;" id="hpPinnedWinnerPosition">
+                    🏆 ১ম স্থান (বিজয়ী)
+                  </span>
+                  <span style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;" id="hpPinnedWinnerCompName">
+                    ৪০ দিনের আত্মশুদ্ধি প্রতিযোগিতা
+                  </span>
+                </div>
+                <h3 style="font-size: 1.85rem; color: #92400E; font-weight: 800; margin: 0 0 0.35rem 0;" id="hpPinnedWinnerName">
+                  লোড হচ্ছে...
+                </h3>
+                <p style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #475569; line-height: 1.5;" id="hpPinnedWinnerBio">
+                  নিয়মিত জামাতে সালাত আদায়কারী, কুরআন তিলাওয়াত ও মাসনুন জিকিরে অবিচল কৃতি প্রতিযোগী।
+                </p>
+                <div style="font-size: 0.88rem; color: #334155; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                  <span style="font-weight: 700; color: #065F46;" id="hpPinnedWinnerPoints">মোট পয়েন্ট: ৪০০০</span>
+                  <span style="color: #92400E; font-weight: 600;" id="hpPinnedWinnerLevel">স্তর: Platinum (মুহসিন)</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <div style="display: inline-block; background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 0.8rem; font-weight: 700; padding: 2px 10px; border-radius: 9999px; margin-bottom: 0.35rem;">
-                অ্যাডমিন মনোনীত বিশেষ সম্মাননা
+
+            <!-- Right: Blessing & View Detailed Profile Button -->
+            <div style="text-align: right; min-width: 260px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; gap: 1rem;">
+              <div style="background: #FFFFFF; border: 2px solid #10B981; color: #065F46; font-size: 1.05rem; font-weight: 700; padding: 0.85rem 1.25rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12); text-align: center; width: 100%;" id="hpPinnedWinnerBlessing">
+                আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।
               </div>
-              <h3 style="font-size: 1.65rem; color: #92400E; font-weight: 800; margin: 0 0 0.25rem 0;" id="hpPinnedWinnerTitle">
-                গত মাসের বিজয়ী!
-              </h3>
-              <div style="font-size: 1.15rem; color: #1E293B; font-weight: 700;" id="hpPinnedWinnerName">
-                লোড হচ্ছে...
-              </div>
-              <div style="font-size: 0.88rem; color: #64748B; margin-top: 0.25rem;">
-                <span id="hpPinnedWinnerPoints" style="font-weight: 700; color: #065F46;">মোট পয়েন্ট: ৪০০০</span> • <span id="hpPinnedWinnerLevel" style="color: #92400E; font-weight: 600;">স্তর: Diamond</span>
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="openPinnedWinnerModal()" style="padding: 0.65rem 1.25rem; font-size: 0.92rem; background: #065F46; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(6, 95, 70, 0.2);">
+                  🏅 বিজয়ীর পূর্ণাঙ্গ প্রোফাইল
+                </button>
+                <a href="/lifestyle/leaderboard" class="btn btn-secondary" style="padding: 0.65rem 1rem; font-size: 0.9rem; border-radius: 8px;">
+                  লিডারবোর্ড →
+                </a>
               </div>
             </div>
+
           </div>
-          <div style="text-align: right; min-width: 280px;">
-            <div style="background: #FFFFFF; border: 2px solid #10B981; color: #065F46; font-size: 1.1rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);" id="hpPinnedWinnerBlessing">
-              আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।
-            </div>
-            <a href="/lifestyle/leaderboard" style="color: #D97706; font-size: 0.88rem; font-weight: 700; text-decoration: none;">
-              সম্পূর্ণ লিডারবোর্ড দেখুন →
-            </a>
+
+          <!-- Achievement Details Banner -->
+          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed #F59E0B; display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: #78350F;">
+            <span style="font-size: 1.2rem;">✨</span>
+            <span id="hpPinnedWinnerAchievement">
+              টানা ৪০ দিন ১০০% জামাতে সালাত, তাহাজ্জুদ ও পূর্ণাঙ্গ সুন্নাহ লাইফস্টাইল অনুসরণে সর্বোচ্চ পয়েন্ট অর্জন করেছেন।
+            </span>
           </div>
+        </div>
+      </div>
+
+      <!-- Previous Winners / Hall of Fame Section (Requirement 1) -->
+      <div id="homepageHallOfFameSection" style="display: none; margin-bottom: 3.5rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <span style="background: #ECFDF5; color: #065F46; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 9999px; border: 1px solid #A7F3D0;">
+            🌟 সম্মাননা গ্যালারি
+          </span>
+          <h3 style="font-size: 1.85rem; color: #0F172A; font-weight: 800; margin: 0.5rem 0 0.35rem 0;">
+            পূর্ববর্তী বিজয়ী ও কৃতি প্রতিযোগী (Hall of Fame)
+          </h3>
+          <p style="color: #64748B; font-size: 0.95rem; max-width: 600px; margin: 0 auto;">
+            ৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় সাফল্য অর্জনকারী কৃতি আমলকারীদের তালিকা। আল্লাহ সকলের আমল কবুল করুন।
+          </p>
+        </div>
+
+        <div id="homepageHallOfFameContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <!-- Dynamically populated from /api/lifestyle/hall-of-fame -->
         </div>
       </div>
 
@@ -918,6 +965,74 @@
     </div>
   </div>
 
+  <!-- Detailed Winner Profile Modal (Requirement 1) -->
+  <div id="winnerProfileModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #FFFFFF; border-radius: 18px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 2px solid #F59E0B; position: relative;">
+      
+      <!-- Modal Header -->
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border-radius: 16px 16px 0 0;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.6rem;">🏆</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.2rem; color: #92400E; font-weight: 800;">বিজয়ীর বিস্তারিত প্রোফাইল</h3>
+            <div style="font-size: 0.8rem; color: #B45309;" id="wpModalCompTitle">৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা</div>
+          </div>
+        </div>
+        <button type="button" onclick="closeWinnerProfileModal()" style="background: none; border: none; font-size: 1.6rem; color: #64748B; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div style="padding: 1.75rem 1.5rem;">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="position: relative; display: inline-block; margin-bottom: 0.75rem;">
+            <img id="wpModalPhoto" src="/images/default-avatar.svg" alt="বিজয়ীর ছবি" style="width: 110px; height: 110px; border-radius: 50%; border: 4px solid #F59E0B; object-fit: cover; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
+            <span style="position: absolute; bottom: 0; right: 0; background: #D97706; color: #FFF; font-size: 1.4rem; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">👑</span>
+          </div>
+          <h3 id="wpModalName" style="font-size: 1.5rem; color: #0F172A; font-weight: 800; margin: 0 0 0.25rem 0;">-</h3>
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+            <span id="wpModalPosition" style="background: #D97706; color: #FFF; font-size: 0.82rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px;">১ম স্থান (বিজয়ী)</span>
+            <span id="wpModalTrophy" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 0.82rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px;">চ্যাম্পিয়ন ট্রফি</span>
+          </div>
+          <div style="font-size: 0.85rem; color: #64748B;" id="wpModalMaskedPhone">মোবাইল: 018****XXXX</div>
+        </div>
+
+        <!-- Score & Achievement Cards -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; padding: 0.85rem; text-align: center;">
+            <div style="font-size: 0.78rem; color: #166534; font-weight: 600;">সর্বমোট অর্জিত পয়েন্ট</div>
+            <div id="wpModalScore" style="font-size: 1.35rem; font-weight: 800; color: #065F46;">০ / ৪০০০</div>
+          </div>
+          <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 10px; padding: 0.85rem; text-align: center;">
+            <div style="font-size: 0.78rem; color: #92400E; font-weight: 600;">অর্জিত সম্মাননা স্তর</div>
+            <div id="wpModalLevel" style="font-size: 1.15rem; font-weight: 800; color: #B45309;">Platinum</div>
+          </div>
+        </div>
+
+        <!-- Short Introduction -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 0.25rem;">📝 সংক্ষিপ্ত পরিচিতি:</div>
+          <p id="wpModalBio" style="margin: 0; font-size: 0.9rem; color: #475569; line-height: 1.6;">-</p>
+        </div>
+
+        <!-- Achievement Details -->
+        <div style="background: #FFFDF5; border: 1px solid #FEF3C7; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="font-size: 0.85rem; font-weight: 700; color: #92400E; margin-bottom: 0.25rem;">✨ বিশেষ কৃতিত্ব ও সাফল্য:</div>
+          <p id="wpModalAchievement" style="margin: 0; font-size: 0.9rem; color: #78350F; line-height: 1.6;">-</p>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid #F1F5F9; padding-top: 1rem;">
+          <a id="wpModalPosterLink" href="#" target="_blank" class="btn btn-primary" style="padding: 0.65rem 1.25rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem; background: #065F46;">
+            📜 ডিজিটাল সার্টিফিকেট / পোস্টার দেখুন
+          </a>
+          <button type="button" onclick="closeWinnerProfileModal()" class="btn btn-secondary" style="padding: 0.65rem 1.25rem; font-size: 0.9rem;">
+            বন্ধ করুন
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==============================================================
     // DYNAMIC HOMEPAGE MODULE LOADERS (CONNECTED TO ADMIN CMS)
@@ -1251,13 +1366,76 @@
       }
     }
 
-    // Load Admin-Pinned Previous Month Winner (Requirement 7)
+    // ==============================================================
+    // WINNER PROFILE & HALL OF FAME MODAL LOGIC (Requirement 1)
+    // ==============================================================
+    let currentPinnedWinner = null;
+    let hallOfFameWinnersList = [];
+
+    function openPinnedWinnerModal() {
+      if (!currentPinnedWinner) return;
+      openWinnerProfileModal({
+        full_name: currentPinnedWinner.full_name,
+        profile_photo: currentPinnedWinner.profile_photo,
+        competition_title: currentPinnedWinner.competition_name || '৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা',
+        position: currentPinnedWinner.winning_position || '১ম স্থান (বিজয়ী)',
+        trophy_title: currentPinnedWinner.trophy_title || 'চ্যাম্পিয়ন ট্রফি',
+        final_score: currentPinnedWinner.total_points || 0,
+        awarded_level: currentPinnedWinner.level || 'Platinum (মুহসিন)',
+        masked_phone: '018****XXXX',
+        short_bio: currentPinnedWinner.short_bio || 'নিয়মিত জামাতে সালাত আদায়কারী, কুরআন তিলাওয়াত ও মাসনুন জিকিরে অবিচল কৃতি প্রতিযোগী।',
+        achievement_details: currentPinnedWinner.achievement_details || 'টানা ৪০ দিন ১০০% জামাতে সালাত, তাহাজ্জুদ ও পূর্ণাঙ্গ সুন্নাহ লাইফস্টাইল অনুসরণে সর্বোচ্চ পয়েন্ট অর্জন করেছেন।',
+        poster_url: currentPinnedWinner.user_id ? `/api/lifestyle/poster/${currentPinnedWinner.user_id}` : '#'
+      });
+    }
+
+    function openWinnerProfileModal(w) {
+      if (!w) return;
+      document.getElementById('wpModalName').innerText = w.full_name || 'নাম প্রকাশে অনিচ্ছুক';
+      document.getElementById('wpModalPhoto').src = w.profile_photo || '/images/default-avatar.svg';
+      document.getElementById('wpModalCompTitle').innerText = w.competition_title || '৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা';
+      document.getElementById('wpModalPosition').innerText = typeof w.position === 'number' ? `#${w.position} স্থান অধিকারী` : (w.position || 'কৃতি আমলকারী');
+      document.getElementById('wpModalTrophy').innerText = w.trophy_title || 'সেরা আমলকারী সম্মাননা';
+      document.getElementById('wpModalScore').innerText = `${w.final_score || 0} / ৪০০০`;
+      document.getElementById('wpModalLevel').innerText = w.awarded_level || 'Platinum';
+      document.getElementById('wpModalMaskedPhone').innerText = `মোবাইল: ${w.masked_phone || '018****XXXX'}`;
+      document.getElementById('wpModalBio').innerText = w.short_bio || '৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় অনন্য সাফল্য অর্জনকারী।';
+      document.getElementById('wpModalAchievement').innerText = w.achievement_details || `${w.final_score || 0} পয়েন্ট অর্জন করে অনন্য কৃতিত্বের স্বাক্ষর রেখেছেন।`;
+      
+      const posterBtn = document.getElementById('wpModalPosterLink');
+      if (w.poster_url && w.poster_url !== '#') {
+        posterBtn.href = w.poster_url;
+        posterBtn.style.display = 'inline-flex';
+      } else {
+        posterBtn.style.display = 'none';
+      }
+
+      const modal = document.getElementById('winnerProfileModal');
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeWinnerProfileModal() {
+      const modal = document.getElementById('winnerProfileModal');
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function viewHallOfFameWinner(winnerId) {
+      const w = hallOfFameWinnersList.find(item => item.id === winnerId);
+      if (w) {
+        openWinnerProfileModal(w);
+      }
+    }
+
+    // Load Admin-Pinned Previous Month Winner (Requirement 1 & 7)
     async function loadHomepagePinnedWinner() {
       try {
         const res = await fetch('/api/lifestyle/pinned-winner');
         const data = await res.json();
         if (data.success && data.pinned_winner && data.pinned_winner.is_active) {
           const pw = data.pinned_winner;
+          currentPinnedWinner = pw;
           const container = document.getElementById('homepagePinnedWinnerContainer');
           if (container) {
             container.style.display = 'block';
@@ -1265,12 +1443,73 @@
             document.getElementById('hpPinnedWinnerName').innerText = pw.full_name;
             document.getElementById('hpPinnedWinnerPhoto').src = pw.profile_photo || '/images/default-avatar.svg';
             document.getElementById('hpPinnedWinnerPoints').innerText = `মোট পয়েন্ট: ${pw.total_points || 0}`;
-            document.getElementById('hpPinnedWinnerLevel').innerText = `স্তর: ${pw.level || 'Diamond'}`;
+            document.getElementById('hpPinnedWinnerLevel').innerText = `স্তর: ${pw.level || 'Platinum'}`;
             document.getElementById('hpPinnedWinnerBlessing').innerText = pw.blessing_message || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+            document.getElementById('hpPinnedWinnerPosition').innerText = `🏆 ${pw.winning_position || '১ম স্থান (বিজয়ী)'}`;
+            document.getElementById('hpPinnedWinnerCompName').innerText = pw.competition_name || '৪০ দিনের আত্মশুদ্ধি প্রতিযোগিতা';
+            document.getElementById('hpPinnedWinnerBio').innerText = pw.short_bio || 'নিয়মিত জামাতে সালাত আদায়কারী, কুরআন তিলাওয়াত ও মাসনুন জিকিরে অবিচল কৃতি প্রতিযোগী।';
+            document.getElementById('hpPinnedWinnerAchievement').innerText = pw.achievement_details || 'টানা ৪০ দিন ১০০% জামাতে সালাত, তাহাজ্জুদ ও পূর্ণাঙ্গ সুন্নাহ লাইফস্টাইল অনুসরণে সর্বোচ্চ পয়েন্ট অর্জন করেছেন।';
           }
+        } else {
+          const container = document.getElementById('homepagePinnedWinnerContainer');
+          if (container) container.style.display = 'none';
         }
       } catch (err) {
         console.error('Failed to load pinned winner on homepage:', err);
+      }
+    }
+
+    // Load Hall of Fame (Previous Published Winners - Requirement 1)
+    async function loadHomepageHallOfFame() {
+      try {
+        const res = await fetch('/api/lifestyle/hall-of-fame');
+        const data = await res.json();
+        const section = document.getElementById('homepageHallOfFameSection');
+        const container = document.getElementById('homepageHallOfFameContainer');
+
+        if (data.success && data.hall_of_fame && data.hall_of_fame.length > 0) {
+          hallOfFameWinnersList = data.hall_of_fame;
+          section.style.display = 'block';
+          container.innerHTML = data.hall_of_fame.map((w, idx) => `
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                  <div style="position: relative; flex-shrink: 0;">
+                    <img src="${w.profile_photo || '/images/default-avatar.svg'}" alt="${w.full_name}" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid #10B981; object-fit: cover;">
+                    <span style="position: absolute; bottom: -2px; right: -2px; background: #065F46; color: #FFF; font-size: 0.85rem; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">🏆</span>
+                  </div>
+                  <div>
+                    <h4 style="margin: 0; font-size: 1.15rem; color: #0F172A; font-weight: 700;">${w.full_name}</h4>
+                    <div style="font-size: 0.82rem; color: #065F46; font-weight: 700; margin-top: 0.2rem;">
+                      ${w.trophy_title || (w.position === 1 ? '১ম স্থান (চ্যাম্পিয়ন)' : `#${w.position} স্থান অধিকারী`)}
+                    </div>
+                    <div style="font-size: 0.78rem; color: #64748B;">${w.competition_title}</div>
+                  </div>
+                </div>
+
+                <p style="font-size: 0.86rem; color: #475569; line-height: 1.5; margin: 0 0 1rem 0;">
+                  ${w.short_bio || w.achievement_details || '৪০ দিনের সুন্নাহ আমল প্রতিযোগিতায় অনন্য সাফল্য অর্জনকারী।'}
+                </p>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 0.75rem; margin-bottom: 0.75rem; font-size: 0.85rem;">
+                  <span style="color: #64748B;">পয়েন্ট: <strong style="color: #065F46;">${w.final_score}</strong></span>
+                  <span style="background: #ECFDF5; color: #065F46; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem;">
+                    ${w.awarded_level}
+                  </span>
+                </div>
+                <button onclick="viewHallOfFameWinner(${w.id})" class="btn btn-secondary" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; border-radius: 6px;">
+                  🏅 বিস্তারিত প্রোফাইল দেখুন
+                </button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          section.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Failed to load hall of fame:', err);
       }
     }
 
@@ -1282,6 +1521,7 @@
       loadHomepageCourses();
       loadHomepageArticles();
       loadHomepagePinnedWinner();
+      loadHomepageHallOfFame();
     });
   </script>
 

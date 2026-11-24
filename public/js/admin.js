@@ -3742,12 +3742,450 @@ async function toggleCourseStatus(id) {
 let adminParticipantsList = [];
 let adminAmalCategoriesList = [];
 
+let currentAdminParticipantId = null;
+
 async function loadLifestyleMgrData() {
   await Promise.all([
     loadAdminPinnedWinner(),
     loadAdminAmalCategories(),
-    loadAdminParticipants()
+    loadAdminParticipants(),
+    loadAdminAmalAnalytics()
   ]);
+}
+
+// ==============================================================
+// 1. ADMIN AMAL ANALYTICS & DAILY REPORTING (Requirement 4)
+// ==============================================================
+async function loadAdminAmalAnalytics() {
+  const dateInput = document.getElementById('adminAnalyticsDateInput');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+  const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+
+  try {
+    const res = await fetch(`/api/lifestyle/admin/analytics?date=${date}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    if (document.getElementById('admMetricTotalUsers')) document.getElementById('admMetricTotalUsers').innerText = data.total_participants || 0;
+    if (document.getElementById('admMetricSubmitted')) document.getElementById('admMetricSubmitted').innerText = data.submitted_count || 0;
+    if (document.getElementById('admMetricMissed')) document.getElementById('admMetricMissed').innerText = data.not_submitted_count || 0;
+    if (document.getElementById('admMetricRate')) document.getElementById('admMetricRate').innerText = (data.submission_rate || 0) + '%';
+    
+    if (document.getElementById('admMetricTopScorer')) {
+      if (data.top_scorers_on_date && data.top_scorers_on_date.length > 0) {
+        const top = data.top_scorers_on_date[0];
+        document.getElementById('admMetricTopScorer').innerText = `${top.full_name} (${top.points} পয়েন্ট)`;
+      } else {
+        document.getElementById('admMetricTopScorer').innerText = 'কেউ নেই';
+      }
+    }
+
+    // Most and Least performed amals
+    const mostContainer = document.getElementById('admMostPerformedAmals');
+    const leastContainer = document.getElementById('admLeastPerformedAmals');
+
+    if (mostContainer) {
+      if (data.most_frequent_amals_on_date && data.most_frequent_amals_on_date.length > 0) {
+        mostContainer.innerHTML = data.most_frequent_amals_on_date.slice(0, 3).map(a => `
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+            <span>${a.title_bn}</span>
+            <strong style="color:#065F46;">${a.completion_rate}% (${a.completed_count} জন)</strong>
+          </div>
+        `).join('');
+      } else {
+        mostContainer.innerText = 'এই তারিখে কোনো তথ্য নেই';
+      }
+    }
+
+    if (leastContainer) {
+      if (data.least_frequent_amals_on_date && data.least_frequent_amals_on_date.length > 0) {
+        leastContainer.innerHTML = data.least_frequent_amals_on_date.slice(0, 3).map(a => `
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+            <span>${a.title_bn}</span>
+            <strong style="color:#B45309;">${a.completion_rate}% (${a.completed_count} জন)</strong>
+          </div>
+        `).join('');
+      } else {
+        leastContainer.innerText = 'এই তারিখে কোনো তথ্য নেই';
+      }
+    }
+  } catch (err) {
+    console.error('Error loading admin analytics:', err);
+  }
+}
+
+// ==============================================================
+// 2. SEARCH & PARTICIPANT MANAGEMENT (Requirement 3 & 4)
+// ==============================================================
+async function loadAdminParticipants() {
+  await searchAdminParticipants();
+}
+
+async function searchAdminParticipants() {
+  const query = document.getElementById('filterParticipantQuery')?.value.trim() || '';
+  const date = document.getElementById('filterParticipantDate')?.value || '';
+  const status = document.getElementById('filterParticipantStatus')?.value || 'all';
+  const level = document.getElementById('filterParticipantLevel')?.value || '';
+  const rankMin = document.getElementById('filterRankMin')?.value || '';
+  const rankMax = document.getElementById('filterRankMax')?.value || '';
+
+  const params = new URLSearchParams();
+  if (query) params.append('query', query);
+  if (date) params.append('date', date);
+  if (status && status !== 'all') params.append('submission_status', status);
+  if (level) params.append('level', level);
+  if (rankMin) params.append('rank_min', rankMin);
+  if (rankMax) params.append('rank_max', rankMax);
+
+  try {
+    const res = await fetch(`/api/lifestyle/admin/participants/search?${params.toString()}`);
+    const data = await res.json();
+    const tbody = document.getElementById('adminLifestyleTbody');
+    const countBadge = document.getElementById('adminParticipantCountBadge');
+
+    if (data.success && data.participants) {
+      adminParticipantsList = data.participants;
+      if (countBadge) countBadge.innerText = `মোট ${data.participants.length} জন প্রতিযোগী`;
+
+      if (!adminParticipantsList.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">কোনো প্রতিযোগী পাওয়া যায়নি।</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = adminParticipantsList.map(p => `
+        <tr>
+          <td><strong>#${p.rank}</strong></td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <img src="${p.profile_photo || '/images/default-avatar.svg'}" alt="${p.full_name}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #10B981;">
+              <div>
+                <strong style="color:#0F172A;">${p.full_name}</strong>
+                <div style="font-size: 0.75rem; color: #64748B;">আইডি: ${p.user_uuid || ('#' + p.id)}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <strong style="color: #065F46;">${p.phone || '-'}</strong>
+          </td>
+          <td>
+            <span style="font-size: 0.85rem; color: #475569;">
+              ${p.upazila ? p.upazila + ', ' : ''}${p.district || 'ফেনী'}
+            </span>
+          </td>
+          <td>${p.completed_days || 0} / 40 দিন</td>
+          <td><span class="badge badge-primary">${p.current_level || 'Improvement'}</span></td>
+          <td><strong style="color:var(--primary); font-size: 1.05rem;">${p.total_points}</strong></td>
+          <td style="text-align: right;">
+            <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
+              <button class="btn btn-sm btn-primary" onclick="openAdminParticipantModal(${p.id})" style="padding: 3px 8px; font-size: 0.78rem;">
+                👤 বিস্তারিত প্রোফাইল
+              </button>
+              <button class="btn btn-sm" onclick="openPinWinnerModal(${p.id})" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; padding: 3px 8px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; cursor: pointer;">
+                👑 পিন
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (err) {
+    console.error('Error searching participants:', err);
+  }
+}
+
+function resetAdminParticipantsFilter() {
+  if (document.getElementById('filterParticipantQuery')) document.getElementById('filterParticipantQuery').value = '';
+  if (document.getElementById('filterParticipantDate')) document.getElementById('filterParticipantDate').value = '';
+  if (document.getElementById('filterParticipantStatus')) document.getElementById('filterParticipantStatus').value = 'all';
+  if (document.getElementById('filterParticipantLevel')) document.getElementById('filterParticipantLevel').value = '';
+  if (document.getElementById('filterRankMin')) document.getElementById('filterRankMin').value = '';
+  if (document.getElementById('filterRankMax')) document.getElementById('filterRankMax').value = '';
+  searchAdminParticipants();
+}
+
+// ==============================================================
+// 3. DETAILED PARTICIPANT PROFILE MODAL (Requirement 3)
+// ==============================================================
+async function openAdminParticipantModal(userId) {
+  currentAdminParticipantId = userId;
+  const editBox = document.getElementById('admPartEditBox');
+  if (editBox) editBox.style.display = 'none';
+
+  try {
+    const res = await fetch(`/api/lifestyle/admin/participants/${userId}`);
+    const data = await res.json();
+    if (!data.success || !data.participant) {
+      return alert(data.error || 'প্রতিযোগীর তথ্য পাওয়া যায়নি');
+    }
+
+    const p = data.participant;
+    document.getElementById('admModalSubtitle').innerText = `আইডি: ${p.user_uuid || ('#' + p.id)}`;
+    document.getElementById('admPartName').innerText = p.full_name;
+    document.getElementById('admPartPhoto').src = p.profile_photo || '/images/default-avatar.svg';
+    document.getElementById('admPartPhone').innerText = `📞 মোবাইল: ${p.phone} (আনমাস্কড)`;
+    document.getElementById('admPartEmail').innerText = `✉️ ইমেইল: ${p.email || 'দেওয়া হয়নি'}`;
+    document.getElementById('admPartLevelBadge').innerText = p.current_level;
+    document.getElementById('admPartTotalPoints').innerText = p.total_points;
+
+    // Address Details
+    document.getElementById('admPartAddressText').innerText = p.address || 'পূর্ণাঙ্গ ঠিকানা দেওয়া হয়নি';
+    document.getElementById('admPartVillage').innerText = p.village || '-';
+    document.getElementById('admPartUnion').innerText = p.union_name || '-';
+    document.getElementById('admPartUpazila').innerText = p.upazila || '-';
+    document.getElementById('admPartDistrict').innerText = p.district || 'Feni';
+    document.getElementById('admPartRegDate').innerText = p.created_at ? p.created_at.split('T')[0] : '-';
+
+    // Metrics & Streaks
+    document.getElementById('admPartRank').innerText = `#${p.rank}`;
+    document.getElementById('admPartStreak').innerText = `${p.current_streak || 0} দিন`;
+    document.getElementById('admPartLongestStreak').innerText = `${p.longest_streak || 0} দিন`;
+    document.getElementById('admPartTodayStatus').innerHTML = p.submitted_today 
+      ? `<span style="color:#059669;">✓ জমা সম্পন্ন (+${p.today_points})</span>` 
+      : `<span style="color:#DC2626;">✕ এখনো জমা দেয়নি</span>`;
+
+    // Frequency Analysis
+    const freq = data.frequency_analysis;
+    const mostAmalsDiv = document.getElementById('admPartMostAmals');
+    const leastAmalsDiv = document.getElementById('admPartLeastAmals');
+
+    if (freq && freq.most_frequent && freq.most_frequent.length > 0) {
+      mostAmalsDiv.innerHTML = freq.most_frequent.slice(0, 3).map(a => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+          <span>${a.title_bn}</span>
+          <strong style="color:#065F46;">${a.completion_rate}% (${a.completed_count} দিন)</strong>
+        </div>
+      `).join('');
+    } else {
+      mostAmalsDiv.innerText = 'কোনো তথ্য নেই';
+    }
+
+    if (freq && freq.least_frequent && freq.least_frequent.length > 0) {
+      leastAmalsDiv.innerHTML = freq.least_frequent.slice(0, 3).map(a => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+          <span>${a.title_bn}</span>
+          <strong style="color:#B45309;">${a.completion_rate}% (${a.completed_count} দিন)</strong>
+        </div>
+      `).join('');
+    } else {
+      leastAmalsDiv.innerText = 'কোনো তথ্য নেই';
+    }
+
+    // Set inspection date default to today
+    const dateInput = document.getElementById('admPartInspectDate');
+    dateInput.value = new Date().toISOString().split('T')[0];
+    loadAdminParticipantDayBreakdown();
+
+    openModal('adminParticipantModal');
+  } catch (err) {
+    console.error('Error opening participant modal:', err);
+    alert('প্রতিযোগীর তথ্য লোড করতে ব্যর্থ হয়েছে');
+  }
+}
+
+function pinThisParticipantDirectly() {
+  if (!currentAdminParticipantId) return;
+  closeModal('adminParticipantModal');
+  openPinWinnerModal(currentAdminParticipantId);
+}
+
+function toggleAdminEditParticipantForm() {
+  const box = document.getElementById('admPartEditBox');
+  if (box.style.display === 'none') {
+    const user = adminParticipantsList.find(p => p.id === currentAdminParticipantId);
+    if (user) {
+      document.getElementById('editPartUserId').value = user.id;
+      document.getElementById('editPartName').value = user.full_name || '';
+      document.getElementById('editPartPhone').value = user.phone || '';
+      document.getElementById('editPartEmail').value = user.email || '';
+      document.getElementById('editPartVillage').value = user.village || '';
+      document.getElementById('editPartUnion').value = user.union_name || '';
+      document.getElementById('editPartUpazila').value = user.upazila || '';
+      document.getElementById('editPartDistrict').value = user.district || 'Feni';
+      document.getElementById('editPartAddress').value = user.address || '';
+      document.getElementById('editPartPoints').value = user.total_points || 0;
+    }
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+async function saveAdminParticipantChanges(e) {
+  e.preventDefault();
+  const userId = document.getElementById('editPartUserId').value;
+  const payload = {
+    full_name: document.getElementById('editPartName').value.trim(),
+    phone: document.getElementById('editPartPhone').value.trim(),
+    email: document.getElementById('editPartEmail').value.trim(),
+    village: document.getElementById('editPartVillage').value.trim(),
+    union_name: document.getElementById('editPartUnion').value.trim(),
+    upazila: document.getElementById('editPartUpazila').value.trim(),
+    district: document.getElementById('editPartDistrict').value.trim(),
+    address: document.getElementById('editPartAddress').value.trim(),
+    total_points: parseInt(document.getElementById('editPartPoints').value, 10) || 0
+  };
+
+  try {
+    const res = await fetch(`/api/lifestyle/admin/participants/${userId}/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('প্রতিযোগীর তথ্য সফলভাবে আপডেট হয়েছে!');
+      document.getElementById('admPartEditBox').style.display = 'none';
+      openAdminParticipantModal(userId);
+      loadAdminParticipants();
+    } else {
+      alert('ত্রুটি: ' + (data.error || 'আপডেট করা যায়নি'));
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে ত্রুটি');
+  }
+}
+
+async function loadAdminParticipantDayBreakdown() {
+  if (!currentAdminParticipantId) return;
+  const date = document.getElementById('admPartInspectDate').value;
+  if (!date) return;
+
+  const container = document.getElementById('admPartDayBreakdownContainer');
+  container.innerHTML = 'তথ্য লোড হচ্ছে...';
+
+  try {
+    const res = await fetch(`/api/lifestyle/admin/participants/${currentAdminParticipantId}/submissions?date=${date}`);
+    const data = await res.json();
+    if (!data.success) {
+      container.innerHTML = `<span style="color:#DC2626;">ত্রুটি: ${data.error || 'তথ্য পাওয়া যায়নি'}</span>`;
+      return;
+    }
+
+    if (!data.submitted) {
+      container.innerHTML = `
+        <div style="color: #64748B; padding: 0.5rem 0;">
+          ⚠️ <strong>${date}</strong> তারিখে এই প্রতিযোগী কোনো আমল জমা দেননি।
+        </div>
+      `;
+      return;
+    }
+
+    const sub = data.submission;
+    const breakdown = data.breakdown || [];
+
+    container.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
+        <div>
+          <strong style="color:#065F46;">${date} এর আমল সাবমিশন রিপোর্ট</strong>
+          <span style="font-size:0.75rem; color:#059669; margin-left:0.5rem;">✓ সততার স্বীকৃতি প্রাপ্ত</span>
+        </div>
+        <span class="badge badge-success" style="font-size:0.9rem; padding: 3px 10px;">
+          অর্জিত পয়েন্ট: ${sub.total_points_awarded} / ১০০
+        </span>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem;">
+        ${breakdown.map(item => `
+          <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:6px; padding:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; font-size:0.85rem; color:#1E293B;">${item.title_bn}</div>
+              <div style="font-size:0.75rem; color:${item.completed ? '#059669' : '#94A3B8'};">${item.status_text}</div>
+            </div>
+            <span style="background:${item.points_earned > 0 ? '#ECFDF5' : '#F1F5F9'}; color:${item.points_earned > 0 ? '#065F46' : '#94A3B8'}; font-weight:700; font-size:0.8rem; padding:2px 6px; border-radius:4px;">
+              ${item.points_earned > 0 ? '+' + item.points_earned : '০'}
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML = '<span style="color:#DC2626;">সার্ভার যোগাযোগে ত্রুটি</span>';
+  }
+}
+
+function openPinWinnerModal(preselectedUserId) {
+  const select = document.getElementById('pinWinnerUserIdSelect');
+  select.innerHTML = '<option value="">-- প্রতিযোগী নির্বাচন করুন --</option>' +
+    adminParticipantsList.map(p => `
+      <option value="${p.id}" ${preselectedUserId && preselectedUserId === p.id ? 'selected' : ''}>
+        #${p.rank} - ${p.full_name} (${p.phone || p.masked_phone}) - ${p.total_points} পয়েন্ট
+      </option>
+    `).join('');
+
+  if (preselectedUserId) {
+    const user = adminParticipantsList.find(p => p.id === preselectedUserId);
+    if (user) {
+      document.getElementById('pinWinnerPoints').value = user.total_points || 4000;
+      document.getElementById('pinWinnerLevel').value = user.current_level || 'Diamond';
+      if (document.getElementById('pinWinnerShortBio')) {
+        document.getElementById('pinWinnerShortBio').value = `${user.full_name} নিয়মিত জামাতে সালাত ও সুন্নাহ রুটিনে অবিচল কৃতি আমলকারী।`;
+      }
+    }
+  }
+
+  document.getElementById('pinWinnerMonthTitle').value = 'গত মাসের বিজয়ী!';
+  document.getElementById('pinWinnerBlessing').value = 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+  document.getElementById('pinWinnerIsActive').checked = true;
+
+  openModal('pinWinnerModal');
+}
+
+function handlePinWinnerUserSelect(select) {
+  const userId = parseInt(select.value, 10);
+  const user = adminParticipantsList.find(p => p.id === userId);
+  if (user) {
+    document.getElementById('pinWinnerPoints').value = user.total_points || 4000;
+    document.getElementById('pinWinnerLevel').value = user.current_level || 'Diamond';
+    if (document.getElementById('pinWinnerShortBio')) {
+      document.getElementById('pinWinnerShortBio').value = `${user.full_name} নিয়মিত জামাতে সালাত ও সুন্নাহ রুটিনে অবিচল কৃতি আমলকারী।`;
+    }
+  }
+}
+
+async function savePinnedWinner(e) {
+  e.preventDefault();
+  const userId = parseInt(document.getElementById('pinWinnerUserIdSelect').value, 10);
+  if (!userId) return alert('অনুগ্রহ করে একজন প্রতিযোগী নির্বাচন করুন');
+
+  const monthTitle = document.getElementById('pinWinnerMonthTitle').value.trim() || 'গত মাসের বিজয়ী!';
+  const totalPoints = parseInt(document.getElementById('pinWinnerPoints').value, 10) || 4000;
+  const level = document.getElementById('pinWinnerLevel').value.trim() || 'Diamond';
+  const blessingMessage = document.getElementById('pinWinnerBlessing').value.trim() || 'আল্লাহ উনার আমলগুলো কবুল করুন। আমিন।';
+  const isActive = document.getElementById('pinWinnerIsActive').checked;
+  const compName = document.getElementById('pinWinnerCompName')?.value.trim() || '৪০ দিনের আত্মশুদ্ধি আমল প্রতিযোগিতা (ব্যাচ-০১)';
+  const position = document.getElementById('pinWinnerPosition')?.value.trim() || '১ম স্থান (বিজয়ী)';
+  const shortBio = document.getElementById('pinWinnerShortBio')?.value.trim() || 'নিয়মিত জামাতে সালাত আদায়কারী, কুরআন তিলাওয়াত ও মাসনুন জিকিরে অবিচল কৃতি প্রতিযোগী।';
+  const achievement = document.getElementById('pinWinnerAchievement')?.value.trim() || 'টানা ৪০ দিন ১০০% জামাতে সালাত, তাহাজ্জুদ ও পূর্ণাঙ্গ সুন্নাহ লাইফস্টাইল অনুসরণে সর্বোচ্চ পয়েন্ট অর্জন করেছেন।';
+
+  try {
+    const res = await fetch('/api/lifestyle/admin/pinned-winner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        month_title: monthTitle,
+        total_points: totalPoints,
+        level: level,
+        blessing_message: blessingMessage,
+        is_active: isActive,
+        competition_name: compName,
+        winning_position: position,
+        short_bio: shortBio,
+        achievement_details: achievement
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message || 'গত মাসের বিজয়ী সফলভাবে পিন করা হয়েছে!');
+      closeModal('pinWinnerModal');
+      await loadAdminPinnedWinner();
+    } else {
+      alert('ত্রুটি: ' + (data.error || 'পিন করা যায়নি'));
+    }
+  } catch (err) {
+    alert('সার্ভার যোগাযোগে সমস্যা হয়েছে');
+  }
 }
 
 async function loadAdminPinnedWinner() {
