@@ -13,6 +13,7 @@
 process.env.NODE_ENV = 'test';
 const assert = require('assert');
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const app = require('../server');
 const db = require('../database/db');
@@ -2325,6 +2326,40 @@ async function runTests() {
 
     const finalTop = await request('GET', '/api/lifestyle/top-profiles');
     assert.strictEqual(finalTop.data.config.display_limit, 3);
+  });
+
+  await test('ADMIN MOBILE VERSION & CRM MENU: Responsive sidebar, mobile toggle, backdrop, bottom navigation and CRM layout', async () => {
+    const adminHtml = fs.readFileSync('views/admin.html', 'utf8');
+    const styleCss = fs.readFileSync('public/css/style.css', 'utf8');
+    const adminJs = fs.readFileSync('public/js/admin.js', 'utf8');
+
+    // 1. Verify mobile sidebar toggle button is present without inline display: none
+    assert.ok(adminHtml.includes('id="adminSidebarToggle"'), 'Admin HTML must contain #adminSidebarToggle');
+    assert.ok(!adminHtml.includes('id="adminSidebarToggle" class="mobile-toggle" style="display: none;"'), 'Toggle must not have hardcoded inline display:none');
+
+    // 2. Verify close button and backdrop overlay
+    assert.ok(adminHtml.includes('id="adminSidebarClose"'), 'Admin HTML must contain #adminSidebarClose');
+    assert.ok(adminHtml.includes('id="adminSidebarBackdrop"'), 'Admin HTML must contain #adminSidebarBackdrop');
+
+    // 3. Verify mobile bottom bar
+    assert.ok(adminHtml.includes('id="adminMobileBottomBar"'), 'Admin HTML must contain #adminMobileBottomBar');
+    assert.ok(adminHtml.includes('data-tab="patients"'), 'Bottom bar must include direct CRM / patients link');
+
+    // 4. Verify CRM section in sidebar navigation
+    assert.ok(adminHtml.includes('admin-crm-section-title'), 'Sidebar must feature distinct CRM section title');
+    assert.ok(adminHtml.includes('admin-crm-item'), 'Sidebar must feature distinct CRM items');
+
+    // 5. Verify CSS rules for mobile responsiveness
+    assert.ok(styleCss.includes('.admin-sidebar-toggle'), 'CSS must define .admin-sidebar-toggle');
+    assert.ok(styleCss.includes('.admin-sidebar-backdrop'), 'CSS must define .admin-sidebar-backdrop');
+    assert.ok(styleCss.includes('.admin-mobile-bottom-bar'), 'CSS must define .admin-mobile-bottom-bar');
+    assert.ok(styleCss.includes('.crm-filter-grid'), 'CSS must define .crm-filter-grid');
+    assert.ok(styleCss.includes('.dossier-tab-bar'), 'CSS must define .dossier-tab-bar');
+
+    // 6. Verify JS functions for mobile sidebar
+    assert.ok(adminJs.includes('window.openAdminSidebar'), 'admin.js must provide window.openAdminSidebar');
+    assert.ok(adminJs.includes('window.closeAdminSidebar'), 'admin.js must provide window.closeAdminSidebar');
+    assert.ok(adminJs.includes('window.toggleAdminSidebar'), 'admin.js must provide window.toggleAdminSidebar');
   });
 
   console.log('================================================================');

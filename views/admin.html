@@ -18,15 +18,21 @@
     <!-- Sidebar Navigation -->
     <aside class="admin-sidebar">
       <div class="admin-sidebar-header">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <img src="/images/logo.png" alt="Ruqyah Center" style="height: 38px; width: auto; object-fit: contain; background: #ffffff; padding: 3px 6px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-        </div>
-        <div style="font-size: 0.75rem; color: #10B981; font-weight: 700; margin-top: 6px; letter-spacing: 0.5px;" data-i18n="admin_panel_title">
-          ক্লিনিক্যাল অ্যাডমিন ড্যাশবোর্ড
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="/images/logo.png" alt="Ruqyah Center" style="height: 38px; width: auto; object-fit: contain; background: #ffffff; padding: 3px 6px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+            <div>
+              <div style="font-size: 0.95rem; font-weight: 700; color: #FFFFFF; line-height: 1.2;">রুকইয়াহ সেন্টার</div>
+              <div style="font-size: 0.72rem; color: #10B981; font-weight: 600;" data-i18n="admin_panel_title">অ্যাডমিন ড্যাশবোর্ড</div>
+            </div>
+          </div>
+          <button id="adminSidebarClose" class="admin-sidebar-close" aria-label="মেনু বন্ধ করুন">✕</button>
         </div>
       </div>
 
       <ul class="admin-nav">
+        <!-- 1. GENERAL -->
+        <li class="admin-nav-section-title">সার্বিক ব্যবস্থাপনা</li>
         <li class="admin-nav-item active" data-tab="dashboard">
           <a href="#dashboard">
             <span>📊</span> <span data-i18n="admin_nav_dashboard">ড্যাশবোর্ড ওভারভিউ</span>
@@ -47,39 +53,40 @@
             <span>⚙️</span> <span data-i18n="admin_nav_availability">সময়সূচি ও প্রাপ্যতা</span>
           </a>
         </li>
-        <li class="admin-nav-item" data-tab="patients">
+
+        <!-- 2. CLINICAL CRM (HIGHLIGHTED) -->
+        <li class="admin-nav-section-title admin-crm-section-title">🏥 ক্লিনিক্যাল CRM ও রোগী সেবা</li>
+        <li class="admin-nav-item admin-crm-item" data-tab="patients">
           <a href="#patients">
             <span>👥</span> <span data-i18n="admin_nav_patients">রোগী ব্যবস্থাপনা (CRM)</span>
           </a>
         </li>
-        <li class="admin-nav-item" data-tab="sessions">
+        <li class="admin-nav-item admin-crm-item" data-tab="sessions">
           <a href="#sessions">
             <span>📖</span> <span data-i18n="admin_nav_sessions">রুকইয়াহ সেশনসমূহ</span>
           </a>
         </li>
-        <li class="admin-nav-item" data-tab="followups">
+        <li class="admin-nav-item admin-crm-item" data-tab="followups">
           <a href="#followups">
             <span>🔄</span> <span data-i18n="admin_nav_followups">ফলো-আপ ট্র্যাকার</span>
           </a>
         </li>
-        <li class="admin-nav-item" data-tab="pricing">
-          <a href="#pricing">
-            <span>💰</span> <span data-i18n="admin_nav_pricing">সেবামূল্য ও চার্জ</span>
-          </a>
-        </li>
-        <li class="admin-nav-item" data-tab="reports">
+        <li class="admin-nav-item admin-crm-item" data-tab="reports">
           <a href="#reports">
-            <span>📄</span> <span data-i18n="admin_nav_reports">পিডিএফ রিপোর্ট হাব</span>
+            <span>📄</span> <span data-i18n="admin_nav_reports">রিপোর্ট হাব (PDF ও ইমেজ)</span>
           </a>
         </li>
-        <li class="admin-nav-item" data-tab="diagnosis">
+        <li class="admin-nav-item admin-crm-item" data-tab="diagnosis">
           <a href="#diagnosis">
             <span>🩺</span> <span data-i18n="admin_nav_diagnosis">ডায়াগনোসিস ব্যবস্থাপনা</span>
           </a>
         </li>
-        <li class="admin-nav-item" data-tab="articles">
-          <a href="#articles">
-            <span>📚</span> <span data-i18n="adminNavArticles">কেস হিস্ট্রি ও আর্টিকেল</span>
+
+        <!-- 3. SERVICES & COMMERCE -->
+        <li class="admin-nav-section-title">সেবা ও ই-কমার্স</li>
+        <li class="admin-nav-item" data-tab="pricing">
+          <a href="#pricing">
+            <span>💰</span> <span data-i18n="admin_nav_pricing">সেবামূল্য ও চার্জ</span>
           </a>
         </li>
         <li class="admin-nav-item" data-tab="commerce">
@@ -102,6 +109,9 @@
             <span>📖</span> <span>কোর্স ব্যবস্থাপনা</span>
           </a>
         </li>
+
+        <!-- 4. COMMUNITY & SETTINGS -->
+        <li class="admin-nav-section-title">কমিউনিটি ও সেটিংস</li>
         <li class="admin-nav-item" data-tab="lifestyle-mgr">
           <a href="#lifestyle-mgr">
             <span>🌟</span> <span>আমল ও প্রতিযোগিতা</span>
@@ -110,6 +120,11 @@
         <li class="admin-nav-item" data-tab="ads-mgr">
           <a href="#ads-mgr">
             <span>📢</span> <span>বিজ্ঞাপন ও ব্যানার</span>
+          </a>
+        </li>
+        <li class="admin-nav-item" data-tab="articles">
+          <a href="#articles">
+            <span>📚</span> <span data-i18n="adminNavArticles">কেস হিস্ট্রি ও আর্টিকেল</span>
           </a>
         </li>
         <li class="admin-nav-item" data-tab="settings">
@@ -132,31 +147,38 @@
       </div>
     </aside>
 
+    <!-- Mobile Backdrop Overlay -->
+    <div id="adminSidebarBackdrop" class="admin-sidebar-backdrop"></div>
+
     <!-- Main Content Area -->
     <main class="admin-main">
       
       <!-- Top Bar Header -->
       <header class="admin-topbar">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <button id="adminSidebarToggle" class="mobile-toggle" style="display: none;">☰</button>
-          <div>
-            <h2 style="font-size: 1.25rem; color: var(--primary); margin: 0;" data-i18n="site_title">রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</h2>
-            <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="admin_brand_sub">ফেনী শাখা — ক্লিনিক ব্যবস্থাপনা ও ডায়াগনোসিস সিস্টেম</div>
+        <div class="admin-topbar-left">
+          <button id="adminSidebarToggle" class="admin-sidebar-toggle" aria-label="মেনু খুলুন">
+            <span>☰</span>
+          </button>
+          <div class="admin-topbar-brand">
+            <h2 class="admin-topbar-title" data-i18n="site_title">রুকইয়াহ সাপোর্ট অ্যান্ড হিজামা সেন্টার</h2>
+            <div class="admin-topbar-sub" data-i18n="admin_brand_sub">ফেনী শাখা — ক্লিনিক ব্যবস্থাপনা ও ডায়াগনোসিস সিস্টেম</div>
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="admin-topbar-right">
           <!-- Language Switcher in Admin Topbar -->
-          <div style="display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-light); padding: 3px 8px; border-radius: 4px; background: #FFF;">
-            <button type="button" class="lang-btn-bn active" onclick="setLanguage('bn')" style="background: none; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: var(--primary);">বাংলা</button>
+          <div class="admin-lang-switcher">
+            <button type="button" class="lang-btn-bn active" onclick="setLanguage('bn')">বাংলা</button>
             <span style="color: var(--text-muted); font-size: 0.75rem;">|</span>
-            <button type="button" class="lang-btn-en" onclick="setLanguage('en')" style="background: none; border: none; cursor: pointer; font-size: 0.85rem; color: var(--text-muted);">English</button>
+            <button type="button" class="lang-btn-en" onclick="setLanguage('en')">EN</button>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="openModal('registerPatientModal')" data-i18n="admin_btn_new_patient">
-            + নতুন রোগী নিবন্ধন
+          <button class="btn btn-primary btn-sm admin-topbar-btn" onclick="openModal('registerPatientModal')" data-i18n="admin_btn_new_patient">
+            <span class="btn-text-full">+ নতুন রোগী নিবন্ধন</span>
+            <span class="btn-text-short">+ রোগী</span>
           </button>
-          <button class="btn btn-accent btn-sm" onclick="openNewSessionForPatient()" data-i18n="admin_btn_new_session">
-            + সেশন রেকর্ড
+          <button class="btn btn-accent btn-sm admin-topbar-btn" onclick="openNewSessionForPatient()" data-i18n="admin_btn_new_session">
+            <span class="btn-text-full">+ সেশন রেকর্ড</span>
+            <span class="btn-text-short">+ সেশন</span>
           </button>
         </div>
       </header>
@@ -529,7 +551,7 @@
 
           <!-- Filters -->
           <div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr auto; gap: 1rem; align-items: flex-end;">
+            <div class="crm-filter-grid">
               <div>
                 <label class="form-label" style="font-size: 0.8rem;">Search Patient ID, Name, or Mobile Phone:</label>
                 <input type="text" id="patientSearchInput" class="form-control" placeholder="Search by RSCC-P-..., Name, or Phone...">
@@ -2979,6 +3001,30 @@
       </div>
     </div>
   </div>
+
+  <!-- Admin Mobile Quick Navigation Bottom Bar -->
+  <nav class="admin-mobile-bottom-bar" id="adminMobileBottomBar">
+    <button type="button" class="admin-mob-tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <span class="mob-icon">📊</span>
+      <span class="mob-text">ওভারভিউ</span>
+    </button>
+    <button type="button" class="admin-mob-tab-btn" data-tab="patients" onclick="switchTab('patients')">
+      <span class="mob-icon">👥</span>
+      <span class="mob-text">CRM / রোগী</span>
+    </button>
+    <button type="button" class="admin-mob-tab-btn" data-tab="sessions" onclick="switchTab('sessions')">
+      <span class="mob-icon">📖</span>
+      <span class="mob-text">সেশন</span>
+    </button>
+    <button type="button" class="admin-mob-tab-btn" data-tab="appointments" onclick="switchTab('appointments')">
+      <span class="mob-icon">🗓</span>
+      <span class="mob-text">বুকিং</span>
+    </button>
+    <button type="button" class="admin-mob-tab-btn" id="adminMobileMenuBtn" onclick="toggleAdminSidebar()">
+      <span class="mob-icon">☰</span>
+      <span class="mob-text">সব মেনু</span>
+    </button>
+  </nav>
 
   <script src="/js/translations.js"></script>
   <script src="/js/app.js"></script>

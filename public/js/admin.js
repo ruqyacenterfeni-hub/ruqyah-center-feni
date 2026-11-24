@@ -86,12 +86,47 @@ function setupNavigation() {
     });
   }
 
-  // Mobile sidebar toggle
+  // Mobile sidebar toggle & overlay handling
   const sidebarToggle = document.getElementById('adminSidebarToggle');
+  const sidebarClose = document.getElementById('adminSidebarClose');
+  const sidebarBackdrop = document.getElementById('adminSidebarBackdrop');
   const sidebar = document.querySelector('.admin-sidebar');
-  if (sidebarToggle && sidebar) {
-    sidebarToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
+
+  window.openAdminSidebar = function() {
+    if (sidebar) sidebar.classList.add('open');
+    if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+  };
+
+  window.closeAdminSidebar = function() {
+    if (sidebar) sidebar.classList.remove('open');
+    if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+  };
+
+  window.toggleAdminSidebar = function() {
+    if (sidebar && sidebar.classList.contains('open')) {
+      window.closeAdminSidebar();
+    } else {
+      window.openAdminSidebar();
+    }
+  };
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.toggleAdminSidebar();
+    });
+  }
+
+  if (sidebarClose) {
+    sidebarClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.closeAdminSidebar();
+    });
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', () => {
+      window.closeAdminSidebar();
     });
   }
 }
@@ -104,6 +139,11 @@ function switchTab(tabName) {
     item.classList.toggle('active', item.getAttribute('data-tab') === tabName);
   });
 
+  // Also sync mobile bottom bar active state
+  document.querySelectorAll('.admin-mob-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
+  });
+
   document.querySelectorAll('.admin-tab-content').forEach(pane => {
     pane.style.display = 'none';
   });
@@ -114,7 +154,12 @@ function switchTab(tabName) {
   }
 
   // Close mobile sidebar if open
-  document.querySelector('.admin-sidebar')?.classList.remove('open');
+  if (typeof window.closeAdminSidebar === 'function') {
+    window.closeAdminSidebar();
+  } else {
+    document.querySelector('.admin-sidebar')?.classList.remove('open');
+    document.getElementById('adminSidebarBackdrop')?.classList.remove('active');
+  }
 
   // Load specific tab data
   if (tabName === 'dashboard') loadDashboardData();
@@ -1117,15 +1162,21 @@ async function viewPatientProfile(patientId, forcedLang = null) {
     const worshipSyms = parseList(history?.worship_problems);
 
     modalContent.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-border); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-        <div>
-          <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">OFFICIAL PATIENT DOSSIER</span>
-          <h2 style="color: var(--primary); margin: 0;">${patient.full_name}</h2>
-          <div style="font-size: 0.9rem; color: var(--text-muted);">
-            ID: <strong>${patient.patient_id}</strong> | Phone: ${patient.phone} | Age: ${patient.age} | Gender: ${patient.gender} | ${patient.marital_status || 'Married'}
+      <div class="dossier-header-bar" style="border-bottom: 2px solid var(--primary-border); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">OFFICIAL PATIENT DOSSIER</span>
+            <h2 style="color: var(--primary); margin: 0.15rem 0 0.35rem 0; font-size: 1.4rem;">${patient.full_name}</h2>
+            <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+              ID: <strong style="color: var(--primary);">${patient.patient_id}</strong> | Phone: ${patient.phone} | Age: ${patient.age} | Gender: ${patient.gender} | ${patient.marital_status || 'Married'}
+            </div>
           </div>
+          <button class="btn btn-outline-primary btn-sm" onclick="openNewSessionForPatient('${patient.patient_id}')">
+            + New Ruqyah Session
+          </button>
         </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+
+        <div class="dossier-actions-grid">
           <a href="/api/admin/reports/patient/${patient.patient_id}/pdf?lang=bn" class="btn btn-primary btn-sm" download>
             📥 বাংলা PDF ডাউনলোড
           </a>
@@ -1141,19 +1192,16 @@ async function viewPatientProfile(patientId, forcedLang = null) {
           <a href="/reports/view/patient/${patient.patient_id}" target="_blank" class="btn btn-outline-secondary btn-sm">
             🖨 Print Report
           </a>
-          <button class="btn btn-outline-primary btn-sm" onclick="openNewSessionForPatient('${patient.patient_id}')">
-            + New Ruqyah Session
-          </button>
         </div>
       </div>
 
-      <!-- Tab Buttons for Dossier -->
-      <div style="display: flex; gap: 0.5rem; border-bottom: 2px solid var(--border-light); margin-bottom: 1.25rem; flex-wrap: wrap;">
-        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn active" onclick="switchDossierTab('diagnosis', this)">🩺 ১০টি ক্যাটাগরির বিস্তারিত ডায়াগনোসিস</button>
-        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('history', this)">📋 সার্বিক স্বাস্থ্য ইতিহাস</button>
-        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('sessions', this)">📖 রুকইয়াহ সেশনসমূহ (${sessions.length})</button>
+      <!-- Tab Buttons for Dossier (Scrollable CRM Submenu) -->
+      <div class="dossier-tab-bar">
+        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn active" onclick="switchDossierTab('diagnosis', this)">🩺 ডায়াগনোসিস (১০ ক্যাটাগরি)</button>
+        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('history', this)">📋 স্বাস্থ্য ইতিহাস</button>
+        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('sessions', this)">📖 সেশনসমূহ (${sessions.length})</button>
         <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('followups', this)">🔄 ফলো-আপ (${followups.length})</button>
-        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('appointments', this)">🗓 অ্যাপয়েন্টমেন্ট (${appointments.length})</button>
+        <button type="button" class="btn btn-sm btn-secondary dossier-tab-btn" onclick="switchDossierTab('appointments', this)">🗓 বুকিং (${appointments.length})</button>
       </div>
 
       <!-- DOSSIER PANE 1: 9-CATEGORY DIAGNOSIS FORM (NO 5-SYMPTOM LIMIT, 10 PER CATEGORY = 90 TOTAL) -->
