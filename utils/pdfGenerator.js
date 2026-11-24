@@ -624,9 +624,9 @@ function wrapText(text, maxChars = 52) {
 }
 
 /**
- * Builds high-resolution SVG and converts to PDF for Patient History Report
+ * Builds high-resolution SVG for Patient History Report
  */
-async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn', options = {}) {
+function buildPatientHistorySvg(patient, history, diagnosis, lang = 'bn', options = {}) {
   const isBn = lang === 'bn';
   const width = 1240;
   const height = 1754;
@@ -935,7 +935,14 @@ async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn
   </svg>
   `;
 
-  // Render SVG to high-quality JPEG and package into PDF
+  return { svgContent, width, height, activeCategories };
+}
+
+/**
+ * Builds high-resolution SVG and converts to PDF for Patient History Report
+ */
+async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn', options = {}) {
+  const { svgContent, width, height, activeCategories } = buildPatientHistorySvg(patient, history, diagnosis, lang, options);
   const jpegBuf = await sharp(Buffer.from(svgContent)).jpeg({ quality: 92 }).toBuffer();
   
   const textEntries = [
@@ -948,6 +955,7 @@ async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn
   if (diagnosis && diagnosis.suicidal_ideation_flag === 1) {
     textEntries.push('URGENT CLINICAL ALERT: Suicidal ideation or self-harm reported.');
   }
+  const isBn = lang === 'bn';
   if (!isBn) {
     for (const cat of activeCategories) {
       textEntries.push(cat.name_en);
@@ -961,9 +969,21 @@ async function generatePatientHistoryPdf(patient, history, diagnosis, lang = 'bn
 }
 
 /**
- * Builds high-resolution SVG and converts to PDF for Ruqyah Session Report
+ * Generates high-resolution PNG or JPEG image for Patient History Report
  */
-async function generateRuqyahSessionPdf(session, patient, lang = 'bn', options = {}) {
+async function generatePatientHistoryImage(patient, history, diagnosis, lang = 'bn', options = {}) {
+  const { svgContent } = buildPatientHistorySvg(patient, history, diagnosis, lang, options);
+  const format = (options.format || 'png').toLowerCase();
+  if (format === 'jpg' || format === 'jpeg') {
+    return await sharp(Buffer.from(svgContent)).jpeg({ quality: 95 }).toBuffer();
+  }
+  return await sharp(Buffer.from(svgContent)).png({ compressionLevel: 8 }).toBuffer();
+}
+
+/**
+ * Builds high-resolution SVG for Ruqyah Session Report
+ */
+function buildRuqyahSessionSvg(session, patient, lang = 'bn', options = {}) {
   const isBn = lang === 'bn';
   const width = 1240;
   const height = 1754;
@@ -1190,7 +1210,16 @@ async function generateRuqyahSessionPdf(session, patient, lang = 'bn', options =
     svgContent = svgContent.replace(`height="${height}"`, `height="${totalHeight}"`);
   }
 
+  return { svgContent, width, height: totalHeight };
+}
+
+/**
+ * Builds high-resolution SVG and converts to PDF for Ruqyah Session Report
+ */
+async function generateRuqyahSessionPdf(session, patient, lang = 'bn', options = {}) {
+  const { svgContent, width, height } = buildRuqyahSessionSvg(session, patient, lang, options);
   const jpegBuf = await sharp(Buffer.from(svgContent)).jpeg({ quality: 95 }).toBuffer();
+  const isBn = lang === 'bn';
   const textEntries = isBn ? [] : [
     'RUQYAH SUPPORT & CUPPING CENTER',
     'RUQYAH SESSION CLINICAL REPORT',
@@ -1199,10 +1228,26 @@ async function generateRuqyahSessionPdf(session, patient, lang = 'bn', options =
     `Classification: ${session.assessment_category || ''}`,
     session.professional_assessment || ''
   ];
-  return packJpegToPdf(jpegBuf, width, totalHeight, textEntries);
+  return packJpegToPdf(jpegBuf, width, height, textEntries);
+}
+
+/**
+ * Generates high-resolution PNG or JPEG image for Ruqyah Session Report
+ */
+async function generateRuqyahSessionImage(session, patient, lang = 'bn', options = {}) {
+  const { svgContent } = buildRuqyahSessionSvg(session, patient, lang, options);
+  const format = (options.format || 'png').toLowerCase();
+  if (format === 'jpg' || format === 'jpeg') {
+    return await sharp(Buffer.from(svgContent)).jpeg({ quality: 95 }).toBuffer();
+  }
+  return await sharp(Buffer.from(svgContent)).png({ compressionLevel: 8 }).toBuffer();
 }
 
 module.exports = {
   generatePatientHistoryPdf,
-  generateRuqyahSessionPdf
+  generatePatientHistoryImage,
+  generateRuqyahSessionPdf,
+  generateRuqyahSessionImage,
+  buildPatientHistorySvg,
+  buildRuqyahSessionSvg
 };

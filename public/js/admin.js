@@ -994,8 +994,10 @@ async function loadPatientsList() {
           <td>
             <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
               <button class="btn btn-primary btn-xs" onclick="viewPatientProfile('${p.patient_id}')">${isBn ? 'রোগীর ফাইল' : 'Dossier'}</button>
-              <a href="/api/admin/reports/patient/${p.patient_id}/pdf?lang=bn" class="btn btn-primary btn-xs" download title="বাংলা PDF ডাউনলোড">বাংলা PDF ডাউনলোড</a>
-              <a href="/api/admin/reports/patient/${p.patient_id}/pdf?lang=en" class="btn btn-secondary btn-xs" download title="English PDF Download">English PDF Download</a>
+              <a href="/api/admin/reports/patient/${p.patient_id}/pdf?lang=bn" class="btn btn-primary btn-xs" download title="বাংলা PDF ডাউনলোড">বাংলা PDF</a>
+              <a href="/api/admin/reports/patient/${p.patient_id}/pdf?lang=en" class="btn btn-secondary btn-xs" download title="English PDF Download">English PDF</a>
+              <a href="/api/admin/reports/patient/${p.patient_id}/image?lang=bn" class="btn btn-outline-primary btn-xs" download title="বাংলা ইমেজ ডাউনলোড">🖼️ ইমেজ (বাং)</a>
+              <a href="/api/admin/reports/patient/${p.patient_id}/image?lang=en" class="btn btn-outline-secondary btn-xs" download title="English Image Download">🖼️ Image (EN)</a>
             </div>
           </td>
         </tr>
@@ -1129,6 +1131,12 @@ async function viewPatientProfile(patientId, forcedLang = null) {
           </a>
           <a href="/api/admin/reports/patient/${patient.patient_id}/pdf?lang=en" class="btn btn-secondary btn-sm" download>
             📥 English PDF Download
+          </a>
+          <a href="/api/admin/reports/patient/${patient.patient_id}/image?lang=bn" class="btn btn-outline-primary btn-sm" download>
+            🖼️ বাংলা ইমেজ ডাউনলোড
+          </a>
+          <a href="/api/admin/reports/patient/${patient.patient_id}/image?lang=en" class="btn btn-outline-secondary btn-sm" download>
+            🖼️ English Image Download
           </a>
           <a href="/reports/view/patient/${patient.patient_id}" target="_blank" class="btn btn-outline-secondary btn-sm">
             🖨 Print Report
@@ -1553,6 +1561,12 @@ function renderDossierSessions(sessions, patient) {
             <a href="/api/admin/reports/session/${s.session_id}/pdf?lang=en" class="btn btn-secondary btn-sm" download>
               📥 English PDF Download
             </a>
+            <a href="/api/admin/reports/session/${s.session_id}/image?lang=bn" class="btn btn-outline-primary btn-sm" download>
+              🖼️ বাংলা ইমেজ ডাউনলোড
+            </a>
+            <a href="/api/admin/reports/session/${s.session_id}/image?lang=en" class="btn btn-outline-secondary btn-sm" download>
+              🖼️ English Image Download
+            </a>
             <button type="button" class="btn btn-outline-primary btn-sm" onclick="openSessionModal('${s.session_id}')">
               ✏️ ${(typeof getCurrentLang === 'function' && getCurrentLang() === 'bn') ? 'এডিট / খুলুন' : 'Edit / Details'}
             </button>
@@ -1713,10 +1727,16 @@ async function loadSessionsList() {
           <td>
             <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
               <a href="/api/admin/reports/session/${s.session_id}/pdf?lang=bn" class="btn btn-primary btn-xs" download title="বাংলা PDF ডাউনলোড">
-                বাংলা PDF ডাউনলোড
+                বাংলা PDF
               </a>
               <a href="/api/admin/reports/session/${s.session_id}/pdf?lang=en" class="btn btn-secondary btn-xs" download title="English PDF Download">
-                English PDF Download
+                English PDF
+              </a>
+              <a href="/api/admin/reports/session/${s.session_id}/image?lang=bn" class="btn btn-outline-primary btn-xs" download title="বাংলা ইমেজ ডাউনলোড">
+                🖼️ বাংলা ইমেজ
+              </a>
+              <a href="/api/admin/reports/session/${s.session_id}/image?lang=en" class="btn btn-outline-secondary btn-xs" download title="English Image Download">
+                🖼️ English Image
               </a>
               <button type="button" class="btn btn-outline-primary btn-xs" onclick="openSessionModal('${s.session_id}')">
                 ${isBn ? 'এডিট / বিবরণী' : 'Edit / Details'}
@@ -2240,6 +2260,8 @@ async function loadReportsList() {
           const pid = patSelect.value;
           const bnBtn = document.getElementById('hubPatientDownloadBn');
           const enBtn = document.getElementById('hubPatientDownloadEn');
+          const bnImgBtn = document.getElementById('hubPatientDownloadBnImg');
+          const enImgBtn = document.getElementById('hubPatientDownloadEnImg');
           if (pid) {
             if (bnBtn) {
               bnBtn.href = `/api/admin/reports/patient/${pid}/pdf?lang=bn`;
@@ -2249,9 +2271,19 @@ async function loadReportsList() {
               enBtn.href = `/api/admin/reports/patient/${pid}/pdf?lang=en`;
               enBtn.style.display = 'inline-block';
             }
+            if (bnImgBtn) {
+              bnImgBtn.href = `/api/admin/reports/patient/${pid}/image?lang=bn`;
+              bnImgBtn.style.display = 'inline-block';
+            }
+            if (enImgBtn) {
+              enImgBtn.href = `/api/admin/reports/patient/${pid}/image?lang=en`;
+              enImgBtn.style.display = 'inline-block';
+            }
           } else {
             if (bnBtn) bnBtn.style.display = 'none';
             if (enBtn) enBtn.style.display = 'none';
+            if (bnImgBtn) bnImgBtn.style.display = 'none';
+            if (enImgBtn) enImgBtn.style.display = 'none';
           }
         });
       }
@@ -2272,6 +2304,8 @@ async function loadReportsList() {
           const sid = sessSelect.value;
           const bnBtn = document.getElementById('hubSessionDownloadBn');
           const enBtn = document.getElementById('hubSessionDownloadEn');
+          const bnImgBtn = document.getElementById('hubSessionDownloadBnImg');
+          const enImgBtn = document.getElementById('hubSessionDownloadEnImg');
           if (sid) {
             if (bnBtn) {
               bnBtn.href = `/api/admin/reports/session/${sid}/pdf?lang=bn`;
@@ -2281,9 +2315,19 @@ async function loadReportsList() {
               enBtn.href = `/api/admin/reports/session/${sid}/pdf?lang=en`;
               enBtn.style.display = 'inline-block';
             }
+            if (bnImgBtn) {
+              bnImgBtn.href = `/api/admin/reports/session/${sid}/image?lang=bn`;
+              bnImgBtn.style.display = 'inline-block';
+            }
+            if (enImgBtn) {
+              enImgBtn.href = `/api/admin/reports/session/${sid}/image?lang=en`;
+              enImgBtn.style.display = 'inline-block';
+            }
           } else {
             if (bnBtn) bnBtn.style.display = 'none';
             if (enBtn) enBtn.style.display = 'none';
+            if (bnImgBtn) bnImgBtn.style.display = 'none';
+            if (enImgBtn) enImgBtn.style.display = 'none';
           }
         });
       }
@@ -2302,10 +2346,13 @@ async function loadReportsList() {
 
     let html = '';
     data.data.forEach(r => {
-      const isHistory = r.report_type === 'patient_history';
+      const isHistory = r.report_type === 'patient_history' || r.report_type === 'patient_history_image';
       const downloadUrl = isHistory 
         ? `/api/admin/reports/patient/${r.patient_id}/pdf` 
         : `/api/admin/reports/session/${r.session_id}/pdf`;
+      const imageUrl = isHistory
+        ? `/api/admin/reports/patient/${r.patient_id}/image`
+        : `/api/admin/reports/session/${r.session_id}/image`;
       const viewUrl = isHistory
         ? `/reports/view/patient/${r.patient_id}`
         : `/reports/view/session/${r.session_id}`;
@@ -2322,8 +2369,10 @@ async function loadReportsList() {
           <td>${r.created_at?.slice(0, 16)} by ${r.generated_by || 'Admin'}</td>
           <td>
             <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-              <a href="${downloadUrl}?lang=bn" class="btn btn-primary btn-xs" download title="বাংলা PDF ডাউনলোড">বাংলা PDF ডাউনলোড</a>
-              <a href="${downloadUrl}?lang=en" class="btn btn-secondary btn-xs" download title="English PDF Download">English PDF Download</a>
+              <a href="${downloadUrl}?lang=bn" class="btn btn-primary btn-xs" download title="বাংলা PDF ডাউনলোড">বাংলা PDF</a>
+              <a href="${downloadUrl}?lang=en" class="btn btn-secondary btn-xs" download title="English PDF Download">English PDF</a>
+              <a href="${imageUrl}?lang=bn" class="btn btn-outline-primary btn-xs" download title="বাংলা ইমেজ ডাউনলোড">🖼️ বাংলা ইমেজ</a>
+              <a href="${imageUrl}?lang=en" class="btn btn-outline-secondary btn-xs" download title="English Image Download">🖼️ English Image</a>
               <a href="${viewUrl}" target="_blank" class="btn btn-outline-secondary btn-xs">Print</a>
             </div>
           </td>

@@ -613,6 +613,59 @@ async function runTests() {
     assert(pdfHeader.startsWith('%PDF-1.'), `Header must be valid PDF, got: ${pdfHeader}`);
   });
 
+  // 13B. Image Report Generation (CRM Reports as Images)
+  await test('CRM REPORTS AS IMAGES: Patient History Report PNG binary download (Bengali & English)', async () => {
+    // 1. Bengali PNG Image
+    const bnRes = await request('GET', `/api/admin/reports/patient/${testPatientId}/image?lang=bn`);
+    assert.strictEqual(bnRes.statusCode, 200);
+    assert.strictEqual(bnRes.headers['content-type'], 'image/png');
+    assert(bnRes.rawBuffer.length > 5000, 'PNG buffer must contain real image content');
+    // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+    assert.strictEqual(bnRes.rawBuffer[0], 0x89);
+    assert.strictEqual(bnRes.rawBuffer[1], 0x50); // P
+    assert.strictEqual(bnRes.rawBuffer[2], 0x4E); // N
+    assert.strictEqual(bnRes.rawBuffer[3], 0x47); // G
+    assert(bnRes.headers['content-disposition'].includes('Patient_History_'));
+    assert(bnRes.headers['content-disposition'].includes('_BN.png'));
+
+    // 2. English PNG Image
+    const enRes = await request('GET', `/api/admin/reports/patient/${testPatientId}/image?lang=en`);
+    assert.strictEqual(enRes.statusCode, 200);
+    assert.strictEqual(enRes.headers['content-type'], 'image/png');
+    assert(enRes.rawBuffer.length > 5000, 'English PNG buffer must contain real image content');
+    assert(enRes.headers['content-disposition'].includes('_EN.png'));
+
+    // 3. Shareable copy
+    const shareRes = await request('GET', `/api/admin/reports/patient/${testPatientId}/image?lang=bn&shareable=1`);
+    assert.strictEqual(shareRes.statusCode, 200);
+    assert(shareRes.headers['content-disposition'].includes('_Shareable.png'));
+  });
+
+  await test('CRM REPORTS AS IMAGES: Ruqyah Session Report PNG binary download (Bengali & English)', async () => {
+    // 1. Bengali PNG Image
+    const bnRes = await request('GET', `/api/admin/reports/session/${recordedSessionId}/image?lang=bn`);
+    assert.strictEqual(bnRes.statusCode, 200);
+    assert.strictEqual(bnRes.headers['content-type'], 'image/png');
+    assert(bnRes.rawBuffer.length > 5000, 'Session PNG buffer must contain real image content');
+    assert.strictEqual(bnRes.rawBuffer[0], 0x89);
+    assert.strictEqual(bnRes.rawBuffer[1], 0x50);
+    assert(bnRes.headers['content-disposition'].includes('Ruqyah_Session_'));
+    assert(bnRes.headers['content-disposition'].includes('_BN.png'));
+
+    // 2. English PNG Image
+    const enRes = await request('GET', `/api/admin/reports/session/${recordedSessionId}/image?lang=en`);
+    assert.strictEqual(enRes.statusCode, 200);
+    assert.strictEqual(enRes.headers['content-type'], 'image/png');
+    assert(enRes.headers['content-disposition'].includes('_EN.png'));
+
+    // 3. Optional JPEG format (?format=jpg)
+    const jpgRes = await request('GET', `/api/admin/reports/session/${recordedSessionId}/image?format=jpg`);
+    assert.strictEqual(jpgRes.statusCode, 200);
+    assert.strictEqual(jpgRes.headers['content-type'], 'image/jpeg');
+    assert.strictEqual(jpgRes.rawBuffer[0], 0xFF);
+    assert.strictEqual(jpgRes.rawBuffer[1], 0xD8); // JPEG SOI marker
+  });
+
   // 14. Database Backup & Audit Logs
   await test('Database Backup: Exports complete JSON snapshot', async () => {
     const res = await request('GET', '/api/admin/settings/backup');

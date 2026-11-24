@@ -62,6 +62,8 @@
       </div>
       <a id="downloadPdfBn" href="#" class="btn btn-primary btn-sm" download>📥 বাংলা PDF ডাউনলোড</a>
       <a id="downloadPdfEn" href="#" class="btn btn-secondary btn-sm" download>📥 English PDF Download</a>
+      <a id="downloadImgBn" href="#" class="btn btn-outline-primary btn-sm" download>🖼️ বাংলা ইমেজ ডাউনলোড</a>
+      <a id="downloadImgEn" href="#" class="btn btn-outline-secondary btn-sm" download>🖼️ English Image Download</a>
       <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨 Print</button>
     </div>
   </div>
@@ -477,11 +479,15 @@
       const urlParams = new URLSearchParams(window.location.search);
       const requestedLang = urlParams.get('lang') === 'en' ? 'en' : 'bn';
 
-      // Set download PDF button URLs
+      // Set download PDF & Image button URLs
       const pdfBnBtn = document.getElementById('downloadPdfBn');
       const pdfEnBtn = document.getElementById('downloadPdfEn');
+      const imgBnBtn = document.getElementById('downloadImgBn');
+      const imgEnBtn = document.getElementById('downloadImgEn');
       if (pdfBnBtn) pdfBnBtn.href = `/api/admin/reports/patient/${patientId}/pdf?lang=bn`;
       if (pdfEnBtn) pdfEnBtn.href = `/api/admin/reports/patient/${patientId}/pdf?lang=en`;
+      if (imgBnBtn) imgBnBtn.href = `/api/admin/reports/patient/${patientId}/image?lang=bn`;
+      if (imgEnBtn) imgEnBtn.href = `/api/admin/reports/patient/${patientId}/image?lang=en`;
 
       try {
         const res = await fetch(`/api/admin/patients/${patientId}`);

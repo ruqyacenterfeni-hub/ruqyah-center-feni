@@ -88,6 +88,8 @@
       </div>
       <a id="downloadPdfBn" href="#" class="btn btn-primary btn-sm" download>📥 বাংলা PDF ডাউনলোড</a>
       <a id="downloadPdfEn" href="#" class="btn btn-secondary btn-sm" download>📥 English PDF Download</a>
+      <a id="downloadImgBn" href="#" class="btn btn-outline-primary btn-sm" download>🖼️ বাংলা ইমেজ ডাউনলোড</a>
+      <a id="downloadImgEn" href="#" class="btn btn-outline-secondary btn-sm" download>🖼️ English Image Download</a>
       <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨 Print</button>
     </div>
   </div>
@@ -399,11 +401,15 @@
 
         globalSessionData = data.data;
 
-        // Set download URLs for both languages
+        // Set download URLs for both languages (PDF and Image)
         const pdfBnBtn = document.getElementById('downloadPdfBn');
         const pdfEnBtn = document.getElementById('downloadPdfEn');
+        const imgBnBtn = document.getElementById('downloadImgBn');
+        const imgEnBtn = document.getElementById('downloadImgEn');
         if (pdfBnBtn) pdfBnBtn.href = `/api/admin/reports/session/${sessionId}/pdf?lang=bn`;
         if (pdfEnBtn) pdfEnBtn.href = `/api/admin/reports/session/${sessionId}/pdf?lang=en`;
+        if (imgBnBtn) imgBnBtn.href = `/api/admin/reports/session/${sessionId}/image?lang=bn`;
+        if (imgEnBtn) imgEnBtn.href = `/api/admin/reports/session/${sessionId}/image?lang=en`;
 
         switchReportLang(activeReportLang);
 
