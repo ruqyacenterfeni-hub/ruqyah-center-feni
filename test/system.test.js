@@ -2164,10 +2164,16 @@ async function runTests() {
   });
 
   await test('TOP PROFILES REQ 1-5: Homepage Top 3 Profiles, Admin Limit Control & Manual Include/Exclude Overrides', async () => {
-    // 1. Verify Homepage contains Top Profiles section
+    // 1. Verify Homepage contains Top Profiles section and See More option
     const homeRes = await request('GET', '/');
     assert.strictEqual(homeRes.statusCode, 200);
     assert.ok(homeRes.data.includes('id="homepageTopProfilesSection"'), 'Homepage must contain #homepageTopProfilesSection');
+    assert.ok(homeRes.data.includes('id="homepageTopProfilesContainer"'), 'Homepage must contain #homepageTopProfilesContainer');
+    assert.ok(homeRes.data.includes('id="homepageTopProfilesSeeMore"'), 'Homepage must contain #homepageTopProfilesSeeMore');
+    assert.ok(homeRes.data.includes('id="seeMoreLeaderboardBtn"'), 'Homepage must contain #seeMoreLeaderboardBtn');
+    assert.ok(homeRes.data.includes('href="/lifestyle/leaderboard"'), 'See More button must link to /lifestyle/leaderboard');
+    assert.ok(homeRes.data.includes('See More'), 'Button must contain See More option');
+    assert.ok(homeRes.data.includes('৪র্থ, ৫ম, ৬ষ্ঠ ও পরবর্তী সকল প্রতিযোগী প্রোফাইল'), 'Must specify remaining 4th, 5th, 6th profiles under See More');
     assert.ok(homeRes.data.includes('শীর্ষ প্রতিযোগী প্রোফাইল (Top Profiles)'), 'Homepage must contain Top Profiles heading');
 
     // 2. Public API GET /api/lifestyle/top-profiles: default Top 3

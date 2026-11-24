@@ -502,14 +502,35 @@
           </p>
         </div>
 
+        <!-- Container for ONLY Top 3 Profiles -->
         <div id="homepageTopProfilesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-          <!-- Dynamically populated from /api/lifestyle/top-profiles -->
+          <!-- Dynamically populated with strictly the Top 3 participant profiles based on rankings -->
         </div>
 
-        <div style="text-align: center; margin-top: 1.5rem;">
-          <a href="/lifestyle/leaderboard" class="btn btn-secondary" style="padding: 0.65rem 1.5rem; font-size: 0.92rem; border-radius: 8px;">
-            🏆 সম্পূর্ণ লিডারবোর্ড দেখুন →
-          </a>
+        <!-- See More Section: Remaining participant profiles (4th, 5th, 6th, etc.) placed under this option -->
+        <div id="homepageTopProfilesSeeMore" style="margin-top: 2rem; text-align: center; background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 14px; padding: 1.6rem 1.25rem;">
+          <div style="max-width: 640px; margin: 0 auto;">
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #E0E7FF; color: #3730A3; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 9999px; margin-bottom: 0.5rem;">
+              <span>👥 অন্যান্য সকল প্রতিযোগী</span>
+            </div>
+            <h4 style="font-size: 1.15rem; color: #0F172A; font-weight: 700; margin: 0.25rem 0 0.35rem 0;" id="seeMoreProfilesHeading">
+              ৪র্থ, ৫ম, ৬ষ্ঠ ও পরবর্তী সকল প্রতিযোগী প্রোফাইল
+            </h4>
+            <p style="color: #64748B; font-size: 0.9rem; margin: 0 0 1.15rem 0; line-height: 1.5;" id="seeMoreProfilesDesc">
+              শীর্ষ ৩ জনের পরবর্তী সকল অংশগ্রহণকারীর বিস্তারিত অবস্থান, মোট পয়েন্ট, সম্পন্ন দিন ও অর্জিত স্তর দেখতে নিচের বাটনে ক্লিক করে সম্পূর্ণ লিডারবোর্ড দেখুন।
+            </p>
+            <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+              <a href="/lifestyle/leaderboard" id="seeMoreLeaderboardBtn" class="btn btn-primary" style="background: #065F46; color: #FFFFFF; font-weight: 700; padding: 0.75rem 2rem; font-size: 0.98rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(6, 95, 70, 0.18);">
+                <span>আরও দেখুন (See More)</span>
+                <span style="font-size: 1.15rem;">→</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Hidden container holding remaining profiles (4th, 5th, 6th, etc.) under the See More option -->
+          <div id="homepageRemainingProfilesContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; text-align: left;">
+            <!-- 4th, 5th, 6th, etc. profiles placed here -->
+          </div>
         </div>
       </div>
 
@@ -1534,18 +1555,26 @@
       }
     }
 
-    // Load Top Profiles (Requirement 1, 2, 3, 4: Top 3 by default, Admin configurable)
+    // Load Top Profiles: display ONLY the Top 3 participants' profiles based on rankings.
+    // All remaining participant profiles (4th, 5th, 6th, etc.) are placed under the "See More" option.
+    // Users can click "See More" to view the complete leaderboard.
     async function loadHomepageTopProfiles() {
       try {
         const res = await fetch('/api/lifestyle/top-profiles');
         const data = await res.json();
         const section = document.getElementById('homepageTopProfilesSection');
         const container = document.getElementById('homepageTopProfilesContainer');
+        const seeMoreBox = document.getElementById('homepageTopProfilesSeeMore');
+        const remainingContainer = document.getElementById('homepageRemainingProfilesContainer');
 
         if (data.success && data.profiles && data.profiles.length > 0) {
           section.style.display = 'block';
 
-          container.innerHTML = data.profiles.map(p => {
+          // Strictly Top 3 profiles based on ranking
+          const top3Profiles = data.profiles.slice(0, 3);
+          const remainingProfiles = data.profiles.slice(3);
+
+          function renderProfileCard(p) {
             let cardBorder = '#10B981';
             let badgeBg = '#ECFDF5';
             let badgeColor = '#065F46';
@@ -1640,7 +1669,19 @@
                 </div>
               </div>
             `;
-          }).join('');
+          }
+
+          // Render only Top 3 in main container
+          container.innerHTML = top3Profiles.map(renderProfileCard).join('');
+
+          // Place remaining participant profiles (4th, 5th, 6th, etc.) under See More container
+          if (remainingContainer && remainingProfiles.length > 0) {
+            remainingContainer.innerHTML = remainingProfiles.map(renderProfileCard).join('');
+          }
+
+          if (seeMoreBox) {
+            seeMoreBox.style.display = 'block';
+          }
         } else {
           section.style.display = 'none';
         }
